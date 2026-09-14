@@ -69,4 +69,8 @@ Desconectar: CameraSession.close (sale de playback) → BLE off → WiFiService.
 | `Osmotic/Views/CameraControlView.swift` | pestaña Live: monitor, lectura, modos, disparo |
 
 Detalle y puntos sin verificar: `docs/CONTROL.md`.
+| `Osmotic/Services/WebcamService.swift` | la cámara enchufada por USB como webcam (UVC): detección, permiso, vista previa |
+| `Osmotic/Views/WebcamView.swift` | pestaña Webcam: imagen por USB o los tres pasos para conectarla |
+
+Pestañas (`AppModel.Workspace`): **Files** (flujo Wi-Fi: cámaras → conexión → biblioteca), **Live** (`.camera`, requiere conexión), **Webcam** (USB, desde cualquier pantalla menos la de conexión). Convertir Osmotic en cámara virtual necesitaría una Camera Extension (firma Developer ID); la Pocket 3 ya es webcam UVC por cable.
 

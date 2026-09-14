@@ -106,8 +106,10 @@ final class AppModel {
     private(set) var linkGaveUp = false
 
     // ---- camera control -----------------------------------------------------------------------
-    /// What the library screen shows: the card's files, or the camera itself (live view + controls).
-    enum Workspace: Hashable { case files, camera }
+    /// The tab on top: the card's files (the Wi-Fi flow: cameras → connect → library), the camera
+    /// itself over Wi-Fi (live view + controls; needs a connection), or the camera as a USB webcam
+    /// (no Wi-Fi involved, available from any screen but the connection steps).
+    enum Workspace: Hashable { case files, camera, webcam }
     private(set) var workspace: Workspace = .files
     /// Leaving or re-entering playback takes a moment; the switch is locked meanwhile.
     private(set) var switchingWorkspace = false
@@ -119,6 +121,7 @@ final class AppModel {
     private(set) var controlBusy = false
     private(set) var controlError: String?
     let liveRenderer = LiveVideoRenderer()
+    let webcam = WebcamService()
     /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
     /// still be restoring the user's network), the launch-time crash recovery, and link recovery.
     @ObservationIgnored private var teardownTask: Task<Void, Never>?
@@ -168,6 +171,9 @@ final class AppModel {
             stage = .pairing
             needsApproval = true
             stageDetail = String(localized: "Approve the connection on the camera’s screen")
+        case "webcam":
+            screen = .cameras
+            workspace = .webcam
         case "camera":
             screen = .library
             workspace = .camera
@@ -996,7 +1002,27 @@ final class AppModel {
 
 extension AppModel {
     func setWorkspace(_ w: Workspace) {
-        guard w != workspace, !switchingWorkspace, screen == .library, !linkLost, let s = session else { return }
+        guard w != workspace, !switchingWorkspace, screen != .connecting else { return }
+        // Webcam and back need no camera session.
+        if w == .webcam || workspace == .webcam {
+            if workspace == .camera {
+                // Leave capture first, so the card is listed again for when the user comes back.
+                setWorkspace(.files)
+                Task {
+                    while switchingWorkspace { try? await Task.sleep(for: .milliseconds(100)) }
+                    workspace = .webcam
+                }
+                return
+            }
+            if w == .camera {
+                workspace = .files
+                setWorkspace(.camera)
+            } else {
+                workspace = w
+            }
+            return
+        }
+        guard screen == .library, !linkLost, let s = session else { return }
         if w == .camera && transfer != nil {
             controlError = String(localized: "Finish or cancel the downloads before using the camera.")
             return

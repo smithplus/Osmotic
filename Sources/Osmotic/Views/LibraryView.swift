@@ -33,7 +33,9 @@ struct LibraryView: View {
         @Bindable var model = model
         VStack(spacing: 0) {
             LibraryTopPlate()
-            if model.workspace == .camera {
+            if model.workspace == .webcam {
+                WebcamView()
+            } else if model.workspace == .camera {
                 CameraControlView()
                     .padding(.horizontal, Theme.s3)
                     .padding(.bottom, Theme.s3)
@@ -181,22 +183,36 @@ struct LibraryView: View {
     }
 }
 
+/// The three tabs on top: Files · Live · Webcam. Live needs a Wi-Fi connection; Webcam works from any
+/// screen but the connection steps.
+struct WorkspaceTabs: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        CassetteKeyBank(compact: true) {
+            key("Files", .files, help: "The camera’s card")
+            key("Live", .camera, help: "Record, take photos and see what the camera sees (over Wi-Fi)")
+                .disabled(model.screen != .library || model.linkLost)
+            key("Webcam", .webcam, help: "Use the camera as a webcam over USB")
+        }
+        .disabled(model.switchingWorkspace)
+    }
+
+    private func key(_ title: LocalizedStringKey, _ w: AppModel.Workspace, help: LocalizedStringKey) -> some View {
+        Button(title) { model.setWorkspace(w) }
+            .buttonStyle(CassetteKeyStyle(compact: true, latched: model.workspace == w, width: 76))
+            .accessibilityAddTraits(model.workspace == w ? .isSelected : [])
+            .help(help)
+    }
+}
+
 /// The library's top strip: the Files / Camera switch in the middle, link LED and Disconnect on the right.
 struct LibraryTopPlate: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         TopPlate {
-            CassetteKeyBank(compact: true) {
-                Button("Files") { model.setWorkspace(.files) }
-                    .buttonStyle(CassetteKeyStyle(compact: true, latched: model.workspace == .files, width: 76))
-                    .accessibilityAddTraits(model.workspace == .files ? .isSelected : [])
-                Button("Live") { model.setWorkspace(.camera) }
-                    .buttonStyle(CassetteKeyStyle(compact: true, latched: model.workspace == .camera, width: 76))
-                    .accessibilityAddTraits(model.workspace == .camera ? .isSelected : [])
-                    .help("Record, take photos and see what the camera sees")
-            }
-            .disabled(model.switchingWorkspace || model.linkLost)
+            WorkspaceTabs()
         } trailing: {
             HStack(spacing: Theme.s3) {
                 LED(color: model.linkLost ? Theme.danger : Theme.success,

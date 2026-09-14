@@ -251,6 +251,16 @@
         }
       }
     },
+    "As a webcam the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Como webcam, la imagen va por el cable en calidad completa y la cámara se carga. La pestaña En vivo funciona sin cable, por Wi-Fi, en calidad de vista previa."
+          }
+        }
+      }
+    },
     "Asking the camera for its Wi-Fi network…": {
       "localizations": {
         "es": {
@@ -947,6 +957,16 @@
         }
       }
     },
+    "It shows up here, and as a camera in Zoom, Meet, FaceTime or OBS.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aparece acá, y como cámara en Zoom, Meet, FaceTime u OBS."
+          }
+        }
+      }
+    },
     "Joining %@…": {
       "localizations": {
         "es": {
@@ -1177,6 +1197,26 @@
         }
       }
     },
+    "No USB camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cámara USB"
+          }
+        }
+      }
+    },
+    "No camera access": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin acceso a la cámara"
+          }
+        }
+      }
+    },
     "No date": {
       "localizations": {
         "es": {
@@ -1253,6 +1293,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "En Mac"
+          }
+        }
+      }
+    },
+    "On the camera, choose Webcam when it asks how to connect.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En la cámara, elegí Webcam cuando pregunte cómo conectarse."
           }
         }
       }
@@ -1390,6 +1440,26 @@
         }
       }
     },
+    "Pick it as the camera in Zoom, Meet, FaceTime, OBS or any other app — Osmotic doesn’t need to stay open.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegila como cámara en Zoom, Meet, FaceTime, OBS o cualquier otra app — Osmotic no necesita quedar abierta."
+          }
+        }
+      }
+    },
+    "Picture": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen"
+          }
+        }
+      }
+    },
     "Play (space)": {
       "localizations": {
         "es": {
@@ -1406,6 +1476,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sonido y aviso al terminar de descargar"
+          }
+        }
+      }
+    },
+    "Plug the camera into this Mac with a USB-C cable.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enchufá la cámara a este Mac con un cable USB-C."
           }
         }
       }
@@ -1513,12 +1593,12 @@
         }
       }
     },
-    "Record, take photos and see what the camera sees": {
+    "Record, take photos and see what the camera sees (over Wi-Fi)": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Grabá, sacá fotos y mirá lo que ve la cámara"
+            "value": "Grabá, sacá fotos y mirá lo que ve la cámara (por Wi-Fi)"
           }
         }
       }
@@ -1903,6 +1983,16 @@
         }
       }
     },
+    "The camera’s card": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tarjeta de la cámara"
+          }
+        }
+      }
+    },
     "The card is empty": {
       "localizations": {
         "es": {
@@ -2023,6 +2113,16 @@
         }
       }
     },
+    "Use the camera as a webcam over USB": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usá la cámara como webcam por USB"
+          }
+        }
+      }
+    },
     "Video": {
       "localizations": {
         "es": {
@@ -2089,6 +2189,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esperando a la cámara…"
+          }
+        }
+      }
+    },
+    "Webcam": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webcam"
+          }
+        }
+      }
+    },
+    "Webcam picture": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Imagen de la webcam"
           }
         }
       }

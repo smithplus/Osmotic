@@ -17,14 +17,20 @@ struct CamerasView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopPlate {
+                WorkspaceTabs()
+            } trailing: {
                 switch model.ble.power {
                 case .poweredOn: LED(color: Theme.success, state: .on, label: "Bluetooth")
                 case .unknown: LED(state: .off, label: "Bluetooth", spokenState: "Starting")
                 default: LED(color: Theme.danger, state: .blink, label: "Bluetooth", spokenState: "Unavailable")
                 }
             }
-            Group {
-                if scrolls { ScrollView { content } } else { content }
+            if model.workspace == .webcam {
+                WebcamView()
+            } else {
+                Group {
+                    if scrolls { ScrollView { content } } else { content }
+                }
             }
         }
         .task {
