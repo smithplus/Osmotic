@@ -32,11 +32,22 @@ struct LibraryView: View {
         @Bindable var model = model
         VStack(spacing: 0) {
             TopPlate {
-                LED(color: model.linkLost ? Theme.danger : Theme.success,
-                    state: model.linkLost ? .blink : .on,
-                    label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
+                HStack(spacing: Theme.s3) {
+                    LED(color: model.linkLost ? Theme.danger : Theme.success,
+                        state: model.linkLost ? .blink : .on,
+                        label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
+                    CassetteKeyBank(compact: true) {
+                        Button {
+                            if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
+                        } label: {
+                            Label("Disconnect", systemImage: "eject.fill")
+                        }
+                        .buttonStyle(.compactKey)
+                        .help("Release the camera and put the Mac back on your Wi-Fi")
+                    }
+                }
             }
-            ControlDeck(confirmDisconnect: $confirmDisconnect)
+            ControlDeck()
                 .padding(.horizontal, Theme.s3)
                 .padding(.bottom, Theme.s3)
 
@@ -120,7 +131,6 @@ struct LibraryView: View {
 /// two cassette-style banks with their legends printed above.
 struct ControlDeck: View {
     @Environment(AppModel.self) private var model
-    @Binding var confirmDisconnect: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.s3) {
@@ -138,27 +148,20 @@ struct ControlDeck: View {
             BankLegend(text: "Transfer")
             CassetteKeyBank {
                 if !model.selection.isEmpty {
-                    Button("Clear") { model.selection = [] }
-                        .buttonStyle(CassetteKeyStyle())
-                        .help("Clear the selection (esc)")
-                    Button("Download \(model.selection.count)") { model.downloadSelected() }
-                        .buttonStyle(CassetteKeyStyle(finish: .orange))
+                    Button("Deselect") { model.selection = [] }
+                        .buttonStyle(.secondaryKey)
+                        .help("Deselect all (esc)")
+                    Button("Download \(model.selection.count) selected") { model.downloadSelected() }
+                        .buttonStyle(.primaryKey)
                         .help("Download the selection (⌘D)")
                 } else {
                     Button { model.downloadNew() } label: {
-                        model.newFiles.isEmpty ? Text("All saved") : Text("Download \(model.newFiles.count) new")
+                        model.newFiles.isEmpty ? Text("All downloaded") : Text("Download \(model.newFiles.count) new")
                     }
-                        .buttonStyle(CassetteKeyStyle(finish: .orange))
-                        .disabled(model.newFiles.isEmpty)
-                        .help("Download everything that isn't in your folder yet (⇧⌘D)")
+                    .buttonStyle(.primaryKey)
+                    .disabled(model.newFiles.isEmpty)
+                    .help("Download everything that isn't in your folder yet (⇧⌘D)")
                 }
-                Button {
-                    if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
-                } label: {
-                    Image(systemName: "eject.fill").font(.system(size: 11, weight: .bold))
-                }
-                .buttonStyle(CassetteKeyStyle(finish: .charcoal, width: 48))
-                .help("Eject: release the camera and put the Mac back on your Wi-Fi")
             }
         }
         .fixedSize()
@@ -226,8 +229,10 @@ struct SectionHeader: View {
                 .foregroundStyle(Theme.accent)
             EngravedRule()
             if !pending.isEmpty {
-                Button("Download day") { model.enqueue(pending) }
-                    .buttonStyle(.ghostKey)
+                CassetteKeyBank(compact: true) {
+                    Button("Download day") { model.enqueue(pending) }
+                        .buttonStyle(.compactKey)
+                }
             }
         }
         .padding(.vertical, Theme.s2)

@@ -65,11 +65,13 @@ struct ConnectingView: View {
                 if let error = model.connectError {
                     ErrorBanner(message: error)
                     HStack(spacing: Theme.s2) {
-                        Button("Back") { model.backToCameras() }
-                            .buttonStyle(KeyButtonStyle(kind: .ghost))
-                        Button("Try Again") { model.retry() }
-                            .buttonStyle(.signalKey)
-                            .keyboardShortcut(.defaultAction)
+                        CassetteKeyBank {
+                            Button("Back") { model.backToCameras() }
+                                .buttonStyle(.secondaryKey)
+                            Button("Try Again") { model.retry() }
+                                .buttonStyle(.primaryKey)
+                                .keyboardShortcut(.defaultAction)
+                        }
                         Spacer()
                         OpenLogLink()
                     }
@@ -80,9 +82,11 @@ struct ConnectingView: View {
                             .foregroundStyle(Theme.muted)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: Theme.s4)
-                        Button("Cancel") { model.cancelConnect() }
-                            .buttonStyle(KeyButtonStyle(kind: .ghost))
-                            .keyboardShortcut(.cancelAction)
+                        CassetteKeyBank {
+                            Button("Cancel") { model.cancelConnect() }
+                                .buttonStyle(.secondaryKey)
+                                .keyboardShortcut(.cancelAction)
+                        }
                     }
                 }
             }
@@ -122,9 +126,11 @@ struct ConnectingView: View {
                     .frame(height: 32)
                     .recessed(radius: 6)
                     .onSubmit(submitPassword)
-                Button("Continue", action: submitPassword)
-                    .buttonStyle(.signalKey)
-                    .disabled(password.count < 8)
+                CassetteKeyBank {
+                    Button("Continue", action: submitPassword)
+                        .buttonStyle(.primaryKey)
+                        .disabled(password.count < 8)
+                }
             }
         }
         .padding(Theme.s3)
@@ -214,7 +220,9 @@ private struct ApprovalCallout: View {
 struct OpenLogLink: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("Technical log") { openWindow(id: "log") }
-            .buttonStyle(.ghostKey)
+        CassetteKeyBank(compact: true) {
+            Button("Technical log") { openWindow(id: "log") }
+                .buttonStyle(.compactKey)
+        }
     }
 }

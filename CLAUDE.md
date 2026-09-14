@@ -31,6 +31,11 @@ scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstr
 - Créditos al upstream Osmosis se mantienen en README, LICENSE y comentarios. No usar "DJI"/"Osmo" como nombre de producto.
 - Tests nuevos con Swift Testing (`@Test`, `#expect`). Simuladores disponibles: `FakeCamera` (datalink UDP del Pocket 3) y `FakeHTTPServer` (cortes, 404/500, Range ignorado).
 
+## UI
+
+- Estética de equipo de audio oscuro (grafito, lecturas ámbar `ETIQUETA: valor`, LEDs). Pocos elementos por panel: sin íconos decorativos.
+- Un solo tipo de botón: `CassetteKeyStyle` dentro de `CassetteKeyBank`. Naranja (`.primaryKey`) solo para la acción principal de la pantalla; el resto `.secondaryKey`/`.compactKey`. Misma acción → mismo nombre en toda la app ("Show in Finder", "Disconnect", "Download …").
+
 ## Textos e idiomas
 
 - Escribí los textos en inglés. `Text("…")`, `Button("…")`, `Silk("…")`, `LCDCaption("…")`, `Notice(text:)`, `LED(label:)` ya se traducen solos (`LocalizedStringKey`). Para `String` (mensajes del modelo, texto del LCD) usá `String(localized: "…")`. Para un `String` que ya es dato (nombre de archivo, fecha), `Silk(verbatim:)`.

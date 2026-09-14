@@ -204,49 +204,53 @@ struct LCDPair: View {
 
 // MARK: - Cassette keys
 
-/// A bank of cassette-deck keys: rectangular keys side by side in a dark slot. A key that is up shows
-/// its front edge; a latched key sits low in the slot, its face shaded, with an indicator stripe.
+/// The app's only button: a cassette-deck key, always seated in a dark slot (`CassetteKeyBank`), one
+/// key or several side by side. Two finishes — `.primary` (orange) for the one action a screen is
+/// for, `.secondary` (graphite) for everything else — and two sizes, regular and `compact`.
+/// A key that is up shows its front edge; a latched key sits low in the slot with an orange stripe.
 struct CassetteKeyBank<Content: View>: View {
+    var compact = false
     @ViewBuilder var content: Content
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: compact ? 6 : 8, style: .continuous)
         HStack(spacing: 2) { content }
-            .padding(3)
+            .padding(compact ? 2 : 3)
             .background {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(white: 0.07).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
+                shape.fill(Color(white: 0.07).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
             }
             .overlay {
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.5), Theme.lip],
-                                                 startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.5), Theme.lip],
+                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
+            .fixedSize()
     }
 }
 
 struct CassetteKeyStyle: ButtonStyle {
-    enum Finish { case light, orange, charcoal }
+    enum Finish { case primary, secondary }
     @Environment(\.isEnabled) private var isEnabled
+    var finish: Finish = .secondary
+    var compact = false
     var latched = false
-    var finish: Finish = .light
     /// Minimum width; keys still grow to fit a longer label.
     var width: CGFloat? = nil
-    var height: CGFloat = 36
 
     func makeBody(configuration: Configuration) -> some View {
         let down = latched || configuration.isPressed
-        let travel: CGFloat = 6                               // front edge visible when the key is up
+        let height: CGFloat = compact ? 26 : 36
+        let travel: CGFloat = compact ? 4 : 6                 // front edge visible when the key is up
         let sink: CGFloat = down ? travel - 1.5 : 0           // how far the face drops into the slot
         let (top, bottom, skirt, text): (Color, Color, Color, Color) = switch finish {
-        case .light: (Theme.greyTop, Theme.greyBottom, Color(white: 0.14), Theme.ink)
-        case .orange: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
-        case .charcoal: (Theme.charcoalTop, Theme.charcoalBottom, Color(white: 0.02), Color(white: 0.85))
+        case .secondary: (Theme.greyTop, Theme.greyBottom, Color(white: 0.14), Theme.ink)
+        case .primary: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
         }
         let face = configuration.label
-            .font(.system(size: 9.5, weight: .semibold))
+            .labelStyle(KeyLabelStyle())
+            .font(.system(size: compact ? 9 : 9.5, weight: .semibold))
             .tracking(0.9)
             .textCase(.uppercase)
-            .foregroundStyle(text.opacity(down && finish == .light ? 0.8 : 1))
-            .padding(.horizontal, width == nil ? 14 : 0)
+            .foregroundStyle(text.opacity(down && finish == .secondary ? 0.8 : 1))
+            .padding(.horizontal, width == nil ? (compact ? 10 : 14) : 0)
             .frame(minWidth: width ?? 44)             // grows for longer translations
             .frame(height: height)
             .background {
@@ -260,7 +264,7 @@ struct CassetteKeyStyle: ButtonStyle {
                         .frame(height: 4)
                         .shadow(color: Theme.accent.opacity(0.6), radius: 2, y: 1)
                 } else if !down {
-                    Rectangle().fill(.white.opacity(finish == .orange ? 0.3 : 0.12)).frame(height: 1)
+                    Rectangle().fill(.white.opacity(finish == .primary ? 0.3 : 0.12)).frame(height: 1)
                 }
             }
             .overlay {
@@ -428,45 +432,20 @@ struct EngravedRule: View {
     }
 }
 
-/// A physical plastic key. Pressing sinks it and shortens its shadow.
-struct KeyButtonStyle: ButtonStyle {
-    enum Kind { case ink, signal, ghost }
-    var kind: Kind = .ghost
-    var compact = false
-
+/// Icon + title on a key: a small glyph before the printed word.
+struct KeyLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
-        let pressed = configuration.isPressed
-        let (top, bottom, text): (Color, Color, Color) = switch kind {
-        case .signal: (Theme.accentTop, Theme.accentBottom, .white)
-        case .ink: (Theme.charcoalTop, Theme.charcoalBottom, Color(white: 0.93))
-        case .ghost: (Theme.greyTop, Theme.greyBottom, Theme.ink)
+        HStack(spacing: 6) {
+            configuration.icon.imageScale(.small)
+            configuration.title
         }
-        let shape = RoundedRectangle(cornerRadius: compact ? 6 : 8, style: .continuous)
-        return configuration.label
-            .font(.system(size: compact ? 9.5 : 10.5, weight: .semibold))
-            .tracking(0.9)
-            .textCase(.uppercase)
-            .foregroundStyle(text)
-            .padding(.horizontal, compact ? 11 : 16)
-            .frame(minHeight: compact ? 26 : 34)
-            .background {
-                shape.fill(LinearGradient(colors: pressed ? [bottom, top] : [top, bottom], startPoint: .top, endPoint: .bottom))
-            }
-            .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.white.opacity(kind == .signal ? 0.35 : 0.12), .black.opacity(0.4)],
-                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
-            }
-            .shadow(color: .black.opacity(pressed ? 0.5 : 0.6), radius: pressed ? 0.5 : 1.2, y: pressed ? 0.5 : 1.6)
-            .shadow(color: .black.opacity(pressed ? 0.15 : 0.3), radius: pressed ? 2 : 6, y: pressed ? 1 : 4)
-            .offset(y: pressed ? 1 : 0)
-            .animation(.snappy(duration: 0.08), value: pressed)
     }
 }
 
-extension ButtonStyle where Self == KeyButtonStyle {
-    static var key: KeyButtonStyle { KeyButtonStyle(kind: .ink) }
-    static var signalKey: KeyButtonStyle { KeyButtonStyle(kind: .signal) }
-    static var ghostKey: KeyButtonStyle { KeyButtonStyle(kind: .ghost, compact: true) }
+extension ButtonStyle where Self == CassetteKeyStyle {
+    static var primaryKey: CassetteKeyStyle { CassetteKeyStyle(finish: .primary) }
+    static var secondaryKey: CassetteKeyStyle { CassetteKeyStyle() }
+    static var compactKey: CassetteKeyStyle { CassetteKeyStyle(compact: true) }
 }
 
 /// Segment meter for the LCD.

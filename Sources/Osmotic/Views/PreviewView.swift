@@ -36,27 +36,37 @@ struct PreviewView: View {
             .frame(minWidth: 760, minHeight: 428)
 
             HStack(spacing: Theme.s3) {
-                Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left") }
-                    .keyboardShortcut(.leftArrow, modifiers: [])
-                    .help("Previous (←)")
-                Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right") }
-                    .keyboardShortcut(.rightArrow, modifiers: [])
-                    .help("Next (→)")
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(current.name).font(.headline).lineLimit(1).truncationMode(.middle)
-                    Text(info(current)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
+                CassetteKeyBank {
+                    Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left") }
+                        .buttonStyle(.secondaryKey)
+                        .keyboardShortcut(.leftArrow, modifiers: [])
+                        .help("Previous (←)")
+                    Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right") }
+                        .buttonStyle(.secondaryKey)
+                        .keyboardShortcut(.rightArrow, modifiers: [])
+                        .help("Next (→)")
+                }
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(current.name).font(Theme.readout(12.5, weight: .semibold)).foregroundStyle(Theme.ink)
+                        .lineLimit(1).truncationMode(.middle)
+                    Text(info(current)).font(.system(size: 11)).foregroundStyle(Theme.muted).lineLimit(1)
                 }
                 Spacer()
-                if model.isOnDisk(current) {
-                    Button("Show in Finder") { model.revealInFinder(current) }
-                } else {
-                    Button("Download") { model.enqueue([current]) }
-                        .buttonStyle(.borderedProminent)
+                CassetteKeyBank {
+                    if model.isOnDisk(current) {
+                        Button("Show in Finder") { model.revealInFinder(current) }
+                            .buttonStyle(.secondaryKey)
+                    } else {
+                        Button("Download") { model.enqueue([current]) }
+                            .buttonStyle(.primaryKey)
+                    }
+                    Button("Close") { dismiss() }
+                        .buttonStyle(.secondaryKey)
+                        .keyboardShortcut(.cancelAction)
                 }
-                Button("Close") { dismiss() }
-                    .keyboardShortcut(.cancelAction)
             }
             .padding(Theme.s3)
+            .background(AluminumPlate())
         }
         .task(id: current.id) { await load(current) }
         .onDisappear { player?.pause() }

@@ -157,8 +157,10 @@ private struct CameraModule: View {
             if let rssi {
                 SignalLEDs(level: Self.level(rssi)).help("Signal \(rssi) dBm")
             }
-            Button(action: connect) { inRange ? Text("Connect") : Text("Try") }
-                .buttonStyle(KeyButtonStyle(kind: inRange ? .signal : .ghost))
+            CassetteKeyBank {
+                Button("Connect", action: connect)
+                    .buttonStyle(CassetteKeyStyle(finish: inRange ? .primary : .secondary))
+            }
         }
         .padding(.vertical, Theme.s3 - 2)
         .padding(.horizontal, Theme.s3)
@@ -246,10 +248,12 @@ private struct DownloadFolderFooter: View {
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
                 .recessed(radius: 6)
-            Button("Open") { model.openDownloadFolder() }
-                .buttonStyle(.ghostKey)
-            SettingsLink { Text("Change") }
-                .buttonStyle(.ghostKey)
+            CassetteKeyBank(compact: true) {
+                Button("Show in Finder") { model.openDownloadFolder() }
+                    .buttonStyle(.compactKey)
+                SettingsLink { Text("Change…") }
+                    .buttonStyle(.compactKey)
+            }
         }
         .padding(.top, Theme.s2)
         .onAppear { folder = Preferences.downloadFolder }

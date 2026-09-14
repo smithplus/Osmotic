@@ -9,7 +9,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ no se pudieron bajar — reintentá para reanudar"
+            "value": "%@ no se pudieron descargar — reintentá para reanudar"
           }
         }
       }
@@ -39,7 +39,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld bajaron, %lld no — abrí Osmotic para reintentar"
+            "value": "%lld descargados, %lld no — abrí Osmotic para reintentar"
           }
         }
       }
@@ -114,12 +114,12 @@
         }
       }
     },
-    "All saved": {
+    "All downloaded": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Todo bajado"
+            "value": "Todo descargado"
           }
         }
       }
@@ -287,16 +287,6 @@
         }
       }
     },
-    "Change": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Cambiar"
-          }
-        }
-      }
-    },
     "Change…": {
       "localizations": {
         "es": {
@@ -313,26 +303,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elegir"
-          }
-        }
-      }
-    },
-    "Clear": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Limpiar"
-          }
-        }
-      }
-    },
-    "Clear the selection (esc)": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Limpiar la selección (esc)"
           }
         }
       }
@@ -437,6 +407,26 @@
         }
       }
     },
+    "Deselect": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deseleccionar"
+          }
+        }
+      }
+    },
+    "Deselect all (esc)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deseleccionar todo (esc)"
+          }
+        }
+      }
+    },
     "Disconnect": {
       "localizations": {
         "es": {
@@ -497,22 +487,22 @@
         }
       }
     },
-    "Download %lld": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bajar %lld"
-          }
-        }
-      }
-    },
     "Download %lld new": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bajar %lld nuevos"
+            "value": "Descargar %lld nuevos"
+          }
+        }
+      }
+    },
+    "Download %lld selected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar %lld elegidos"
           }
         }
       }
@@ -552,7 +542,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Descarga cancelada — lo que ya bajó quedó guardado"
+            "value": "Descarga cancelada — lo ya descargado quedó guardado"
           }
         }
       }
@@ -562,7 +552,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bajar día"
+            "value": "Descargar día"
           }
         }
       }
@@ -572,7 +562,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Baja todo lo que todavía no está en tu carpeta (⇧⌘D)"
+            "value": "Descargar todo lo que todavía no está en tu carpeta (⇧⌘D)"
           }
         }
       }
@@ -623,16 +613,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descargas"
-          }
-        }
-      }
-    },
-    "Eject: release the camera and put the Mac back on your Wi-Fi": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Expulsar: libera la cámara y devuelve el Mac a tu Wi-Fi"
           }
         }
       }
@@ -930,16 +910,6 @@
         }
       }
     },
-    "Open": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Abrir"
-          }
-        }
-      }
-    },
     "Open Downloads Folder": {
       "localizations": {
         "es": {
@@ -1115,6 +1085,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reconectando"
+          }
+        }
+      }
+    },
+    "Release the camera and put the Mac back on your Wi-Fi": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libera la cámara y devuelve el Mac a tu Wi-Fi"
           }
         }
       }
@@ -1409,16 +1389,6 @@
         }
       }
     },
-    "Try": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Intentar"
-          }
-        }
-      }
-    },
     "Try Again": {
       "localizations": {
         "es": {
@@ -1494,7 +1464,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lo que ya bajó queda guardado; lo demás se reanuda la próxima vez."
+            "value": "Lo ya descargado queda guardado; lo demás se reanuda la próxima vez."
           }
         }
       }

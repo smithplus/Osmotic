@@ -10,9 +10,15 @@ struct SnapshotView: View {
             switch model.screen {
             case .library:
                 TopPlate {
-                    LED(color: Theme.success, state: .on, label: "Linked")
+                    HStack(spacing: Theme.s3) {
+                        LED(color: Theme.success, state: .on, label: "Linked")
+                        CassetteKeyBank(compact: true) {
+                            Button {} label: { Label("Disconnect", systemImage: "eject.fill") }
+                                .buttonStyle(.compactKey)
+                        }
+                    }
                 }
-                ControlDeck(confirmDisconnect: .constant(false))
+                ControlDeck()
                     .padding(.horizontal, Theme.s3)
                     .padding(.bottom, Theme.s3)
                 LibraryGridSnapshot()

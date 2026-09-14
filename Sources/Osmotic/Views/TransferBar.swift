@@ -37,7 +37,7 @@ struct TransferBar: View {
             }
             CassetteKeyBank {
                 Button("Cancel") { model.cancelTransfers() }
-                    .buttonStyle(CassetteKeyStyle(height: 40))
+                    .buttonStyle(.secondaryKey)
             }
             .fixedSize()
         }
@@ -58,7 +58,7 @@ struct TransferBar: View {
             }
             CassetteKeyBank {
                 Button("Show in Finder") { model.openDownloadFolder() }
-                    .buttonStyle(CassetteKeyStyle(finish: .orange, height: 40))
+                    .buttonStyle(.primaryKey)
             }
             .fixedSize()
         }
