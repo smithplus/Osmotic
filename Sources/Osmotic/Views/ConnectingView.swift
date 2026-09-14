@@ -57,7 +57,7 @@ struct ConnectingView: View {
                     }
                 } else {
                     HStack(alignment: .firstTextBaseline) {
-                        Label("Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi. Al desconectar vuelve a tu red.",
+                        Label("Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet.",
                               systemImage: "wifi.exclamationmark")
                             .font(.callout)
                             .foregroundStyle(.secondary)

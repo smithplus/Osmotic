@@ -41,7 +41,7 @@ struct TransferBar: View {
     }
 
     private func stats(_ t: AppModel.TransferState) -> String {
-        var parts = ["\(min(t.done + 1, t.total)) de \(t.total)"]
+        var parts = ["\(Int((t.fraction * 100).rounded())) %", "\(min(t.done + 1, t.total)) de \(t.total)"]
         if t.speed > 0 { parts.append("\(Format.bytes(Int(t.speed)))/s") }
         if let eta = t.eta { parts.append("faltan \(Format.eta(eta))") }
         return parts.joined(separator: " · ")

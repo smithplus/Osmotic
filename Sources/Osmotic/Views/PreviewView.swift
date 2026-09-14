@@ -13,8 +13,11 @@ struct PreviewView: View {
     @State private var player: AVPlayer?
     @State private var photo: NSImage?
     @State private var failed = false
+    @State private var source = ""
 
     var body: some View {
+        // The sheet stays up while ← / → swap the file, so follow the model's current one.
+        let current = model.previewFile ?? file
         VStack(spacing: 0) {
             ZStack {
                 Color.black
@@ -30,18 +33,24 @@ struct PreviewView: View {
                     ProgressView().controlSize(.large).tint(.white)
                 }
             }
-            .frame(minWidth: 720, minHeight: 405)
+            .frame(minWidth: 760, minHeight: 428)
 
             HStack(spacing: Theme.s3) {
+                Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left") }
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+                    .help("Anterior (←)")
+                Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right") }
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+                    .help("Siguiente (→)")
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(file.name).font(.headline).lineLimit(1).truncationMode(.middle)
-                    Text(info).font(.callout).foregroundStyle(.secondary)
+                    Text(current.name).font(.headline).lineLimit(1).truncationMode(.middle)
+                    Text(info(current)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
-                if model.isOnDisk(file) {
-                    Button("Mostrar en Finder") { model.revealInFinder(file) }
+                if model.isOnDisk(current) {
+                    Button("Mostrar en Finder") { model.revealInFinder(current) }
                 } else {
-                    Button("Descargar") { model.enqueue([file]); dismiss() }
+                    Button("Descargar") { model.enqueue([current]) }
                         .buttonStyle(.borderedProminent)
                 }
                 Button("Cerrar") { dismiss() }
@@ -49,44 +58,67 @@ struct PreviewView: View {
             }
             .padding(Theme.s3)
         }
-        .task { await load() }
+        .task(id: current.id) { await load(current) }
         .onDisappear { player?.pause() }
     }
 
-    private var info: String {
+    private func info(_ f: CameraFile) -> String {
         var parts: [String] = []
-        if let d = file.captureDate { parts.append(Format.dayHeader.string(from: d) + " " + Format.time.string(from: d)) }
-        if let r = file.resolution { parts.append(r) }
-        if let fps = file.resLabel { parts.append(fps) }
-        if file.durationSec > 0 { parts.append(Format.duration(file.durationSec)) }
-        if file.sizeBytes > 0 { parts.append(Format.bytes(file.sizeBytes)) }
+        if let d = f.captureDate { parts.append(Format.dayHeader.string(from: d) + " " + Format.time.string(from: d)) }
+        if let r = f.resolution { parts.append(r) }
+        if let fps = f.resLabel { parts.append(fps) }
+        if f.durationSec > 0 { parts.append(Format.duration(f.durationSec)) }
+        if f.sizeBytes > 0 { parts.append(Format.bytes(f.sizeBytes)) }
+        if !source.isEmpty { parts.append(source) }
         return parts.joined(separator: " · ")
     }
 
-    private func load() async {
-        if file.isVideo {
-            for path in file.previewURLPaths {
+    private func load(_ f: CameraFile) async {
+        player?.pause()
+        player = nil
+        photo = nil
+        failed = false
+        source = ""
+        let local = DownloadPaths.destination(for: f)
+        let onDisk = FileManager.default.fileExists(atPath: local.path)
+        if f.isVideo {
+            if onDisk {
+                // Already on the Mac: the original, instantly and at full quality.
+                start(AVPlayer(url: local), source: "original en tu Mac")
+                return
+            }
+            for path in f.previewURLPaths {
                 let url = model.http.url(path)
-                // The proxy is an MP4 behind a `.LRF` name that lighttpd serves untyped.
+                // The proxy is an MP4 behind a `.LRF` name that lighttpd serves untyped: without the
+                // override AVFoundation refuses it (verified against a range-serving stand-in).
                 let asset = AVURLAsset(url: url, options: [AVURLAssetOverrideMIMETypeKey: "video/mp4"])
                 if (try? await asset.load(.isPlayable)) == true {
+                    guard !Task.isCancelled else { return }
                     log("preview: streaming \(path)")
-                    let p = AVPlayer(playerItem: AVPlayerItem(asset: asset))
-                    player = p
-                    p.play()
+                    start(AVPlayer(playerItem: AVPlayerItem(asset: asset)),
+                          source: path.hasSuffix(".LRF") ? "vista previa liviana" : "original desde la cámara")
                     return
                 }
                 log("preview: \(path) not playable")
             }
-            failed = true
+            if !Task.isCancelled { failed = true }
         } else {
-            if let thumb = model.cachedThumbnail(for: file) { photo = thumb }
-            if let data = await model.http.data(file.originalURLPath), let img = NSImage(data: data) {
+            if let thumb = model.cachedThumbnail(for: f) { photo = thumb }
+            let data = onDisk ? try? Data(contentsOf: local) : await model.http.data(f.originalURLPath)
+            guard !Task.isCancelled else { return }
+            if let data, let img = NSImage(data: data) {
                 photo = img
+                source = onDisk ? "en tu Mac" : "desde la cámara"
             } else if photo == nil {
                 failed = true
             }
         }
+    }
+
+    private func start(_ p: AVPlayer, source label: String) {
+        source = label
+        player = p
+        p.play()
     }
 }
 

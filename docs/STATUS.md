@@ -1,6 +1,6 @@
 # Estado
 
-_Última actualización: 2026-09-14._
+_Última actualización: 2026-09-14 (primera prueba con Pocket 3 real: OK)._
 
 ## Hecho y verificado sin hardware
 
@@ -12,14 +12,18 @@ _Última actualización: 2026-09-14._
 - App SwiftUI completa: cámaras cercanas/guardadas, stepper de conexión con aviso de aprobación y contraseña manual, biblioteca por día con miniaturas/badges/filtros/selección, vista previa (proxy LRF), cola de descargas con velocidad y ETA, Ajustes, Registro.
 - Revisión de código independiente aplicada (cancelación de conexión, restauración de Wi-Fi no cancelable, sesión cerrada, falsos positivos de red 192.168.2.x, cola de descargas por generación, SSID perdido).
 
-## NO verificado todavía (necesita la Pocket 3 real)
+## Verificado con la Pocket 3 real (2026-09-14, log `osmotic-20260914-175922.log`)
 
-1. CoreBluetooth contra la cámara: arming de fff4, MTU que negocia macOS, recepción de `0x07/0x46`.
-2. `WiFiService.join` en macOS 26: si `CWInterface.associate` funciona o hace falta `networksetup`; si macOS se queda en una red sin Internet.
-3. Permisos: Bluetooth, Ubicación (para leer el SSID), Red local (primer paquete UDP).
-4. Que el Pocket 3 real entre en playback con `0x01/0x01` desde el Mac.
-5. Vista previa `.LRF` con `AVURLAssetOverrideMIMETypeKey`.
-6. Restauración del Wi-Fi con y sin permiso de ubicación.
+Todo el flujo funcionó a la primera: BLE armado (MTU 512), ya emparejada (`0x01`), SSID y password por BLE, CoreWLAN `associate` al primer intento (sin `networksetup`), ruta por `en0`, handshake udp/9004, `0x02/0x0c` → `e0` → playback por `0x01/0x01` en 5 tramas, 9 archivos (SD), 4 MP4 + 4 WAV bajados (1,97 GB a ~32 MB/s), salida de playback, vuelta a la red de casa. Los archivos son MP4 válidos.
+
+Detalle: al restaurar, `networksetup -setairportnetwork` devolvió `-3900 tmpErr` pero macOS ya estaba volviendo solo; el chequeo por IP lo detectó en 4 s.
+
+## Todavía sin probar con hardware
+
+1. Primer emparejamiento (aprobación en pantalla, `0x07/0x46`): la cámara ya estaba emparejada.
+2. Vista previa `.LRF` en streaming desde la cámara (verificado contra un servidor de rangos local: requiere `AVURLAssetOverrideMIMETypeKey`).
+3. Restauración del Wi-Fi sin permiso de ubicación; paginación con >45 archivos; recuperación de enlace caído.
+4. Selección con casillas, ⇧-rango, espacio para vista previa, ← → en la vista previa, sonido/aviso al terminar (agregados después de la prueba).
 
 ## Cómo diagnosticar una prueba real
 
@@ -30,6 +34,8 @@ Pedir el log `~/Library/Logs/Osmotic/osmotic-*.log`. Líneas clave:
 - `transfer: … saved` / `link dropped … resuming` → descargas.
 
 ## Pendiente / ideas
+
+- Pregunta abierta del usuario: ¿puede la cámara unirse al Wi-Fi de casa (modo estación) para no perder Internet? El Pocket 3 se une a redes para *livestream* RTMP, pero nadie documentó offload de media en ese modo; habría que capturar Mimo. Hoy: Ethernet o iPhone por cable mantienen Internet.
 
 - Probar con hardware y ajustar según el log (prioridad 1).
 - Expandir ráfagas/intervalos (`_001` → frames) con el group-expand `0x00/0x26` modo `0x10` (hoy solo baja el primero).

@@ -2,6 +2,7 @@ import AppKit
 import Foundation
 import Observation
 import OsmoticCore
+import UserNotifications
 
 /// The app's single source of truth: which screen is up, the connection in progress, the camera's
 /// library, and the transfer queue.
@@ -605,12 +606,46 @@ final class AppModel {
 
     func cachedThumbnail(for f: CameraFile) -> NSImage? { thumbCache[f.id] }
 
-    func toggleSelection(_ f: CameraFile, extend: Bool) {
-        if extend {
-            if selection.contains(f.id) { selection.remove(f.id) } else { selection.insert(f.id) }
-        } else {
-            selection = selection == [f.id] ? [] : [f.id]
+    @ObservationIgnored private var selectionAnchor: String?
+
+    /// A click on a cell, Finder-style: plain selects just this one (again to clear), ⌘ adds or
+    /// removes it, ⇧ selects the range from the last clicked file.
+    func click(_ f: CameraFile, modifiers: NSEvent.ModifierFlags) {
+        if modifiers.contains(.shift), let anchor = selectionAnchor,
+           let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
+           let b = visibleFiles.firstIndex(where: { $0.id == f.id }) {
+            selection.formUnion(visibleFiles[min(a, b)...max(a, b)].map(\.id))
+            return
         }
+        if modifiers.contains(.command) {
+            toggleInSelection(f)
+            return
+        }
+        selection = selection == [f.id] ? [] : [f.id]
+        selectionAnchor = f.id
+    }
+
+    /// The checkbox on a thumbnail: add or remove this file, keeping the rest.
+    func toggleInSelection(_ f: CameraFile) {
+        if selection.contains(f.id) { selection.remove(f.id) } else { selection.insert(f.id) }
+        selectionAnchor = f.id
+    }
+
+    func selectAllVisible() { selection = Set(visibleFiles.map(\.id)) }
+
+    /// Space bar: preview the selected file (the first, if several).
+    func previewSelection() {
+        previewFile = visibleFiles.first { selection.contains($0.id) }
+    }
+
+    /// ← / → inside the preview.
+    func stepPreview(by delta: Int) {
+        guard let current = previewFile, let i = visibleFiles.firstIndex(where: { $0.id == current.id }) else { return }
+        let j = i + delta
+        guard visibleFiles.indices.contains(j) else { return }
+        previewFile = visibleFiles[j]
+        selection = [visibleFiles[j].id]
+        selectionAnchor = visibleFiles[j].id
     }
 
     func selectNew() { selection = Set(newFiles.map(\.id)) }
@@ -679,6 +714,7 @@ final class AppModel {
         }
         lastTransferSummary = nil
         log("transfer: queued \(fresh.count) file(s), \(bytes / 1_000_000) MB")
+        TransferNotifier.prepare()
         if transferTask == nil {
             let gen = transferGeneration
             transferTask = Task { [weak self] in
@@ -759,6 +795,7 @@ final class AppModel {
             : failed.isEmpty ? "Listo: \(saved) archivo\(saved == 1 ? "" : "s") en \(Preferences.downloadFolder.lastPathComponent)"
             : "\(failed.count) archivo\(failed.count == 1 ? "" : "s") no se pudieron bajar — reintentá para reanudar"
         log("transfer: finished — \(lastTransferSummary ?? "")")
+        if !cancelled { TransferNotifier.finished(saved: saved, failed: failed.count, folder: Preferences.downloadFolder) }
         if !cancelled && failed.isEmpty && Preferences.disconnectWhenDone && screen == .library {
             // Not awaited: disconnect() cancels this very task.
             Task { @MainActor in await self.disconnect() }

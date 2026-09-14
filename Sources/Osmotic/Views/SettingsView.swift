@@ -8,6 +8,7 @@ struct SettingsView: View {
     @State private var sidecars = Preferences.includeSidecars
     @State private var restoreWifi = Preferences.restoreWifi
     @State private var disconnectWhenDone = Preferences.disconnectWhenDone
+    @State private var notifyWhenDone = Preferences.notifyWhenDone
     @State private var confirmForget = false
 
     var body: some View {
@@ -28,6 +29,8 @@ struct SettingsView: View {
                     .onChange(of: byDate) { Preferences.organizeByDate = byDate }
                 Toggle("Incluir RAW (.DNG) y audio de respaldo (.WAV) cuando existan", isOn: $sidecars)
                     .onChange(of: sidecars) { Preferences.includeSidecars = sidecars }
+                Toggle("Sonido y aviso al terminar de descargar", isOn: $notifyWhenDone)
+                    .onChange(of: notifyWhenDone) { Preferences.notifyWhenDone = notifyWhenDone }
             }
             Section("Conexión") {
                 Toggle("Volver a mi Wi-Fi al desconectar", isOn: $restoreWifi)

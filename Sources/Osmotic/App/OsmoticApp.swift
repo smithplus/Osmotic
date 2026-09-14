@@ -24,6 +24,12 @@ struct OsmoticApp: App {
                 Button("Descargar selección") { model.downloadSelected() }
                     .keyboardShortcut("d", modifiers: .command)
                     .disabled(!model.isConnected || model.selection.isEmpty)
+                Button("Seleccionar todo") { model.selectAllVisible() }
+                    .disabled(!model.isConnected)
+                Button("Seleccionar nuevos") { model.selectNew() }
+                    .disabled(!model.isConnected || model.newFiles.isEmpty)
+                Button("Vista previa") { model.previewSelection() }
+                    .disabled(!model.isConnected || model.selection.isEmpty)
                 Divider()
                 Button("Abrir carpeta de descargas") { model.openDownloadFolder() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])

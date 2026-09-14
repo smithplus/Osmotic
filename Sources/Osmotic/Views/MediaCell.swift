@@ -20,10 +20,15 @@ struct MediaCell: View {
             meta
         }
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) { model.previewFile = file }
-        .simultaneousGesture(TapGesture().onEnded {
-            let flags = NSEvent.modifierFlags
-            model.toggleSelection(file, extend: flags.contains(.command) || flags.contains(.shift))
+        // One gesture for both: selection responds on the first click with no double-click delay,
+        // and the second click of a double-click opens the preview. The buttons on the thumbnail
+        // take precedence over this, so ticking the circle never also re-selects the cell.
+        .gesture(TapGesture().onEnded {
+            if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+                model.previewFile = file
+            } else {
+                model.click(file, modifiers: NSEvent.modifierFlags)
+            }
         })
         .onHover { hovering = $0 }
         .contextMenu {
@@ -83,14 +88,35 @@ struct MediaCell: View {
                     .padding(Theme.s2)
             }
         }
+        .overlay {
+            if hovering {
+                Button { model.previewFile = file } label: {
+                    Image(systemName: file.isVideo ? "play.fill" : "eye.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 40, height: 40)
+                        .background(.black.opacity(0.5), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .help(file.isVideo ? "Reproducir (espacio)" : "Ver (espacio)")
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
         .overlay(alignment: .topLeading) {
-            if selected || hovering {
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 18))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.white, selected ? Theme.accent : .black.opacity(0.35))
-                    .shadow(radius: 2)
-                    .padding(Theme.s2)
+            // Visible on hover, and on every cell once something is selected, so it reads as a
+            // checkbox: one click adds or removes this file, no modifier keys needed.
+            if selected || hovering || !model.selection.isEmpty {
+                Button { model.toggleInSelection(file) } label: {
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 20))
+                        .symbolRenderingMode(.palette)
+                        .foregroundStyle(.white, selected ? Theme.accent : .black.opacity(0.35))
+                        .shadow(radius: 2)
+                        .padding(Theme.s2)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help(selected ? "Quitar de la selección" : "Agregar a la selección")
             }
         }
         .clipShape(RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))

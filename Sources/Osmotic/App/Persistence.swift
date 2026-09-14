@@ -39,6 +39,12 @@ enum Preferences {
         set { d.set(newValue, forKey: "restoreWifi") }
     }
 
+    /// Sound (and a notification when the app is in the background) when a transfer finishes.
+    static var notifyWhenDone: Bool {
+        get { d.object(forKey: "notifyWhenDone") as? Bool ?? true }
+        set { d.set(newValue, forKey: "notifyWhenDone") }
+    }
+
     static var disconnectWhenDone: Bool {
         get { d.bool(forKey: "disconnectWhenDone") }
         set { d.set(newValue, forKey: "disconnectWhenDone") }

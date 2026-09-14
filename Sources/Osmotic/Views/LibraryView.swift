@@ -48,8 +48,10 @@ struct LibraryView: View {
         .toolbar { toolbar }
         .navigationTitle(model.target?.model.name ?? "Osmotic")
         .navigationSubtitle(subtitle)
-        .sheet(item: $model.previewFile) { f in
-            PreviewView(file: f).environment(model)
+        // One sheet that stays up while ← / → change the file (sheet(item:) would re-present on each).
+        .sheet(isPresented: Binding(get: { model.previewFile != nil },
+                                    set: { if !$0 { model.previewFile = nil } })) {
+            if let f = model.previewFile { PreviewView(file: f).environment(model) }
         }
         .confirmationDialog("¿Desconectar mientras se descargan archivos?", isPresented: $confirmDisconnect) {
             Button("Desconectar y cancelar la descarga", role: .destructive) { Task { await model.disconnect() } }
@@ -92,8 +94,15 @@ struct LibraryView: View {
             }
         }
         .contentMargins(.top, Theme.s2, for: .scrollContent)
+        .focusable()
+        .focusEffectDisabled()
         .onKeyPress(.escape) {
             model.selection = []
+            return .handled
+        }
+        .onKeyPress(.space) {
+            guard !model.selection.isEmpty else { return .ignored }
+            model.previewSelection()
             return .handled
         }
     }
