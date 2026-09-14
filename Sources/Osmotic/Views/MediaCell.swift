@@ -62,7 +62,7 @@ struct MediaCell: View {
                     Image(nsImage: image)
                         .resizable()
                         .scaledToFill()
-                        .transition(.opacity)
+                        .transition(.opacity)   // the print develops in, rather than popping
                 } else {
                     Image(systemName: file.isVideo ? "video" : "photo")
                         .font(.system(size: 20, weight: .light))
@@ -117,7 +117,7 @@ struct MediaCell: View {
                 }
                 .buttonStyle(.plain)
                 .help(file.isVideo ? Text("Play (space)") : Text("View (space)"))
-                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                .transition(.opacity)
             }
         }
         .overlay(alignment: .topLeading) {
@@ -149,12 +149,14 @@ struct MediaCell: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(selected ? Theme.accent : Color.white.opacity(0.08), lineWidth: selected ? 2.5 : 1)
+                .strokeBorder(selected ? Theme.accent : Color.white.opacity(hovering ? 0.22 : 0.08),
+                              lineWidth: selected ? 2.5 : 1)
         )
         .raisedShadow()
-        .scaleEffect(hovering && !selected ? 1.015 : 1)
-        .animation(.snappy(duration: 0.15), value: hovering)
-        .animation(.snappy(duration: 0.15), value: selected)
+        // A print on a tray doesn't grow under the pointer: the mount catches the light instead.
+        .motion(Motion.quick, value: hovering)
+        .motion(Motion.quick, value: selected)
+        .motion(Motion.bloom, value: image != nil)
     }
 
     private var spokenLabel: String {

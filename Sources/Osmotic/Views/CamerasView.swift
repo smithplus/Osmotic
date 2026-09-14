@@ -40,7 +40,7 @@ struct CamerasView: View {
         VStack(alignment: .leading, spacing: Theme.s4) {
             display
             if let error = model.connectError { ErrorBanner(message: error) }
-            if model.restoringWifi { Notice(text: "Going back to your Wi-Fi…") }
+            if model.restoringWifi { Notice(text: "Going back to your Wi-Fi…").transition(.panelFromTop) }
             // The automatic disconnect after downloads lands here: say how it went.
             if let summary = model.lastTransferSummary, !model.restoringWifi {
                 Notice(verbatim: summary.text, color: summary.ok ? Theme.success : Theme.warning)
@@ -138,12 +138,15 @@ struct CamerasView: View {
 /// A radio "activity" graphic for the LCD: bars that breathe while scanning.
 private struct ScanBars: View {
     let active: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        TimelineView(.animation(minimumInterval: 0.12, paused: !active)) { t in
+        // ~8 refreshes a second and heights snapped to 3 pt segments: an LCD bar graph, not a
+        // smooth animation.
+        TimelineView(.animation(minimumInterval: 0.12, paused: !active || reduceMotion)) { t in
             let phase = t.date.timeIntervalSinceReferenceDate
             HStack(alignment: .bottom, spacing: 3) {
                 ForEach(0..<9, id: \.self) { i in
-                    let h = active ? 6 + 18 * abs(sin(phase * 2.2 + Double(i) * 0.7)) : 4
+                    let h = active ? ((6 + 18 * abs(sin(phase * 2.2 + Double(i) * 0.7))) / 3).rounded() * 3 : 4
                     Rectangle()
                         .fill(Theme.lcdText.opacity(active ? 0.9 : 0.25))
                         .frame(width: 3, height: h)

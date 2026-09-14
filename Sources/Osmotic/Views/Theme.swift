@@ -140,6 +140,69 @@ extension ShadowStyle {
     static func inner(_ t: ShadowToken) -> ShadowStyle { .inner(color: t.color, radius: t.radius, y: t.y) }
 }
 
+// MARK: - Motion
+
+/// How things move. Every animation in the app is one of these — never an ad-hoc `.smooth` or
+/// `.snappy` — and each one is borrowed from how the hardware it imitates behaves:
+/// - keys go **down** fast and hard (`press`) and come back **up** on their spring, a hair past rest
+///   (`release`);
+/// - modules and trays slide in on rails, well damped (`panel`);
+/// - lights come on in a quick bloom (`bloom`); plain state changes are brief (`quick`);
+/// - displays never cross-fade: values change instantly, segment meters step, and a display that
+///   appears powers up with a short flicker (`LCDBoot`).
+/// With Reduce Motion on, everything collapses to instant changes or plain fades.
+enum Motion {
+    static let press = Animation.easeIn(duration: 0.045)
+    static let release = Animation.spring(response: 0.2, dampingFraction: 0.55)
+    static let panel = Animation.spring(response: 0.32, dampingFraction: 0.9)
+    static let bloom = Animation.easeOut(duration: 0.14)
+    static let quick = Animation.easeOut(duration: 0.1)
+}
+
+extension View {
+    /// `animation`, or none when the user asked for reduced motion.
+    func motion<V: Equatable>(_ animation: Animation, value: V) -> some View {
+        modifier(MotionModifier(animation: animation, value: value))
+    }
+}
+
+private struct MotionModifier<V: Equatable>: ViewModifier {
+    let animation: Animation
+    let value: V
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    func body(content: Content) -> some View {
+        content.animation(reduceMotion ? nil : animation, value: value)
+    }
+}
+
+extension AnyTransition {
+    /// A module sliding out from under the part above it.
+    static var panelFromTop: AnyTransition { .move(edge: .top).combined(with: .opacity) }
+    /// A tray sliding up from the bottom edge.
+    static var trayFromBottom: AnyTransition { .move(edge: .bottom).combined(with: .opacity) }
+}
+
+/// A display powering up: dark, a flash, a dip, then steady — about 150 ms, once per appearance.
+struct LCDBoot: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var level = 1.0
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(level)
+            .task {
+                // Debug snapshots render a single frame: never catch the display mid-flicker.
+                guard !reduceMotion, ProcessInfo.processInfo.environment["OSMOTIC_SNAPSHOT"] == nil else { return }
+                defer { level = 1 }   // however the sequence ends (cancelled, interrupted), end lit
+                for (value, ms) in [(0.0, 45), (0.75, 55), (0.2, 45)] {
+                    level = value
+                    try? await Task.sleep(for: .milliseconds(ms))
+                    if Task.isCancelled { return }
+                }
+            }
+    }
+}
+
 /// A pocket cut into the plate, filled with `fill`: inner shadow from the top, a lit lip at the bottom.
 struct Pocket: ViewModifier {
     var fill: Color = Theme.recess
@@ -191,6 +254,9 @@ struct LCDGlass<Content: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         content
+            // Segments switch; they don't fade. Outer animations must not cross-fade the readout.
+            .transaction { $0.animation = nil }
+            .modifier(LCDBoot())
             .modifier(Pocket(fill: Theme.lcd, radius: radius, deep: true))
             .overlay {
                 shape.fill(LinearGradient(stops: [
@@ -246,6 +312,7 @@ struct CassetteKeyBank<Content: View>: View {
 struct CassetteKeyStyle: ButtonStyle {
     enum Finish { case primary, secondary }
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var finish: Finish = .secondary
     var compact = false
     var latched = false
@@ -306,7 +373,7 @@ struct CassetteKeyStyle: ButtonStyle {
             .saturation(isEnabled ? 1 : 0.2)
             .opacity(isEnabled ? 1 : 0.55)
             .contentShape(Rectangle())
-            .animation(.snappy(duration: 0.07), value: down)
+            .animation(reduceMotion ? nil : (down ? Motion.press : Motion.release), value: down)
     }
 }
 
@@ -410,6 +477,7 @@ struct LED: View {
                 }
             } else {
                 lens(dim: 0)
+                    .motion(Motion.bloom, value: state)
             }
             if let label { Silk(label, color: Theme.ink) }
         }

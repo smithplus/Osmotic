@@ -13,7 +13,7 @@ struct RootView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { AluminumPlate().ignoresSafeArea() }
-        .animation(.smooth(duration: 0.25), value: model.screen)
+        .motion(Motion.quick, value: model.screen)
     }
 }
 

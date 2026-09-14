@@ -35,6 +35,7 @@ scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstr
 
 - Estética de equipo de audio oscuro (grafito, lecturas ámbar `ETIQUETA: valor`, LEDs). Pocos elementos por panel: sin íconos decorativos.
 - Sombras solo con los tokens de `Depth` (Theme.swift): `raisedShadow()` para lo elevado, `Pocket`/`recessed()` para lo hundido (`deep` en pantallas y ranuras), `Depth.glow` para lo encendido, `Depth.onImage` sobre fotos. Nada de `.shadow(color:radius:)` sueltos ni sombras de radio 0.
+- Movimiento solo con los tokens de `Motion` (Theme.swift) vía `.motion(_:value:)` (respeta Reducir movimiento): tecla abajo `press`, arriba `release` (resorte), paneles `panel` con `.panelFromTop`/`.trayFromBottom`, luces `bloom`, cambios de estado `quick`. Las pantallas LCD no hacen fundidos: valores instantáneos, medidores por segmentos, encendido con `LCDBoot`. Nada de `scaleEffect` al pasar el mouse.
 - Un solo tipo de botón: `CassetteKeyStyle` dentro de `CassetteKeyBank`. Naranja (`.primaryKey`) solo para la acción principal de la pantalla; el resto `.secondaryKey`/`.compactKey`. Misma acción → mismo nombre en toda la app ("Show in Finder", "Disconnect", "Download …").
 
 ## Textos e idiomas

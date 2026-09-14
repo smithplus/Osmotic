@@ -56,7 +56,7 @@ struct ConnectingView: View {
 
                 if model.needsApproval && model.connectError == nil {
                     ApprovalCallout()
-                        .transition(.move(edge: .top).combined(with: .opacity))
+                        .transition(.panelFromTop)
                 }
 
                 if let ssid = model.passwordPromptSSID, model.connectError == nil {
@@ -96,8 +96,9 @@ struct ConnectingView: View {
             .padding(.top, Theme.s3)
             .padding(.bottom, Theme.s6)
             .frame(maxWidth: .infinity)
-            .animation(.smooth(duration: 0.3), value: model.stage)
-            .animation(.smooth(duration: 0.3), value: model.needsApproval)
+            .motion(Motion.panel, value: model.stage)
+            .motion(Motion.panel, value: model.needsApproval)
+            .motion(Motion.panel, value: model.connectError)
     }
 
     private var lcdMessage: String {

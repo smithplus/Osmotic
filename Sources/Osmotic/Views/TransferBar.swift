@@ -5,13 +5,15 @@ struct TransferBar: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        if let t = model.transfer {
-            active(t)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-        } else if let summary = model.lastTransferSummary {
-            finished(summary)
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+        Group {
+            if let t = model.transfer {
+                active(t).transition(.trayFromBottom)
+            } else if let summary = model.lastTransferSummary {
+                finished(summary).transition(.trayFromBottom)
+            }
         }
+        .motion(Motion.panel, value: model.transfer == nil)
+        .motion(Motion.panel, value: model.lastTransferSummary)
     }
 
     /// The transfer display: an LCD set into the plate, with its key beside it. Values sit in fixed

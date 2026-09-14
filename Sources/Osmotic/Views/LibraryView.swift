@@ -60,6 +60,7 @@ struct LibraryView: View {
                 }
                 .padding(.horizontal, Theme.s3)
                 .padding(.bottom, Theme.s3)
+                .transition(.panelFromTop)
             }
 
             Group {
@@ -78,6 +79,7 @@ struct LibraryView: View {
 
             TransferBar()
         }
+        .motion(Motion.panel, value: model.linkGaveUp)
         // One sheet that stays up while ← / → change the file (sheet(item:) would re-present on each).
         .sheet(isPresented: Binding(get: { model.previewFile != nil },
                                     set: { if !$0 { model.previewFile = nil } })) {
