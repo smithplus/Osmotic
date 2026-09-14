@@ -14,52 +14,57 @@ struct TransferBar: View {
         }
     }
 
+    /// The LCD: black strip, orange segment meter, mono readouts.
     private func active(_ t: AppModel.TransferState) -> some View {
-        VStack(alignment: .leading, spacing: Theme.s2) {
-            HStack(alignment: .firstTextBaseline, spacing: Theme.s2) {
-                Image(systemName: "arrow.down.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                Text(t.current?.name ?? "Preparando…")
-                    .font(.callout.weight(.medium))
+        HStack(spacing: Theme.s4) {
+            VStack(alignment: .leading, spacing: 3) {
+                Silk("Descargando", color: Theme.accent, size: 9.5)
+                Text(t.current?.name ?? "PREPARANDO…")
+                    .font(Theme.readout(12, weight: .semibold))
+                    .foregroundStyle(Theme.lcdText)
                     .lineLimit(1)
                     .truncationMode(.middle)
-                Spacer()
-                Text(stats(t))
-                    .font(.callout.monospacedDigit())
-                    .foregroundStyle(.secondary)
-                Button("Cancelar") { model.cancelTransfers() }
-                    .controlSize(.small)
             }
-            ProgressView(value: t.fraction)
-                .progressViewStyle(.linear)
-                .tint(Theme.accent)
+            .frame(width: 250, alignment: .leading)
+
+            VStack(alignment: .leading, spacing: 6) {
+                SegmentMeter(value: t.fraction, segments: 40)
+                    .frame(height: 12)
+                HStack(spacing: Theme.s3) {
+                    lcd("\(Int((t.fraction * 100).rounded()))%", big: true)
+                    lcd(String(format: "%02d/%02d", min(t.done + 1, t.total), t.total))
+                    if t.speed > 0 { lcd("\(Format.bytes(Int(t.speed)).uppercased())/S") }
+                    if let eta = t.eta { lcd("−" + Format.clock(eta)) }
+                }
+            }
+
+            Button("Cancelar") { model.cancelTransfers() }
+                .buttonStyle(KeyButtonStyle(kind: .ghost, compact: true))
         }
         .padding(.horizontal, Theme.s4)
         .padding(.vertical, Theme.s3)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .background(Theme.lcd)
     }
 
-    private func stats(_ t: AppModel.TransferState) -> String {
-        var parts = ["\(Int((t.fraction * 100).rounded())) %", "\(min(t.done + 1, t.total)) de \(t.total)"]
-        if t.speed > 0 { parts.append("\(Format.bytes(Int(t.speed)))/s") }
-        if let eta = t.eta { parts.append("faltan \(Format.eta(eta))") }
-        return parts.joined(separator: " · ")
+    private func lcd(_ text: String, big: Bool = false) -> some View {
+        Text(text)
+            .font(Theme.readout(big ? 13 : 11.5, weight: big ? .bold : .medium))
+            .foregroundStyle(big ? Theme.accent : Theme.lcdText.opacity(0.75))
     }
 
     private func finished(_ summary: String) -> some View {
-        HStack(spacing: Theme.s2) {
-            Image(systemName: summary.hasPrefix("Listo") ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
-                .foregroundStyle(summary.hasPrefix("Listo") ? Theme.success : .orange)
+        let ok = summary.hasPrefix("Listo")
+        return HStack(spacing: Theme.s3) {
+            LED(color: ok ? Theme.success : Theme.warning, label: ok ? "Listo" : "Atención")
             Text(summary)
-                .font(.callout)
+                .font(Theme.readout(12, weight: .medium))
+                .foregroundStyle(Theme.lcdText)
             Spacer()
             Button("Mostrar en Finder") { model.openDownloadFolder() }
-                .controlSize(.small)
+                .buttonStyle(KeyButtonStyle(kind: .signal, compact: true))
         }
         .padding(.horizontal, Theme.s4)
         .padding(.vertical, Theme.s3)
-        .background(.bar)
-        .overlay(alignment: .top) { Divider() }
+        .background(Theme.lcd)
     }
 }

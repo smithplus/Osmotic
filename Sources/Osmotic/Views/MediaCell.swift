@@ -48,7 +48,7 @@ struct MediaCell: View {
 
     private var thumbnail: some View {
         ZStack {
-            Rectangle().fill(Color.secondary.opacity(0.12))
+            Rectangle().fill(Theme.well)
             if let image {
                 Image(nsImage: image)
                     .resizable()
@@ -56,8 +56,8 @@ struct MediaCell: View {
                     .transition(.opacity)
             } else {
                 Image(systemName: file.isVideo ? "video" : "photo")
-                    .font(.system(size: 22, weight: .light))
-                    .foregroundStyle(.tertiary)
+                    .font(.system(size: 20, weight: .light))
+                    .foregroundStyle(Theme.muted.opacity(0.6))
             }
         }
         .aspectRatio(16 / 9, contentMode: .fit)
@@ -66,19 +66,18 @@ struct MediaCell: View {
         .overlay(alignment: .topTrailing) {
             if file.starred {
                 Image(systemName: "heart.fill")
-                    .font(.caption)
-                    .foregroundStyle(.white)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundStyle(Theme.accent)
                     .padding(6)
-                    .background(.black.opacity(0.45), in: Circle())
+                    .background(Theme.lcd.opacity(0.8), in: Circle())
                     .padding(Theme.s2)
             }
         }
         .overlay(alignment: .bottomTrailing) {
             if downloaded {
-                Image(systemName: "checkmark.circle.fill")
-                    .font(.system(size: 17))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(.white, Theme.success)
+                LED(color: Theme.success, label: "En Mac")
+                    .padding(.horizontal, 7).padding(.vertical, 4)
+                    .background(Theme.lcd.opacity(0.8), in: Capsule())
                     .padding(Theme.s2)
                     .help("Ya está en tu carpeta de descargas")
             } else if isCurrentTransfer {
@@ -92,10 +91,11 @@ struct MediaCell: View {
             if hovering {
                 Button { model.previewFile = file } label: {
                     Image(systemName: file.isVideo ? "play.fill" : "eye.fill")
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 15, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
-                        .background(.black.opacity(0.5), in: Circle())
+                        .background(Theme.accent, in: Circle())
+                        .shadow(color: Theme.accent.opacity(0.5), radius: 8)
                 }
                 .buttonStyle(.plain)
                 .help(file.isVideo ? "Reproducir (espacio)" : "Ver (espacio)")
@@ -107,13 +107,19 @@ struct MediaCell: View {
             // checkbox: one click adds or removes this file, no modifier keys needed.
             if selected || hovering || !model.selection.isEmpty {
                 Button { model.toggleInSelection(file) } label: {
-                    Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                        .font(.system(size: 20))
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(.white, selected ? Theme.accent : .black.opacity(0.35))
-                        .shadow(radius: 2)
-                        .padding(Theme.s2)
-                        .contentShape(Rectangle())
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(selected ? Theme.accent : Theme.lcd.opacity(0.35))
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .strokeBorder(.white.opacity(selected ? 0 : 0.9), lineWidth: 1.5)
+                        if selected {
+                            Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)).foregroundStyle(.white)
+                        }
+                    }
+                    .frame(width: 18, height: 18)
+                    .shadow(color: .black.opacity(0.25), radius: 2)
+                    .padding(Theme.s2)
+                    .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
                 .help(selected ? "Quitar de la selección" : "Agregar a la selección")
@@ -122,7 +128,7 @@ struct MediaCell: View {
         .clipShape(RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous)
-                .strokeBorder(selected ? Theme.accent : Theme.hairline.opacity(hovering ? 1 : 0.5), lineWidth: selected ? 3 : 1)
+                .strokeBorder(selected ? Theme.accent : Theme.hairline, lineWidth: selected ? 3 : 1)
         )
         .scaleEffect(hovering && !selected ? 1.015 : 1)
         .animation(.snappy(duration: 0.15), value: hovering)
@@ -136,16 +142,13 @@ struct MediaCell: View {
 
     @ViewBuilder private var kindBadge: some View {
         if file.isVideo {
-            Label(file.durationSec > 0 ? Format.duration(file.durationSec) : "Video", systemImage: "play.fill")
-                .font(.caption.weight(.semibold).monospacedDigit())
+            Label(file.durationSec > 0 ? Format.duration(file.durationSec) : "VIDEO", systemImage: "play.fill")
                 .labelStyle(BadgeLabelStyle())
         } else if file.isPanorama {
-            Label("Panorama", systemImage: "pano")
-                .font(.caption.weight(.semibold))
+            Label("PANO", systemImage: "pano")
                 .labelStyle(BadgeLabelStyle())
         } else if file.isBurst {
-            Label("Ráfaga", systemImage: "square.stack")
-                .font(.caption.weight(.semibold))
+            Label("RÁFAGA", systemImage: "square.stack")
                 .labelStyle(BadgeLabelStyle())
         }
     }
@@ -153,10 +156,12 @@ struct MediaCell: View {
     private var meta: some View {
         HStack(spacing: Theme.s2) {
             Text(file.captureDate.map { Format.time.string(from: $0) } ?? file.name)
-                .font(.callout.weight(.medium).monospacedDigit())
-            Text(details)
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Theme.readout(12.5, weight: .bold))
+                .foregroundStyle(Theme.ink)
+            Text(details.uppercased())
+                .font(Theme.label(9.5))
+                .tracking(0.8)
+                .foregroundStyle(Theme.muted)
                 .lineLimit(1)
             Spacer(minLength: 0)
         }
@@ -182,9 +187,10 @@ private struct BadgeLabelStyle: LabelStyle {
             configuration.icon.imageScale(.small)
             configuration.title
         }
+        .font(Theme.readout(10, weight: .bold))
         .foregroundStyle(.white)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(.black.opacity(0.55), in: Capsule())
+        .background(Theme.lcd.opacity(0.8), in: Capsule())
     }
 }

@@ -124,10 +124,22 @@ final class AppModel {
             stageDetail = "Aprobá la conexión en la pantalla de la cámara"
         case "cameras":
             screen = .cameras
+            ble.injectDemo(DiscoveredCamera(id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
+                                            model: CameraModel.resolve(modelId: 0x20, name: nil), brand: .dji, lastSeen: Date()))
         default:
             screen = .library
             if let first = files.first { downloaded.insert(first.id) }
             if files.count > 3 { selection = [files[1].id, files[2].id] }
+            if let clip = files.first(where: \.isVideo) {
+                var t = TransferState(total: 4, bytesTotal: 2_070_000_000)
+                t.done = 1
+                t.current = clip
+                t.currentSize = clip.sizeBytes
+                t.currentBytes = clip.sizeBytes / 3
+                t.bytesDone = 600_000_000
+                t.speed = 32_400_000
+                transfer = t
+            }
         }
     }
 

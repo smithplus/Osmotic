@@ -4,6 +4,8 @@ import SwiftUI
 /// The start screen: cameras in Bluetooth range, and the ones connected before.
 struct CamerasView: View {
     @Environment(AppModel.self) private var model
+    /// False only for debug snapshots — `ImageRenderer` cannot draw scroll-view content.
+    var scrolls = true
 
     private var nearby: [DiscoveredCamera] { model.ble.sortedCameras }
 
@@ -11,9 +13,6 @@ struct CamerasView: View {
         let near = Set(nearby.map(\.id))
         return model.savedCameras.filter { !near.contains($0.id) }
     }
-
-    /// False only for debug snapshots — `ImageRenderer` cannot draw scroll-view content.
-    var scrolls = true
 
     var body: some View {
         Group {
@@ -29,52 +28,68 @@ struct CamerasView: View {
     }
 
     private var content: some View {
-            VStack(alignment: .leading, spacing: Theme.s5) {
-                header
-                if let error = model.connectError {
-                    ErrorBanner(message: error)
-                }
-                if model.restoringWifi {
-                    Notice(symbol: "wifi", text: "Volviendo a tu red Wi-Fi…")
-                }
-                bluetoothNotice
-                section(title: "Cerca", trailing: AnyView(ScanIndicator(active: model.ble.isScanning))) {
-                    if nearby.isEmpty {
-                        EmptyNearby()
-                    } else {
-                        ForEach(nearby) { cam in
-                            CameraRow(title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
-                                      saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true) {
-                                model.connect(cam)
-                            }
+        VStack(alignment: .leading, spacing: Theme.s5) {
+            header
+            if let error = model.connectError { ErrorBanner(message: error) }
+            if model.restoringWifi { Notice(symbol: "wifi", text: "Volviendo a tu red Wi-Fi…") }
+            bluetoothNotice
+
+            VStack(alignment: .leading, spacing: Theme.s3) {
+                SectionIndex(number: 1, title: "Cerca", trailing: AnyView(
+                    LED(color: Theme.accent, state: model.ble.isScanning ? .blink : .off,
+                        label: model.ble.isScanning ? "Buscando" : "En pausa")))
+                if nearby.isEmpty {
+                    EmptyNearby()
+                } else {
+                    ForEach(Array(nearby.enumerated()), id: \.element.id) { i, cam in
+                        CameraModule(slot: i + 1, title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
+                                     saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true) {
+                            model.connect(cam)
                         }
                     }
                 }
-                if !savedOutOfRange.isEmpty {
-                    section(title: "Conectadas antes", trailing: nil) {
-                        ForEach(savedOutOfRange) { cam in
-                            CameraRow(title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false) {
-                                model.connect(saved: cam)
-                            }
-                        }
-                    }
-                }
-                DownloadFolderFooter()
             }
-            .frame(maxWidth: 640, alignment: .leading)
-            .padding(.horizontal, Theme.s5)
-            .padding(.vertical, Theme.s6)
-            .frame(maxWidth: .infinity)
+
+            if !savedOutOfRange.isEmpty {
+                VStack(alignment: .leading, spacing: Theme.s3) {
+                    SectionIndex(number: 2, title: "Conectadas antes")
+                    ForEach(Array(savedOutOfRange.enumerated()), id: \.element.id) { i, cam in
+                        CameraModule(slot: nearby.count + i + 1, title: cam.modelName, subtitle: cam.bleName,
+                                     rssi: nil, saved: true, inRange: false) {
+                            model.connect(saved: cam)
+                        }
+                    }
+                }
+            }
+
+            DownloadFolderFooter()
+        }
+        .frame(maxWidth: 680, alignment: .leading)
+        .padding(.horizontal, Theme.s5)
+        .padding(.vertical, Theme.s6)
+        .frame(maxWidth: .infinity)
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: Theme.s2) {
-            Text("Osmotic")
-                .font(Theme.display(34))
-            Text("Bajá los videos y fotos de tu DJI Osmo directo al Mac, sin cables ni la app del teléfono.")
-                .font(.title3)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: Theme.s3) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("OSMOTIC")
+                    .font(Theme.display(46))
+                    .tracking(-1.5)
+                    .foregroundStyle(Theme.ink)
+                Circle().fill(Theme.accent).frame(width: 12, height: 12)
+                    .shadow(color: Theme.accent.opacity(0.8), radius: 8)
+                    .offset(y: -4)
+                Spacer()
+                Silk("v0.1 · MAC", size: 10)
+            }
+            HStack(spacing: Theme.s3) {
+                Silk("DJI Osmo", color: Theme.ink)
+                Image(systemName: "arrow.right").font(.system(size: 10, weight: .bold)).foregroundStyle(Theme.accent)
+                Silk("Mac", color: Theme.ink)
+                Rectangle().fill(Theme.hairline).frame(width: 24, height: 1)
+                Silk("Sin cables · sin app · sin cuenta")
+            }
         }
     }
 
@@ -90,20 +105,11 @@ struct CamerasView: View {
             EmptyView()
         }
     }
-
-    private func section<Content: View>(title: String, trailing: AnyView?, @ViewBuilder content: () -> Content) -> some View {
-        VStack(alignment: .leading, spacing: Theme.s2) {
-            HStack {
-                Text(title).font(.headline)
-                Spacer()
-                trailing
-            }
-            VStack(spacing: Theme.s2) { content() }
-        }
-    }
 }
 
-private struct CameraRow: View {
+/// One camera as a hardware module: slot number, glyph well, name plate, signal dots, key.
+private struct CameraModule: View {
+    let slot: Int
     let title: String
     let subtitle: String
     let rssi: Int?
@@ -114,88 +120,84 @@ private struct CameraRow: View {
 
     var body: some View {
         HStack(spacing: Theme.s3) {
-            ZStack {
-                RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous)
-                    .fill(inRange ? Theme.accent.opacity(0.14) : Color.secondary.opacity(0.1))
-                Image(systemName: "camera.fill")
-                    .font(.system(size: 20, weight: .medium))
-                    .foregroundStyle(inRange ? Theme.accent : .secondary)
-            }
-            .frame(width: 48, height: 48)
+            Text(String(format: "%02d", slot))
+                .font(Theme.readout(11, weight: .bold))
+                .foregroundStyle(Theme.muted)
+                .frame(width: 22)
 
-            VStack(alignment: .leading, spacing: 2) {
+            ZStack {
+                RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous).fill(inRange ? Theme.ink : Theme.well)
+                Image(systemName: "camera.fill")
+                    .font(.system(size: 19, weight: .medium))
+                    .foregroundStyle(inRange ? Theme.accent : Theme.muted)
+            }
+            .frame(width: 50, height: 50)
+
+            VStack(alignment: .leading, spacing: 5) {
+                Text(title)
+                    .font(.system(size: 17, weight: .bold))
+                    .foregroundStyle(Theme.ink)
                 HStack(spacing: Theme.s2) {
-                    Text(title).font(.headline)
-                    if saved {
-                        Text("Guardada")
-                            .font(.caption2.weight(.semibold))
-                            .padding(.horizontal, 6).padding(.vertical, 2)
-                            .background(Color.secondary.opacity(0.14), in: Capsule())
-                            .foregroundStyle(.secondary)
-                    }
+                    Text(subtitle)
+                        .font(Theme.readout(11.5))
+                        .foregroundStyle(Theme.muted)
+                    if saved { Silk("· Guardada", size: 9.5) }
+                    if !inRange { Silk("· Fuera de alcance", size: 9.5) }
                 }
-                Text(inRange ? subtitle : "\(subtitle) · fuera de alcance")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
             }
             Spacer()
-            if let rssi {
-                Image(systemName: "cellularbars", variableValue: Self.signal(rssi))
-                    .foregroundStyle(.secondary)
-                    .help("Señal \(rssi) dBm")
-            }
+            if let rssi { SignalDots(level: Self.level(rssi)).help("Señal \(rssi) dBm") }
             Button(inRange ? "Conectar" : "Intentar", action: connect)
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .tint(inRange ? Theme.accent : .gray)
+                .buttonStyle(KeyButtonStyle(kind: inRange ? .signal : .ghost, compact: !inRange))
         }
         .card(padding: Theme.s3)
-        .scaleEffect(hovering ? 1.005 : 1)
+        .offset(y: hovering ? -2 : 0)
         .animation(.snappy(duration: 0.15), value: hovering)
         .onHover { hovering = $0 }
     }
 
-    static func signal(_ rssi: Int) -> Double {
-        min(1, max(0.1, Double(rssi + 95) / 45))
+    static func level(_ rssi: Int) -> Int { min(5, max(1, (rssi + 100) / 9)) }
+}
+
+/// Five-dot signal meter.
+private struct SignalDots: View {
+    let level: Int
+    var body: some View {
+        HStack(spacing: 3) {
+            ForEach(0..<5, id: \.self) { i in
+                Circle()
+                    .fill(i < level ? Theme.ink : Theme.well)
+                    .frame(width: 5, height: 5)
+            }
+        }
     }
 }
 
 private struct EmptyNearby: View {
     var body: some View {
-        HStack(alignment: .top, spacing: Theme.s3) {
-            Image(systemName: "camera.viewfinder")
-                .font(.system(size: 28, weight: .light))
-                .foregroundStyle(.secondary)
+        HStack(alignment: .center, spacing: Theme.s4) {
+            ZStack {
+                ForEach(0..<3, id: \.self) { i in
+                    Circle()
+                        .strokeBorder(Theme.accent.opacity(0.9 - Double(i) * 0.3), style: StrokeStyle(lineWidth: 1.2, dash: [2, 3]))
+                        .frame(width: 26 + CGFloat(i) * 16, height: 26 + CGFloat(i) * 16)
+                }
+                Circle().fill(Theme.accent).frame(width: 8, height: 8)
+                    .shadow(color: Theme.accent.opacity(0.8), radius: 6)
+            }
+            .frame(width: 64, height: 64)
             VStack(alignment: .leading, spacing: Theme.s1) {
                 Text("Encendé tu cámara y acercala al Mac")
-                    .font(.headline)
-                Text("Aparece acá en unos segundos. Funciona con Osmo Pocket 3, Pocket 4, Nano, Action 4, 5 Pro y 6.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 15, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                Text("Aparece acá en unos segundos. Pocket 3 · Pocket 4 · Nano · Action 4 · 5 Pro · 6")
+                    .font(Theme.readout(11.5))
+                    .foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 0)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
         .card(padding: Theme.s4)
-    }
-}
-
-private struct ScanIndicator: View {
-    let active: Bool
-    @State private var pulse = false
-
-    var body: some View {
-        HStack(spacing: 6) {
-            Circle()
-                .fill(active ? Theme.accent : Color.secondary)
-                .frame(width: 7, height: 7)
-                .opacity(active && pulse ? 0.25 : 1)
-                .animation(active ? .easeInOut(duration: 0.9).repeatForever() : .default, value: pulse)
-            Text(active ? "Buscando…" : "En pausa")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .onAppear { pulse = true }
     }
 }
 
@@ -203,24 +205,29 @@ struct Notice: View {
     let symbol: String
     let text: String
     var body: some View {
-        Label { Text(text).fixedSize(horizontal: false, vertical: true) } icon: { Image(systemName: symbol) }
-            .font(.callout)
-            .padding(Theme.s3)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.yellow.opacity(0.12), in: RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
+        HStack(spacing: Theme.s3) {
+            LED(color: Theme.warning)
+            Text(text).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 0)
+        }
+        .padding(Theme.s3)
+        .background(Theme.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
     }
 }
 
 struct ErrorBanner: View {
     let message: String
     var body: some View {
-        Label { Text(message).fixedSize(horizontal: false, vertical: true) } icon: {
-            Image(systemName: "exclamationmark.octagon.fill").foregroundStyle(.red)
+        HStack(alignment: .firstTextBaseline, spacing: Theme.s3) {
+            LED(color: Theme.danger)
+            VStack(alignment: .leading, spacing: 4) {
+                Silk("Error", color: Theme.danger)
+                Text(message).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 0)
         }
-        .font(.callout)
         .padding(Theme.s3)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.red.opacity(0.09), in: RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
+        .background(Theme.danger.opacity(0.09), in: RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
     }
 }
 
@@ -229,22 +236,20 @@ private struct DownloadFolderFooter: View {
     @State private var folder = Preferences.downloadFolder
 
     var body: some View {
-        HStack(spacing: Theme.s2) {
-            Image(systemName: "folder")
-                .foregroundStyle(.secondary)
-            Text("Las descargas van a")
-                .foregroundStyle(.secondary)
+        HStack(spacing: Theme.s3) {
+            Silk("Destino")
             Text(folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
-                .fontWeight(.medium)
+                .font(Theme.readout(12, weight: .semibold))
+                .foregroundStyle(Theme.ink)
                 .lineLimit(1)
                 .truncationMode(.middle)
             Spacer()
             Button("Abrir") { model.openDownloadFolder() }
-                .buttonStyle(.link)
-            SettingsLink { Text("Cambiar…") }
-                .buttonStyle(.link)
+                .buttonStyle(.ghostKey)
+            SettingsLink { Text("Cambiar") }
+                .buttonStyle(.ghostKey)
         }
-        .font(.callout)
+        .padding(.top, Theme.s2)
         .onAppear { folder = Preferences.downloadFolder }
     }
 }

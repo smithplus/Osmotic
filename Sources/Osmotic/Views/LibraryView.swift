@@ -109,11 +109,7 @@ struct LibraryView: View {
 
     private var linkLostBanner: some View {
         HStack(spacing: Theme.s3) {
-            if model.reconnecting {
-                ProgressView().controlSize(.small)
-            } else {
-                Image(systemName: "wifi.slash").foregroundStyle(.orange)
-            }
+            LED(color: model.reconnecting ? Theme.warning : Theme.danger, state: .blink)
             Text(model.reconnecting
                  ? "Reconectando con la cámara… la descarga sigue sola cuando vuelva."
                  : "La cámara dejó de responder (¿se apagó o se alejó?).")
@@ -123,7 +119,7 @@ struct LibraryView: View {
         }
         .padding(.horizontal, Theme.s4)
         .padding(.vertical, Theme.s2)
-        .background(Color.orange.opacity(0.12))
+        .background(Theme.warning.opacity(0.14))
     }
 
     @ToolbarContentBuilder
@@ -176,22 +172,23 @@ private struct SectionHeader: View {
 
     var body: some View {
         let pending = files.filter { !model.isDownloaded($0) }
-        HStack(alignment: .firstTextBaseline) {
-            Text(title)
-                .font(.title3.weight(.semibold))
-            Text("\(files.count)")
-                .font(.callout.monospacedDigit())
-                .foregroundStyle(.secondary)
-            Spacer()
+        HStack(alignment: .center, spacing: Theme.s2) {
+            Text(title.uppercased())
+                .font(.system(size: 15, weight: .heavy))
+                .tracking(0.4)
+                .foregroundStyle(Theme.ink)
+            Text(String(format: "%02d", files.count))
+                .font(Theme.readout(11, weight: .bold))
+                .foregroundStyle(Theme.accent)
+            Rectangle().fill(Theme.hairline).frame(height: 1)
             if !pending.isEmpty {
-                Button("Descargar día") { model.enqueue(pending) }
-                    .buttonStyle(.link)
-                    .font(.callout)
+                Button("Bajar día") { model.enqueue(pending) }
+                    .buttonStyle(.ghostKey)
             }
         }
         .padding(.vertical, Theme.s2)
         .padding(.horizontal, Theme.s1)
-        .background(.bar)
+        .background(Theme.window.opacity(0.94))
     }
 }
 
@@ -202,28 +199,33 @@ struct CameraStatusPill: View {
     var body: some View {
         let s = model.status
         HStack(spacing: Theme.s3) {
+            LED(color: model.linkLost ? Theme.danger : Theme.success, state: model.linkLost ? .blink : .on)
             if s.batteryPercent >= 0 {
-                Label("\(s.batteryPercent)%", systemImage: batterySymbol(s.batteryPercent, charging: s.charging))
-                    .foregroundStyle(s.batteryPercent <= 15 ? .red : .primary)
+                Readout(label: s.charging ? "BAT ⚡︎" : "BAT", value: "\(s.batteryPercent)%",
+                        alert: s.batteryPercent <= 15)
             }
             if let st = s.displayStorage {
-                Label("\(Format.megabytes(st.freeMb)) libres", systemImage: "sdcard")
+                Readout(label: "SD", value: Format.megabytes(st.freeMb).uppercased(), alert: false)
                     .help("\(Format.megabytes(st.freeMb)) libres de \(Format.megabytes(st.totalMb))")
             }
         }
-        .font(.callout.monospacedDigit())
-        .labelStyle(.titleAndIcon)
         .padding(.horizontal, Theme.s2)
     }
 
-    private func batterySymbol(_ pct: Int, charging: Bool) -> String {
-        if charging { return "battery.100percent.bolt" }
-        switch pct {
-        case ..<13: return "battery.0percent"
-        case ..<38: return "battery.25percent"
-        case ..<63: return "battery.50percent"
-        case ..<88: return "battery.75percent"
-        default: return "battery.100percent"
+}
+
+/// `BAT 76%` — a silkscreen label over a mono value.
+struct Readout: View {
+    let label: String
+    let value: String
+    let alert: Bool
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 5) {
+            Silk(label, size: 9.5)
+            Text(value)
+                .font(Theme.readout(12.5, weight: .bold))
+                .foregroundStyle(alert ? Theme.danger : Theme.ink)
         }
     }
 }

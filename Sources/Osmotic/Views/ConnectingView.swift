@@ -15,12 +15,17 @@ struct ConnectingView: View {
 
     private var content: some View {
             VStack(alignment: .leading, spacing: Theme.s4) {
-                VStack(alignment: .leading, spacing: Theme.s1) {
-                    Text(model.connectError == nil ? "Conectando" : "No se pudo conectar")
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
-                    Text(model.target?.model.name ?? "Cámara")
-                        .font(Theme.display(32))
+                VStack(alignment: .leading, spacing: Theme.s2) {
+                    LED(color: model.connectError == nil ? Theme.accent : Theme.danger,
+                        state: model.connectError == nil ? .blink : .on,
+                        label: model.connectError == nil ? "Conectando" : "Sin conexión")
+                    Text((model.target?.model.name ?? "Cámara").uppercased())
+                        .font(Theme.display(38))
+                        .tracking(-1)
+                        .foregroundStyle(Theme.ink)
+                    if let t = model.target {
+                        Text(t.name).font(Theme.readout(12)).foregroundStyle(Theme.muted)
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
@@ -45,31 +50,31 @@ struct ConnectingView: View {
 
                 if let error = model.connectError {
                     ErrorBanner(message: error)
-                    HStack {
+                    HStack(spacing: Theme.s2) {
                         Button("Volver") { model.backToCameras() }
-                            .controlSize(.large)
+                            .buttonStyle(KeyButtonStyle(kind: .ghost))
                         Button("Reintentar") { model.retry() }
-                            .buttonStyle(.borderedProminent)
-                            .controlSize(.large)
+                            .buttonStyle(.signalKey)
                             .keyboardShortcut(.defaultAction)
                         Spacer()
                         OpenLogLink()
                     }
                 } else {
-                    HStack(alignment: .firstTextBaseline) {
-                        Label("Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet.",
-                              systemImage: "wifi.exclamationmark")
+                    HStack(alignment: .top, spacing: Theme.s3) {
+                        Image(systemName: "wifi.exclamationmark")
+                            .foregroundStyle(Theme.muted)
+                        Text("Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet.")
                             .font(.callout)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.muted)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: Theme.s4)
                         Button("Cancelar") { model.cancelConnect() }
-                            .controlSize(.large)
+                            .buttonStyle(KeyButtonStyle(kind: .ghost))
                             .keyboardShortcut(.cancelAction)
                     }
                 }
             }
-            .frame(maxWidth: 560, alignment: .leading)
+            .frame(maxWidth: 580, alignment: .leading)
             .padding(.horizontal, Theme.s5)
             .padding(.vertical, Theme.s6)
             .frame(maxWidth: .infinity)
@@ -85,18 +90,18 @@ struct ConnectingView: View {
 
     private func passwordCard(_ ssid: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.s2) {
-            Text("Contraseña Wi-Fi de la cámara")
-                .font(.headline)
-            Text("La cámara no la envió por Bluetooth. La encontrás en su pantalla, en Ajustes › Conexión inalámbrica (red \(ssid)).")
+            Silk("Contraseña Wi-Fi de la cámara", color: Theme.ink)
+            Text("La cámara no la envió por Bluetooth. Está en su pantalla: Ajustes › Conexión inalámbrica (red \(ssid)).")
                 .font(.callout)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
             HStack {
                 SecureField("Contraseña", text: $password)
                     .textFieldStyle(.roundedBorder)
+                    .font(Theme.readout(13))
                     .onSubmit(submitPassword)
                 Button("Continuar", action: submitPassword)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.signalKey)
                     .disabled(password.count < 8)
             }
         }
@@ -121,63 +126,54 @@ private struct StageRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: Theme.s3) {
-            VStack(spacing: 0) {
-                icon
-                    .frame(width: 26, height: 26)
-                if !isLast {
-                    Rectangle()
-                        .fill(state == .done ? Theme.accent.opacity(0.5) : Theme.hairline)
-                        .frame(width: 2)
-                        .frame(minHeight: 18, maxHeight: .infinity)
-                        .padding(.vertical, 2)
-                }
-            }
-            VStack(alignment: .leading, spacing: Theme.s1) {
-                Text(stage.title)
-                    .font(.body.weight(state == .active ? .semibold : .regular))
-                    .foregroundStyle(state == .pending ? .secondary : .primary)
+            Text(String(format: "%02d", stage.rawValue + 1))
+                .font(Theme.readout(11, weight: .bold))
+                .foregroundStyle(state == .pending ? Theme.muted : Theme.ink)
+                .frame(width: 22, alignment: .leading)
+                .padding(.top, 2)
+            LED(color: ledColor, state: ledState)
+                .padding(.top, 5)
+            VStack(alignment: .leading, spacing: 6) {
+                Silk(stage.title, color: state == .pending ? Theme.muted : Theme.ink, size: 11.5)
                 if let detail, !detail.isEmpty, state == .active || state == .failed {
                     Text(detail)
                         .font(.callout)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Theme.muted)
                         .contentTransition(.opacity)
                 }
                 if let progress {
-                    ProgressView(value: progress)
-                        .progressViewStyle(.linear)
-                        .frame(maxWidth: 280)
+                    SegmentMeter(value: progress, segments: 24, lit: Theme.accent, unlit: Theme.well)
+                        .frame(maxWidth: 260)
+                        .frame(height: 8)
                 }
             }
-            .padding(.top, 3)
-            .padding(.bottom, isLast ? 0 : Theme.s3)
             Spacer(minLength: 0)
+            if state == .done { Silk("OK", color: Theme.success) }
         }
-        .fixedSize(horizontal: false, vertical: true)
+        .padding(.vertical, Theme.s2 + 2)
+        .overlay(alignment: .bottom) {
+            if !isLast { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        }
     }
 
-    @ViewBuilder private var icon: some View {
+    private var ledColor: Color {
         switch state {
-        case .pending:
-            Circle().strokeBorder(Theme.hairline, lineWidth: 2)
-        case .active:
-            ZStack {
-                Circle().fill(Theme.accent.opacity(0.15))
-                ProgressView().controlSize(.small)
-            }
-        case .done:
-            Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 22))
-                .foregroundStyle(Theme.accent)
-                .transition(.scale.combined(with: .opacity))
-        case .failed:
-            Image(systemName: "xmark.octagon.fill")
-                .font(.system(size: 22))
-                .foregroundStyle(.red)
+        case .failed: Theme.danger
+        case .done: Theme.success
+        default: Theme.accent
+        }
+    }
+
+    private var ledState: LED.State {
+        switch state {
+        case .pending: .off
+        case .active: .blink
+        case .done, .failed: .on
         }
     }
 }
 
-/// The one step only the user can do.
+/// The one step only the user can do: a signal-orange block.
 private struct ApprovalCallout: View {
     @State private var nudge = false
 
@@ -185,22 +181,24 @@ private struct ApprovalCallout: View {
         HStack(spacing: Theme.s3) {
             Image(systemName: "hand.tap.fill")
                 .font(.system(size: 26))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(.white)
                 .offset(y: nudge ? -2 : 2)
                 .animation(.easeInOut(duration: 0.7).repeatForever(autoreverses: true), value: nudge)
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
+                Silk("Acción requerida", color: .white.opacity(0.85))
                 Text("Aprobá la conexión en la cámara")
-                    .font(.headline)
-                Text("En la pantalla de la cámara aparece un pedido de emparejamiento: tocá el visto para aceptar. Solo hace falta la primera vez.")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(.white)
+                Text("En su pantalla aparece un pedido de emparejamiento: tocá el visto. Solo la primera vez.")
                     .font(.callout)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.white.opacity(0.9))
                     .fixedSize(horizontal: false, vertical: true)
             }
+            Spacer(minLength: 0)
         }
-        .padding(Theme.s3)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.accent.opacity(0.1), in: RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous).strokeBorder(Theme.accent.opacity(0.35)))
+        .padding(Theme.s4)
+        .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
+        .shadow(color: Theme.accent.opacity(0.3), radius: 16, y: 6)
         .onAppear { nudge = true }
     }
 }
@@ -208,7 +206,7 @@ private struct ApprovalCallout: View {
 struct OpenLogLink: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("Ver registro técnico") { openWindow(id: "log") }
-            .buttonStyle(.link)
+        Button("Registro técnico") { openWindow(id: "log") }
+            .buttonStyle(.ghostKey)
     }
 }

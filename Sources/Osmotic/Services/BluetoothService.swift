@@ -62,6 +62,9 @@ final class BluetoothService: NSObject {
         if central == nil { central = CBCentralManager(delegate: self, queue: .main) }
     }
 
+    /// Demo/snapshot only: show a camera without any radio.
+    func injectDemo(_ camera: DiscoveredCamera) { cameras[camera.id] = camera }
+
     var sortedCameras: [DiscoveredCamera] { cameras.values.sorted { $0.rssi > $1.rssi } }
 
     // ---- scanning -------------------------------------------------------------------------------
