@@ -54,6 +54,23 @@ public struct CameraFile: Sendable, Hashable, Identifiable {
 
     public var name: String { path.split(separator: "/").last.map(String.init) ?? path }
 
+    /// The name the file is stored under on the Mac. The camera's name is untrusted network input, so
+    /// only a plain, visible file name survives: see `safeFileName`.
+    public var localName: String { Self.safeFileName(name) }
+
+    /// Reduce `raw` to a plain file name that can only ever land inside the folder it is appended to:
+    /// ASCII letters, digits, `-`, `_`, `.` and spaces; no leading dot (so never `.`, `..` or a hidden
+    /// file); never empty; at most 200 characters. Real camera names (`DJI_20260804154141_0728_D.MP4`)
+    /// pass through unchanged.
+    public static func safeFileName(_ raw: String) -> String {
+        let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_. ")
+        var s = String(raw.map { allowed.contains($0) ? $0 : "_" })
+        while s.first == "." || s.first == " " { s.removeFirst() }
+        while s.last == " " { s.removeLast() }
+        if s.isEmpty { s = "file" }
+        return String(s.prefix(200))
+    }
+
     public var ext: String {
         guard let dot = name.lastIndex(of: ".") else { return "" }
         return String(name[name.index(after: dot)...]).uppercased()

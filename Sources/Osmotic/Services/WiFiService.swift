@@ -74,7 +74,8 @@ enum WiFiService {
         /// On the camera's AP — not merely on some network whose router also answers at 192.168.2.1.
         func onCameraNetwork() -> Bool {
             guard reachable(name) else { return false }
-            if let current = iface.ssid() { return current == ssid }
+            // With the name readable, the network details are too: an open network is never the camera.
+            if let current = iface.ssid() { return current == ssid && iface.security() != .none }
             // Name hidden (no Location permission): trust it only if the address actually changed,
             // or the Mac wasn't on a 192.168.2.x network to begin with.
             guard let ip = ipv4Address(name) else { return false }
@@ -126,8 +127,10 @@ enum WiFiService {
 
     nonisolated private static func scan(_ iface: CWInterface, for ssid: String) -> CWNetwork? {
         do {
+            // Exactly this name, and never an open network: an open AP using the camera's name is not
+            // the camera.
             let nets = try iface.scanForNetworks(withName: ssid)
-            return nets.first { $0.ssid == ssid } ?? nets.first
+            return nets.first { $0.ssid == ssid && !$0.supportsSecurity(.none) }
         } catch {
             log("wifi: scan failed: \(error.localizedDescription)")
             return nil
@@ -168,9 +171,11 @@ enum WiFiService {
     /// The camera network is forgotten first so the Mac doesn't jump straight back onto it.
     /// Uses cancellation-proof pauses — this must run to the end.
     @concurrent
-    static func restore(previous: String?, cameraSSID: String?, cameraSideIP: String?) async {
+    static func restore(previous: String?, cameraSSID: String?, cameraSideIP: String?, forgetCamera: Bool) async {
         guard let iface = CWWiFiClient.shared().interface(), let name = iface.interfaceName else { return }
-        if let cameraSSID, !cameraSSID.isEmpty {
+        // Only forget a network this app added: the name came from the camera, and a network the user
+        // had already saved (their own, if the camera lied) must survive.
+        if forgetCamera, let cameraSSID, !cameraSSID.isEmpty {
             let out = runNetworksetup(["-removepreferredwirelessnetwork", name, cameraSSID])
             log("wifi: forget \(cameraSSID) → \(out.isEmpty ? "ok" : out)")
         }
@@ -193,9 +198,7 @@ enum WiFiService {
         }
         // No auto-join: try the preferred networks, in the system's order, that are in range.
         let visible = Set(((try? iface.scanForNetworks(withSSID: nil)) ?? []).compactMap(\.ssid))
-        let preferred = runNetworksetup(["-listpreferredwirelessnetworks", name])
-            .split(separator: "\n").dropFirst().map { $0.trimmingCharacters(in: .whitespaces) }
-            .filter { !$0.isEmpty && $0 != cameraSSID }
+        let preferred = preferredNetworks(name).filter { $0 != cameraSSID }
         let candidates = visible.isEmpty ? Array(preferred.prefix(3)) : preferred.filter(visible.contains)
         for ssid in candidates {
             let out = runNetworksetup(["-setairportnetwork", name, ssid])
@@ -239,6 +242,17 @@ enum WiFiService {
 
     /// Run `/usr/sbin/networksetup`; returns trimmed output (empty on success).
     @discardableResult
+    /// The Mac's saved Wi-Fi networks, in the system's order.
+    nonisolated static func preferredNetworks(_ interface: String? = interfaceName) -> [String] {
+        guard let interface else { return [] }
+        return runNetworksetup(["-listpreferredwirelessnetworks", interface])
+            .split(separator: "\n").dropFirst().map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+    }
+
+    @concurrent
+    static func isSavedNetwork(_ ssid: String) async -> Bool { preferredNetworks().contains(ssid) }
+
     nonisolated static func runNetworksetup(_ args: [String]) -> String {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")

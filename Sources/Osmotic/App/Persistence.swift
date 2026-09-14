@@ -56,6 +56,12 @@ enum Preferences {
         set { d.set(newValue, forKey: "pendingRestoreSSID") }
     }
 
+    /// Whether the pending camera network was added by this app (and so may be forgotten).
+    static var pendingForgetCamera: Bool {
+        get { d.object(forKey: "pendingForgetCamera") as? Bool ?? true }
+        set { d.set(newValue, forKey: "pendingForgetCamera") }
+    }
+
     static var pendingCameraSSID: String? {
         get { d.string(forKey: "pendingCameraSSID") }
         set { d.set(newValue, forKey: "pendingCameraSSID") }
@@ -133,6 +139,6 @@ enum DownloadPaths {
             fmt.locale = Locale(identifier: "en_US_POSIX")
             dir = dir.appendingPathComponent(fmt.string(from: date), isDirectory: true)
         }
-        return dir.appendingPathComponent(f.name)
+        return dir.appendingPathComponent(f.localName)
     }
 }

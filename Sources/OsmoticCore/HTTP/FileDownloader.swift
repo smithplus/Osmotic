@@ -72,6 +72,11 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
     public func download(urlPath: String, to destination: URL, expectedSize: Int,
                          progress: @escaping @Sendable (Int) -> Void) async -> Result {
         let fm = FileManager.default
+        // Never write outside the folder we were given: the name must be a plain file name.
+        let leaf = destination.lastPathComponent
+        guard !leaf.isEmpty, leaf != ".", leaf != "..", !leaf.contains("/") else {
+            return .failed("refusing unsafe file name \"\(leaf)\"")
+        }
         // Only complete files are ever renamed into place, so presence alone proves it (the manifest
         // size can disagree slightly with the stored bytes, so it is not compared).
         if fm.fileExists(atPath: destination.path) { return .skipped(destination) }
@@ -79,18 +84,23 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         do {
             try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         } catch {
-            return .failed("no se pudo crear la carpeta: \(error.localizedDescription)")
+            return .failed("could not create the folder: \(error.localizedDescription)")
         }
         if !fm.fileExists(atPath: part.path) { fm.createFile(atPath: part.path, contents: nil) }
 
         func partSize() -> Int { (try? fm.attributesOfItem(atPath: part.path)[.size] as? Int) ?? 0 }
         func finish() -> Result {
+            // Nothing at the destination is ever deleted: if something appeared there meanwhile, keep
+            // it and drop our copy.
+            if fm.fileExists(atPath: destination.path) {
+                try? fm.removeItem(at: part)
+                return .skipped(destination)
+            }
             do {
-                if fm.fileExists(atPath: destination.path) { try fm.removeItem(at: destination) }
                 try fm.moveItem(at: part, to: destination)
                 return .saved(destination)
             } catch {
-                return .failed("no se pudo guardar: \(error.localizedDescription)")
+                return .failed("could not save: \(error.localizedDescription)")
             }
         }
 

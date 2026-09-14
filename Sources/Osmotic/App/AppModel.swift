@@ -93,6 +93,8 @@ final class AppModel {
     @ObservationIgnored private var pendingCredentials: (ssid: String, password: String)?
     @ObservationIgnored private var previousSSID: String?
     @ObservationIgnored private var joinedCameraSSID: String?
+    /// False when the camera's network was already among the Mac's saved networks before we joined.
+    @ObservationIgnored private var forgetCameraNetwork = true
     @ObservationIgnored private var thumbCache: [String: NSImage] = [:]
     @ObservationIgnored private var connectGeneration = 0
     @ObservationIgnored private var cameraPassword: String?
@@ -241,8 +243,14 @@ final class AppModel {
             // 2. Join the camera's access point.
             stage = .wifi
             stageDetail = String(localized: "Waiting for the camera to turn on its Wi-Fi…")
+            // A network the Mac already knew stays known afterwards (a leftover from our own crashed
+            // run doesn't count).
+            let alreadySaved = await WiFiService.isSavedNetwork(ssid) && Preferences.pendingCameraSSID != ssid
+            try live()
+            forgetCameraNetwork = !alreadySaved
             Preferences.pendingRestoreSSID = previousSSID
             Preferences.pendingCameraSSID = ssid
+            Preferences.pendingForgetCamera = !alreadySaved
             joinedCameraSSID = ssid
             try await Task.sleep(for: .seconds(3))
             let joined = try await WiFiService.join(ssid: ssid, password: password, timeout: 75) { text in
@@ -448,7 +456,8 @@ final class AppModel {
             if restoreWifi {
                 restoringWifi = true
                 stageDetail = String(localized: "Going back to your Wi-Fi…")
-                await WiFiService.restore(previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP)
+                await WiFiService.restore(previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP,
+                                          forgetCamera: forgetCameraNetwork)
                 restoringWifi = false
             }
         }
@@ -559,7 +568,8 @@ final class AppModel {
         if onCamera {
             log("wifi: recovering from an interrupted session on \(cam)")
             restoringWifi = true
-            await WiFiService.restore(previous: Preferences.pendingRestoreSSID, cameraSSID: cam, cameraSideIP: nil)
+            await WiFiService.restore(previous: Preferences.pendingRestoreSSID, cameraSSID: cam, cameraSideIP: nil,
+                                      forgetCamera: Preferences.pendingForgetCamera)
             restoringWifi = false
         }
         Preferences.pendingRestoreSSID = nil
@@ -859,7 +869,7 @@ final class AppModel {
     private func fetchSidecar(of f: CameraFile, next dest: URL) async {
         guard let side = f.sidecarCandidate() else { return }
         guard let head = await http.headStatus(side.originalURLPath), head.status == 200 else { return }
-        let sideDest = dest.deletingLastPathComponent().appendingPathComponent(side.name)
+        let sideDest = dest.deletingLastPathComponent().appendingPathComponent(side.localName)
         log("transfer: sidecar \(side.name) exists (\(head.length / 1_000_000) MB)")
         let r = await downloader.download(urlPath: side.originalURLPath, to: sideDest, expectedSize: max(0, head.length)) { _ in }
         if case .saved(let url) = r { stampDates(url, f) }
