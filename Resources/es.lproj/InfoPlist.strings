@@ -4,3 +4,4 @@
 "NSLocationUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
 "NSLocationWhenInUseUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
 "NSHumanReadableCopyright" = "MIT. Protocolo por KonradIT/osmosis y colaboradores. No afiliado a DJI.";
+"NSCameraUsageDescription" = "Osmotic muestra la imagen de tu cámara DJI cuando la enchufás por USB como webcam.";

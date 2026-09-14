@@ -31,5 +31,7 @@ mkdir -p "$APP_DIR/Contents/Resources/en.lproj"
 chmod +x "$APP_DIR/Contents/MacOS/Osmotic"
 
 # Hardened runtime: no JIT, no unsigned libraries, no debugger attach — the app needs none of them.
-codesign --force --sign - --options runtime --identifier io.github.smithplus.osmotic "$APP_DIR"
+# Its resource-access entitlements (location, camera) are in Resources/Osmotic.entitlements.
+codesign --force --sign - --options runtime --entitlements "$ROOT_DIR/Resources/Osmotic.entitlements" \
+  --identifier io.github.smithplus.osmotic "$APP_DIR"
 echo "$APP_DIR"

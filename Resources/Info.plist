@@ -39,6 +39,8 @@
 	<string>Osmotic uses Bluetooth to find your DJI camera and ask it to turn on its Wi-Fi.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Osmotic talks to your camera on its own Wi-Fi network (192.168.2.1) to list and download your files.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Osmotic shows your DJI camera’s picture when it’s plugged in by USB as a webcam.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_osmotic._udp</string>
