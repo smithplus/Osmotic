@@ -21,10 +21,10 @@ enum TransferNotifier {
         guard !NSApp.isActive else { return }
         NSApp.requestUserAttention(.informationalRequest)
         let content = UNMutableNotificationContent()
-        content.title = failed == 0 ? "Descarga terminada" : "Descarga incompleta"
+        content.title = failed == 0 ? String(localized: "Download finished") : String(localized: "Download incomplete")
         content.body = failed == 0
-            ? "\(saved) archivo\(saved == 1 ? "" : "s") en \(folder.lastPathComponent)"
-            : "\(saved) bajaron, \(failed) no — abrí Osmotic para reintentar"
+            ? String(localized: "\(String(localized: "\(saved) files")) in \(folder.lastPathComponent)")
+            : String(localized: "\(saved) arrived, \(failed) didn’t — open Osmotic to try again")
         let request = UNNotificationRequest(identifier: "transfer-\(UUID().uuidString)", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }

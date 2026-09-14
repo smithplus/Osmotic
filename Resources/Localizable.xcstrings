@@ -1,0 +1,1630 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "": {
+      "shouldTranslate": false
+    },
+    "%@ couldn’t be downloaded — try again to resume": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ no se pudieron bajar — reintentá para reanudar"
+          }
+        }
+      }
+    },
+    "%@ free of %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ libres de %@"
+          }
+        }
+      }
+    },
+    "%@ in %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ en %@"
+          }
+        }
+      }
+    },
+    "%lld arrived, %lld didn’t — open Osmotic to try again": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld bajaron, %lld no — abrí Osmotic para reintentar"
+          }
+        }
+      }
+    },
+    "%lld files": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld archivo"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld archivos"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "A pairing request shows up on its screen: tap the check mark. Only needed the first time.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En su pantalla aparece un pedido de emparejamiento: tocá el visto. Solo la primera vez."
+          }
+        }
+      }
+    },
+    "Add to selection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agregar a la selección"
+          }
+        }
+      }
+    },
+    "All": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo"
+          }
+        }
+      }
+    },
+    "All saved": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo bajado"
+          }
+        }
+      }
+    },
+    "Already in your downloads folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya está en tu carpeta de descargas"
+          }
+        }
+      }
+    },
+    "Approve on the camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobá en la cámara"
+          }
+        }
+      }
+    },
+    "Approve the connection on the camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobá la conexión en la cámara"
+          }
+        }
+      }
+    },
+    "Approve the connection on the camera’s screen": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aprobá la conexión en la pantalla de la cámara"
+          }
+        }
+      }
+    },
+    "Asking the camera for its Wi-Fi network…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pidiendo la red Wi-Fi a la cámara…"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver"
+          }
+        }
+      }
+    },
+    "Batt": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bat"
+          }
+        }
+      }
+    },
+    "Bluetooth": {
+      "shouldTranslate": false
+    },
+    "Bluetooth is off. Turn it on to find your camera.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El Bluetooth está apagado. Encendelo para encontrar tu cámara."
+          }
+        }
+      }
+    },
+    "Burst": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ráfaga"
+          }
+        }
+      }
+    },
+    "Camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cámara"
+          }
+        }
+      }
+    },
+    "Camera Wi-Fi": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wi-Fi de la cámara"
+          }
+        }
+      }
+    },
+    "Camera Wi-Fi password": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Contraseña Wi-Fi de la cámara"
+          }
+        }
+      }
+    },
+    "Camera link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace con la cámara"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        }
+      }
+    },
+    "Can’t find the camera. Turn it on and bring it close to the Mac.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se encuentra la cámara. Encendela y acercala al Mac."
+          }
+        }
+      }
+    },
+    "Card": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarj"
+          }
+        }
+      }
+    },
+    "Change": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar"
+          }
+        }
+      }
+    },
+    "Change…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar…"
+          }
+        }
+      }
+    },
+    "Choose": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir"
+          }
+        }
+      }
+    },
+    "Clear": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpiar"
+          }
+        }
+      }
+    },
+    "Clear the selection (esc)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limpiar la selección (esc)"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Connect": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar"
+          }
+        }
+      }
+    },
+    "Connected before": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectadas antes"
+          }
+        }
+      }
+    },
+    "Connecting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectando"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conexión"
+          }
+        }
+      }
+    },
+    "Continue": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        }
+      }
+    },
+    "Copy All": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copiar todo"
+          }
+        }
+      }
+    },
+    "Couldn’t connect over Bluetooth. Is the camera on and nearby?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar por Bluetooth. ¿La cámara está encendida y cerca?"
+          }
+        }
+      }
+    },
+    "Couldn’t join the camera’s Wi-Fi network (%@).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo conectar a la red Wi-Fi de la cámara (%@)."
+          }
+        }
+      }
+    },
+    "Couldn’t open the preview": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo abrir la vista previa"
+          }
+        }
+      }
+    },
+    "Disconnect": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar"
+          }
+        }
+      }
+    },
+    "Disconnect and Cancel the Download": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar y cancelar la descarga"
+          }
+        }
+      }
+    },
+    "Disconnect automatically when downloads finish": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar automáticamente al terminar de descargar"
+          }
+        }
+      }
+    },
+    "Disconnect while files are downloading?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desconectar mientras se descargan archivos?"
+          }
+        }
+      }
+    },
+    "Done: %@ in %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo: %@ en %@"
+          }
+        }
+      }
+    },
+    "Download": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar"
+          }
+        }
+      }
+    },
+    "Download %lld": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajar %lld"
+          }
+        }
+      }
+    },
+    "Download %lld new": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajar %lld nuevos"
+          }
+        }
+      }
+    },
+    "Download New": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar nuevos"
+          }
+        }
+      }
+    },
+    "Download Selection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar selección"
+          }
+        }
+      }
+    },
+    "Download cancelled": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarga cancelada"
+          }
+        }
+      }
+    },
+    "Download cancelled — what already arrived is saved": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarga cancelada — lo que ya bajó quedó guardado"
+          }
+        }
+      }
+    },
+    "Download day": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bajar día"
+          }
+        }
+      }
+    },
+    "Download everything that isn't in your folder yet (⇧⌘D)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Baja todo lo que todavía no está en tu carpeta (⇧⌘D)"
+          }
+        }
+      }
+    },
+    "Download finished": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarga terminada"
+          }
+        }
+      }
+    },
+    "Download incomplete": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descarga incompleta"
+          }
+        }
+      }
+    },
+    "Download it to watch it in full quality.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargalo para verlo en calidad completa."
+          }
+        }
+      }
+    },
+    "Download the selection (⌘D)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar la selección (⌘D)"
+          }
+        }
+      }
+    },
+    "Downloads": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargas"
+          }
+        }
+      }
+    },
+    "Eject: release the camera and put the Mac back on your Wi-Fi": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar: libera la cámara y devuelve el Mac a tu Wi-Fi"
+          }
+        }
+      }
+    },
+    "Enter the camera’s Wi-Fi password": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingresá la contraseña Wi-Fi de la cámara"
+          }
+        }
+      }
+    },
+    "Error": {
+      "shouldTranslate": false
+    },
+    "File": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivo"
+          }
+        }
+      }
+    },
+    "Files": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archivos"
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Filtrar"
+          }
+        }
+      }
+    },
+    "Folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Carpeta"
+          }
+        }
+      }
+    },
+    "Forget": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar"
+          }
+        }
+      }
+    },
+    "Forget All…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olvidar todas…"
+          }
+        }
+      }
+    },
+    "Forget the saved cameras?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Olvidar las cámaras guardadas?"
+          }
+        }
+      }
+    },
+    "Go back to my Wi-Fi when disconnecting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volver a mi Wi-Fi al desconectar"
+          }
+        }
+      }
+    },
+    "Going back to your Wi-Fi…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volviendo a tu Wi-Fi…"
+          }
+        }
+      }
+    },
+    "Include RAW (.DNG) and backup audio (.WAV) when present": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Incluir RAW (.DNG) y audio de respaldo (.WAV) cuando existan"
+          }
+        }
+      }
+    },
+    "Joining %@…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectando a %@…"
+          }
+        }
+      }
+    },
+    "Left": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resta"
+          }
+        }
+      }
+    },
+    "Library": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Biblioteca"
+          }
+        }
+      }
+    },
+    "Link": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlace"
+          }
+        }
+      }
+    },
+    "Linked": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enlazada"
+          }
+        }
+      }
+    },
+    "Loading older files": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cargando archivos más antiguos"
+          }
+        }
+      }
+    },
+    "Log": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro"
+          }
+        }
+      }
+    },
+    "Looking for %@…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando %@…"
+          }
+        }
+      }
+    },
+    "Maintenance": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mantenimiento"
+          }
+        }
+      }
+    },
+    "Nearby": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerca"
+          }
+        }
+      }
+    },
+    "New": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nuevos"
+          }
+        }
+      }
+    },
+    "Next (→)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiente (→)"
+          }
+        }
+      }
+    },
+    "Next time you’ll have to find them again. Your download history is kept.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La próxima vez vas a tener que buscarlas de nuevo. El historial de descargas se mantiene."
+          }
+        }
+      }
+    },
+    "No date": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin fecha"
+          }
+        }
+      }
+    },
+    "No signal": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin señal"
+          }
+        }
+      }
+    },
+    "Not connected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin conexión"
+          }
+        }
+      }
+    },
+    "Nothing to show here": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nada para mostrar acá"
+          }
+        }
+      }
+    },
+    "On Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En Mac"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        }
+      }
+    },
+    "Open Downloads Folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir carpeta de descargas"
+          }
+        }
+      }
+    },
+    "Open Folder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir carpeta"
+          }
+        }
+      }
+    },
+    "Osmo › Mac  ·  No cables  ·  No app": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmo › Mac  ·  Sin cables  ·  Sin app"
+          }
+        }
+      }
+    },
+    "Osmotic": {
+      "shouldTranslate": false
+    },
+    "Osmotic doesn’t have Bluetooth permission. Turn it on in System Settings › Privacy & Security › Bluetooth.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic no tiene permiso de Bluetooth. Activalo en Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
+          }
+        }
+      }
+    },
+    "Osmotic needs Bluetooth permission: System Settings › Privacy & Security › Bluetooth.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic necesita permiso de Bluetooth: Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
+          }
+        }
+      }
+    },
+    "PANO": {
+      "shouldTranslate": false
+    },
+    "Pair": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emparejar"
+          }
+        }
+      }
+    },
+    "Pairing": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emparejamiento"
+          }
+        }
+      }
+    },
+    "Pairing with the camera…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Emparejando con la cámara…"
+          }
+        }
+      }
+    },
+    "Paused": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En pausa"
+          }
+        }
+      }
+    },
+    "Photos": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotos"
+          }
+        }
+      }
+    },
+    "Play (space)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reproducir (espacio)"
+          }
+        }
+      }
+    },
+    "Play a sound and notify when downloads finish": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonido y aviso al terminar de descargar"
+          }
+        }
+      }
+    },
+    "Pocket 3 · Pocket 4 · Nano · Action 4 · 5 Pro · 6": {
+      "shouldTranslate": false
+    },
+    "Preparing…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preparando…"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista previa"
+          }
+        }
+      }
+    },
+    "Previous (←)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anterior (←)"
+          }
+        }
+      }
+    },
+    "Reading the camera’s card…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Leyendo la tarjeta de la cámara…"
+          }
+        }
+      }
+    },
+    "Reconnecting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectando"
+          }
+        }
+      }
+    },
+    "Remove from selection": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quitar de la selección"
+          }
+        }
+      }
+    },
+    "Reset": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Restablecer"
+          }
+        }
+      }
+    },
+    "Saved cameras": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cámaras guardadas"
+          }
+        }
+      }
+    },
+    "Saving to": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Destino"
+          }
+        }
+      }
+    },
+    "Searching…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando…"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar todo"
+          }
+        }
+      }
+    },
+    "Select New": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seleccionar nuevos"
+          }
+        }
+      }
+    },
+    "Selected": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegidos"
+          }
+        }
+      }
+    },
+    "Show": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver"
+          }
+        }
+      }
+    },
+    "Show File": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar archivo"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mostrar en Finder"
+          }
+        }
+      }
+    },
+    "Signal %lld dBm": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Señal %lld dBm"
+          }
+        }
+      }
+    },
+    "Sort into folders by date (YYYY-MM-DD)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Organizar en subcarpetas por fecha (AAAA-MM-DD)"
+          }
+        }
+      }
+    },
+    "Speed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Veloc"
+          }
+        }
+      }
+    },
+    "Starred": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Favoritos"
+          }
+        }
+      }
+    },
+    "Technical Log": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro técnico"
+          }
+        }
+      }
+    },
+    "Technical log": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Registro técnico"
+          }
+        }
+      }
+    },
+    "The Mac’s Bluetooth is off.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El Bluetooth del Mac está apagado."
+          }
+        }
+      }
+    },
+    "The camera closed the Bluetooth connection.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara cerró la conexión Bluetooth."
+          }
+        }
+      }
+    },
+    "The camera didn’t answer on the data link. If macOS asked about local network access, allow it and try again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no respondió en el enlace de datos. Si macOS preguntó por acceso a la red local, permitilo y reintentá."
+          }
+        }
+      }
+    },
+    "The camera didn’t hand over its Wi-Fi. Try turning it off and on again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no entregó su Wi-Fi. Probá apagarla y encenderla."
+          }
+        }
+      }
+    },
+    "The camera didn’t send it over Bluetooth. It’s on the camera’s screen: Settings › Wireless connection (network %@).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no la envió por Bluetooth. Está en su pantalla: Ajustes › Conexión inalámbrica (red %@)."
+          }
+        }
+      }
+    },
+    "The card is empty": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tarjeta está vacía"
+          }
+        }
+      }
+    },
+    "There are no videos or photos on the camera.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay videos ni fotos en la cámara."
+          }
+        }
+      }
+    },
+    "This Mac doesn’t have Bluetooth LE.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac no tiene Bluetooth LE."
+          }
+        }
+      }
+    },
+    "This Mac has no Wi-Fi interface available.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este Mac no tiene una interfaz Wi-Fi disponible."
+          }
+        }
+      }
+    },
+    "This camera was never activated, so it won’t turn on its Wi-Fi. Activate it once with DJI Mimo.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cámara nunca fue activada, así que no enciende su Wi-Fi. Activala una vez con DJI Mimo."
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hoy"
+          }
+        }
+      }
+    },
+    "Transfer": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Transferir"
+          }
+        }
+      }
+    },
+    "Try": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Intentar"
+          }
+        }
+      }
+    },
+    "Try Again": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        }
+      }
+    },
+    "Try another view.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Probá con otra vista."
+          }
+        }
+      }
+    },
+    "Turn on your camera and bring it close to the Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encendé tu cámara y acercala al Mac"
+          }
+        }
+      }
+    },
+    "Videos": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Videos"
+          }
+        }
+      }
+    },
+    "View (space)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ver (espacio)"
+          }
+        }
+      }
+    },
+    "Waiting for the %@ network…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando la red %@…"
+          }
+        }
+      }
+    },
+    "Waiting for the camera to turn on its Wi-Fi…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando que la cámara encienda su Wi-Fi…"
+          }
+        }
+      }
+    },
+    "What already arrived stays saved; the rest resumes next time.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lo que ya bajó queda guardado; lo demás se reanuda la próxima vez."
+          }
+        }
+      }
+    },
+    "While connected, your Mac uses the camera’s Wi-Fi and has no Internet over Wi-Fi; it goes back to your network when you disconnect. To stay online, plug the Mac into Ethernet or share an iPhone’s connection over USB.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet."
+          }
+        }
+      }
+    },
+    "Wi-Fi": {
+      "shouldTranslate": false
+    },
+    "Yesterday": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayer"
+          }
+        }
+      }
+    },
+    "from the camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "desde la cámara"
+          }
+        }
+      }
+    },
+    "lightweight preview": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "vista previa liviana"
+          }
+        }
+      }
+    },
+    "on your Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "en tu Mac"
+          }
+        }
+      }
+    },
+    "original from the camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "original desde la cámara"
+          }
+        }
+      }
+    },
+    "original on your Mac": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "original en tu Mac"
+          }
+        }
+      }
+    },
+    "osmotic": {
+      "shouldTranslate": false
+    },
+    "password": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "contraseña"
+          }
+        }
+      }
+    },
+    "signal": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "señal"
+          }
+        }
+      }
+    },
+    "under 1 min": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "menos de 1 min"
+          }
+        }
+      }
+    },
+    "· out of range": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· fuera de alcance"
+          }
+        }
+      }
+    },
+    "· saved": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· guardada"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

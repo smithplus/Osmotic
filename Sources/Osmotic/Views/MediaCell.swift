@@ -32,12 +32,12 @@ struct MediaCell: View {
         })
         .onHover { hovering = $0 }
         .contextMenu {
-            Button("Vista previa") { model.previewFile = file }
+            Button("Preview") { model.previewFile = file }
             if model.isOnDisk(file) {
-                Button("Mostrar en Finder") { model.revealInFinder(file) }
+                Button("Show in Finder") { model.revealInFinder(file) }
             } else {
                 // Also offered for files the history remembers but that were moved or deleted.
-                Button("Descargar") { model.enqueue([file]) }
+                Button("Download") { model.enqueue([file]) }
             }
         }
         .task(id: file.id) {
@@ -79,12 +79,12 @@ struct MediaCell: View {
             if downloaded {
                 HStack(spacing: 5) {
                     LED(color: Theme.success, size: 6)
-                    Text("EN MAC").font(.system(size: 8.5, weight: .bold)).tracking(0.6).foregroundStyle(.white.opacity(0.9))
+                    Text("On Mac").font(.system(size: 8.5, weight: .bold)).tracking(0.6).foregroundStyle(.white.opacity(0.9))
                 }
                 .padding(.horizontal, 7).padding(.vertical, 4)
                 .background(.black.opacity(0.55), in: Capsule())
                 .padding(Theme.s2)
-                    .help("Ya está en tu carpeta de descargas")
+                    .help("Already in your downloads folder")
             } else if isCurrentTransfer {
                 ProgressView(value: currentFraction)
                     .progressViewStyle(.circular)
@@ -104,7 +104,7 @@ struct MediaCell: View {
                         .shadow(color: .black.opacity(0.35), radius: 2, y: 2)
                 }
                 .buttonStyle(.plain)
-                .help(file.isVideo ? "Reproducir (espacio)" : "Ver (espacio)")
+                .help(file.isVideo ? Text("Play (space)") : Text("View (space)"))
                 .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
         }
@@ -130,7 +130,7 @@ struct MediaCell: View {
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(selected ? "Quitar de la selección" : "Agregar a la selección")
+                .help(selected ? Text("Remove from selection") : Text("Add to selection"))
             }
         }
         // A print on the tray: thin dark mount, a little lift; selected = orange rim.
@@ -159,7 +159,7 @@ struct MediaCell: View {
             Label("PANO", systemImage: "pano")
                 .labelStyle(BadgeLabelStyle())
         } else if file.isBurst {
-            Label("RÁFAGA", systemImage: "square.stack")
+            Label("Burst", systemImage: "square.stack")
                 .labelStyle(BadgeLabelStyle())
         }
     }

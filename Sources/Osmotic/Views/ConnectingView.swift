@@ -14,7 +14,7 @@ struct ConnectingView: View {
             TopPlate {
                 LED(color: model.connectError == nil ? Theme.accent : Theme.danger,
                     state: model.connectError == nil ? .blink : .on,
-                    label: model.connectError == nil ? "Conectando" : "Error")
+                    label: model.connectError == nil ? "Connecting" : "Error")
             }
             Group {
                 if scrolls { ScrollView { content } } else { content }
@@ -28,12 +28,12 @@ struct ConnectingView: View {
                 LCDGlass {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
-                            LCDText(text: (model.target?.model.name ?? "CÁMARA").uppercased(), size: 11, weight: .bold,
+                            LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 11, weight: .medium,
                                     color: Theme.lcdText.opacity(0.6))
                             Spacer()
                             LCDText(text: model.target?.name.uppercased() ?? "", size: 11, color: Theme.lcdText.opacity(0.6))
                         }
-                        LCDText(text: lcdMessage, size: 18, weight: .bold)
+                        LCDText(text: lcdMessage, size: 16, weight: .medium)
                         if model.stage == .datalink && model.connectError == nil {
                             SegmentMeter(value: model.datalinkProgress, segments: 40).frame(height: 8)
                         }
@@ -51,7 +51,7 @@ struct ConnectingView: View {
                 }
                 .padding(.vertical, Theme.s3)
                 .padding(.horizontal, Theme.s2)
-                .raisedPanel()
+                .raisedPanel(screws: true)
 
                 if model.needsApproval && model.connectError == nil {
                     ApprovalCallout()
@@ -65,9 +65,9 @@ struct ConnectingView: View {
                 if let error = model.connectError {
                     ErrorBanner(message: error)
                     HStack(spacing: Theme.s2) {
-                        Button("Volver") { model.backToCameras() }
+                        Button("Back") { model.backToCameras() }
                             .buttonStyle(KeyButtonStyle(kind: .ghost))
-                        Button("Reintentar") { model.retry() }
+                        Button("Try Again") { model.retry() }
                             .buttonStyle(.signalKey)
                             .keyboardShortcut(.defaultAction)
                         Spacer()
@@ -75,12 +75,12 @@ struct ConnectingView: View {
                     }
                 } else {
                     HStack(alignment: .top, spacing: Theme.s3) {
-                        Text("Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet.")
+                        Text("While connected, your Mac uses the camera’s Wi-Fi and has no Internet over Wi-Fi; it goes back to your network when you disconnect. To stay online, plug the Mac into Ethernet or share an iPhone’s connection over USB.")
                             .font(.system(size: 11.5))
                             .foregroundStyle(Theme.muted)
                             .fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: Theme.s4)
-                        Button("Cancelar") { model.cancelConnect() }
+                        Button("Cancel") { model.cancelConnect() }
                             .buttonStyle(KeyButtonStyle(kind: .ghost))
                             .keyboardShortcut(.cancelAction)
                     }
@@ -96,8 +96,8 @@ struct ConnectingView: View {
     }
 
     private var lcdMessage: String {
-        if model.connectError != nil { return "SIN CONEXIÓN" }
-        if model.needsApproval { return "APROBÁ EN LA CÁMARA" }
+        if model.connectError != nil { return String(localized: "Not connected").uppercased() }
+        if model.needsApproval { return String(localized: "Approve on the camera").uppercased() }
         return model.stageDetail.isEmpty ? model.stage.title.uppercased() : model.stageDetail.uppercased()
     }
 
@@ -109,20 +109,20 @@ struct ConnectingView: View {
 
     private func passwordCard(_ ssid: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.s2 + 2) {
-            Silk("Contraseña Wi-Fi de la cámara", color: Theme.ink)
-            Text("La cámara no la envió por Bluetooth. Está en su pantalla: Ajustes › Conexión inalámbrica (red \(ssid)).")
+            Silk("Camera Wi-Fi password", color: Theme.ink)
+            Text("The camera didn’t send it over Bluetooth. It’s on the camera’s screen: Settings › Wireless connection (network \(ssid)).")
                 .font(.callout)
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Theme.s2) {
-                SecureField("", text: $password, prompt: Text("contraseña"))
+                SecureField("", text: $password, prompt: Text("password"))
                     .textFieldStyle(.plain)
                     .font(Theme.readout(13))
                     .padding(.horizontal, 10)
                     .frame(height: 32)
                     .recessed(radius: 6)
                     .onSubmit(submitPassword)
-                Button("Continuar", action: submitPassword)
+                Button("Continue", action: submitPassword)
                     .buttonStyle(.signalKey)
                     .disabled(password.count < 8)
             }
@@ -155,13 +155,13 @@ private struct StageChannel: View {
         }
     }
 
-    private var shortTitle: String {
+    private var shortTitle: LocalizedStringKey {
         switch stage {
         case .bluetooth: "Bluetooth"
-        case .pairing: "Emparejar"
+        case .pairing: "Pair"
         case .wifi: "Wi-Fi"
-        case .datalink: "Enlace"
-        case .library: "Biblioteca"
+        case .datalink: "Link"
+        case .library: "Library"
         }
     }
 
@@ -196,10 +196,10 @@ private struct ApprovalCallout: View {
                 }
                 .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1.5)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Aprobá la conexión en la cámara")
+                Text("Approve the connection on the camera")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Theme.ink)
-                Text("En su pantalla aparece un pedido de emparejamiento: tocá el visto. Solo la primera vez.")
+                Text("A pairing request shows up on its screen: tap the check mark. Only needed the first time.")
                     .font(.callout)
                     .foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)
@@ -214,7 +214,7 @@ private struct ApprovalCallout: View {
 struct OpenLogLink: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("Registro técnico") { openWindow(id: "log") }
+        Button("Technical log") { openWindow(id: "log") }
             .buttonStyle(.ghostKey)
     }
 }

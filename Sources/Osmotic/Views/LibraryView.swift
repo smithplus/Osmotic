@@ -21,7 +21,7 @@ struct LibraryView: View {
             groups[key, default: []].append(f)
         }
         return order.map { key in
-            let title = groups[key]?.first?.captureDate.map(Format.day) ?? "Sin fecha"
+            let title = groups[key]?.first?.captureDate.map(Format.day) ?? String(localized: "No date")
             return DaySection(id: key, title: title, files: groups[key] ?? [])
         }
     }
@@ -34,7 +34,7 @@ struct LibraryView: View {
             TopPlate {
                 LED(color: model.linkLost ? Theme.danger : Theme.success,
                     state: model.linkLost ? .blink : .on,
-                    label: model.linkLost ? (model.reconnecting ? "Reconectando" : "Sin señal") : "Enlazada")
+                    label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
             }
             ControlDeck(confirmDisconnect: $confirmDisconnect)
                 .padding(.horizontal, Theme.s3)
@@ -42,9 +42,9 @@ struct LibraryView: View {
 
             Group {
                 if model.files.isEmpty {
-                    trayMessage("La tarjeta está vacía", "No hay videos ni fotos en la cámara.")
+                    trayMessage("The card is empty", "There are no videos or photos on the camera.")
                 } else if model.visibleFiles.isEmpty {
-                    trayMessage("Nada en «\(model.filter.rawValue)»", "Probá con otro filtro.")
+                    trayMessage("Nothing to show here", "Try another view.")
                 } else {
                     grid
                 }
@@ -61,14 +61,14 @@ struct LibraryView: View {
                                     set: { if !$0 { model.previewFile = nil } })) {
             if let f = model.previewFile { PreviewView(file: f).environment(model) }
         }
-        .confirmationDialog("¿Desconectar mientras se descargan archivos?", isPresented: $confirmDisconnect) {
-            Button("Desconectar y cancelar la descarga", role: .destructive) { Task { await model.disconnect() } }
+        .confirmationDialog("Disconnect while files are downloading?", isPresented: $confirmDisconnect) {
+            Button("Disconnect and Cancel the Download", role: .destructive) { Task { await model.disconnect() } }
         } message: {
-            Text("Lo que ya bajó queda guardado; lo demás se reanuda la próxima vez.")
+            Text("What already arrived stays saved; the rest resumes next time.")
         }
     }
 
-    private func trayMessage(_ title: String, _ detail: String) -> some View {
+    private func trayMessage(_ title: LocalizedStringKey, _ detail: LocalizedStringKey) -> some View {
         VStack(spacing: 6) {
             Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.ink)
             Text(detail).font(.callout).foregroundStyle(Theme.muted)
@@ -94,7 +94,7 @@ struct LibraryView: View {
             if model.moreAvailable || model.loadingMore {
                 HStack(spacing: Theme.s2) {
                     LED(color: Theme.accent, state: .blink)
-                    Silk("Cargando archivos más antiguos")
+                    Silk("Loading older files")
                 }
                 .padding(.bottom, Theme.s4)
                 .onAppear { model.loadMoreIfNeeded() }
@@ -116,95 +116,99 @@ struct LibraryView: View {
     }
 }
 
-/// The deck above the tray: status display, filter keys, action keys.
+/// The deck above the tray: a full-width status display, then the view keys and the transfer keys —
+/// two cassette-style banks with their legends printed above.
 struct ControlDeck: View {
     @Environment(AppModel.self) private var model
     @Binding var confirmDisconnect: Bool
 
     var body: some View {
-        HStack(alignment: .center, spacing: Theme.s4) {
+        VStack(alignment: .leading, spacing: Theme.s3) {
             StatusDisplay()
-                .frame(width: 300)
-            FilterKeys()
-            Spacer(minLength: 0)
-            actionKeys
+            HStack(alignment: .bottom, spacing: Theme.s4) {
+                FilterKeys()
+                Spacer(minLength: 0)
+                actionKeys
+            }
         }
     }
 
-    @ViewBuilder private var actionKeys: some View {
-        HStack(spacing: Theme.s2) {
-            if !model.selection.isEmpty {
-                Button("Limpiar") { model.selection = [] }
-                    .buttonStyle(KeyButtonStyle(kind: .ghost))
-                Button("Bajar \(model.selection.count)") { model.downloadSelected() }
-                    .buttonStyle(.signalKey)
-                    .help("Descargar la selección (⌘D)")
-            } else {
-                Button(model.newFiles.isEmpty ? "Todo bajado" : "Bajar \(model.newFiles.count) nuevos") { model.downloadNew() }
-                    .buttonStyle(.signalKey)
-                    .disabled(model.newFiles.isEmpty)
-                    .help("Baja todo lo que todavía no está en tu carpeta (⇧⌘D)")
+    private var actionKeys: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            BankLegend(text: "Transfer")
+            CassetteKeyBank {
+                if !model.selection.isEmpty {
+                    Button("Clear") { model.selection = [] }
+                        .buttonStyle(CassetteKeyStyle())
+                        .help("Clear the selection (esc)")
+                    Button("Download \(model.selection.count)") { model.downloadSelected() }
+                        .buttonStyle(CassetteKeyStyle(finish: .orange))
+                        .help("Download the selection (⌘D)")
+                } else {
+                    Button { model.downloadNew() } label: {
+                        model.newFiles.isEmpty ? Text("All saved") : Text("Download \(model.newFiles.count) new")
+                    }
+                        .buttonStyle(CassetteKeyStyle(finish: .orange))
+                        .disabled(model.newFiles.isEmpty)
+                        .help("Download everything that isn't in your folder yet (⇧⌘D)")
+                }
+                Button {
+                    if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
+                } label: {
+                    Image(systemName: "eject.fill").font(.system(size: 11, weight: .bold))
+                }
+                .buttonStyle(CassetteKeyStyle(finish: .charcoal, width: 48))
+                .help("Eject: release the camera and put the Mac back on your Wi-Fi")
             }
-            Button {
-                if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
-            } label: {
-                Image(systemName: "eject.fill").font(.system(size: 11, weight: .bold))
-            }
-            .buttonStyle(KeyButtonStyle(kind: .ink))
-            .help("Expulsar: libera la cámara y devuelve el Mac a tu Wi-Fi")
         }
+        .fixedSize()
     }
 }
 
-/// The deck's LCD: camera, library counts, battery and card.
+/// The deck's LCD: one quiet line of `LABEL: value` readouts.
 private struct StatusDisplay: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
         let s = model.status
         LCDGlass {
-            VStack(alignment: .leading, spacing: 5) {
-                LCDText(text: (model.target?.model.name ?? "OSMO").uppercased(), size: 10, weight: .bold,
-                        color: Theme.lcdText.opacity(0.55))
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    LCDText(text: String(format: "%03d", model.files.count), size: 20, weight: .bold, ghost: 3)
-                    LCDText(text: "ARCH", size: 10, color: Theme.lcdText.opacity(0.55))
-                    LCDText(text: String(format: "%03d", model.newFiles.count), size: 20, weight: .bold, ghost: 3)
-                    LCDText(text: "NUEVOS", size: 10, color: Theme.lcdText.opacity(0.55))
+            HStack(spacing: Theme.s4) {
+                LCDText(text: (model.target?.model.name ?? "Osmo").uppercased(), size: 12.5, weight: .medium)
+                LCDPair(label: "Files", value: "\(model.files.count)")
+                LCDPair(label: "New", value: "\(model.newFiles.count)")
+                if !model.selection.isEmpty {
+                    LCDPair(label: "Selected", value: "\(model.selection.count)")
                 }
-                HStack(spacing: 12) {
-                    LCDText(text: s.batteryPercent >= 0 ? "BAT \(s.batteryPercent)%" : "BAT --", size: 10.5,
-                            color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText.opacity(0.8))
-                    if let st = s.displayStorage {
-                        LCDText(text: "SD " + Format.compact(bytes: st.freeMb * 1_048_576) + " LIBRE", size: 10.5,
-                                color: Theme.lcdText.opacity(0.8))
-                    }
+                Spacer(minLength: Theme.s2)
+                LCDPair(label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
+                        color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
+                if let st = s.displayStorage {
+                    LCDPair(label: "Card", value: Format.compact(bytes: st.freeMb * 1_048_576))
+                        .help(String(localized: "\(Format.megabytes(st.freeMb)) free of \(Format.megabytes(st.totalMb))"))
                 }
             }
-            .padding(.horizontal, Theme.s3)
-            .padding(.vertical, 10)
+            .padding(.horizontal, Theme.s3 + 2)
+            .padding(.vertical, 13)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 }
 
-/// Filter keys in a milled strip, with an LED over the active one — like a device's mode keys.
+/// View keys: a cassette bank where the chosen key stays latched down.
 private struct FilterKeys: View {
     @Environment(AppModel.self) private var model
 
     var body: some View {
-        HStack(spacing: 6) {
-            ForEach(AppModel.Filter.allCases) { f in
-                VStack(spacing: 6) {
-                    LED(color: Theme.accent, state: model.filter == f ? .on : .off, size: 6)
-                    Button(f.rawValue) { model.filter = f }
-                        .buttonStyle(KeyButtonStyle(kind: .ghost, compact: true))
+        VStack(alignment: .leading, spacing: 6) {
+            BankLegend(text: "Show")
+            CassetteKeyBank {
+                ForEach(AppModel.Filter.allCases) { f in
+                    Button(f.title) { model.filter = f }
+                        .buttonStyle(CassetteKeyStyle(latched: model.filter == f, width: 66))
                 }
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .recessed(radius: Theme.radiusM)
+        .fixedSize()
     }
 }
 
@@ -216,56 +220,18 @@ struct SectionHeader: View {
     var body: some View {
         let pending = files.filter { !model.isDownloaded($0) }
         HStack(alignment: .center, spacing: Theme.s2) {
-            Silk(title, color: Theme.ink, size: 10.5)
+            Silk(verbatim: title, color: Theme.ink, size: 10.5)
             Text(String(format: "%02d", files.count))
                 .font(Theme.readout(10, weight: .bold))
                 .foregroundStyle(Theme.accent)
             EngravedRule()
             if !pending.isEmpty {
-                Button("Bajar día") { model.enqueue(pending) }
+                Button("Download day") { model.enqueue(pending) }
                     .buttonStyle(.ghostKey)
             }
         }
         .padding(.vertical, Theme.s2)
         .padding(.horizontal, Theme.s1)
         .background(Theme.recess.opacity(0.96))
-    }
-}
-
-/// Battery and free space, from the camera's own status pushes.
-struct CameraStatusPill: View {
-    @Environment(AppModel.self) private var model
-
-    var body: some View {
-        let s = model.status
-        HStack(spacing: Theme.s3) {
-            LED(color: model.linkLost ? Theme.danger : Theme.success, state: model.linkLost ? .blink : .on)
-            if s.batteryPercent >= 0 {
-                Readout(label: s.charging ? "BAT ⚡︎" : "BAT", value: "\(s.batteryPercent)%",
-                        alert: s.batteryPercent <= 15)
-            }
-            if let st = s.displayStorage {
-                Readout(label: "SD", value: Format.megabytes(st.freeMb).uppercased(), alert: false)
-                    .help("\(Format.megabytes(st.freeMb)) libres de \(Format.megabytes(st.totalMb))")
-            }
-        }
-        .padding(.horizontal, Theme.s2)
-    }
-
-}
-
-/// `BAT 76%` — a silkscreen label over a mono value.
-struct Readout: View {
-    let label: String
-    let value: String
-    let alert: Bool
-
-    var body: some View {
-        HStack(alignment: .firstTextBaseline, spacing: 5) {
-            Silk(label, size: 9.5)
-            Text(value)
-                .font(Theme.readout(12.5, weight: .bold))
-                .foregroundStyle(alert ? Theme.danger : Theme.ink)
-        }
     }
 }

@@ -13,49 +13,49 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("Descargas") {
-                LabeledContent("Carpeta") {
+            Section("Downloads") {
+                LabeledContent("Folder") {
                     HStack {
                         Text(folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
                             .lineLimit(1)
                             .truncationMode(.middle)
-                        Button("Cambiar…", action: chooseFolder)
+                        Button("Change…", action: chooseFolder)
                         if folder != Preferences.defaultDownloadFolder {
-                            Button("Restablecer") { setFolder(Preferences.defaultDownloadFolder) }
+                            Button("Reset") { setFolder(Preferences.defaultDownloadFolder) }
                         }
                     }
                 }
-                Toggle("Organizar en subcarpetas por fecha (AAAA-MM-DD)", isOn: $byDate)
+                Toggle("Sort into folders by date (YYYY-MM-DD)", isOn: $byDate)
                     .onChange(of: byDate) { Preferences.organizeByDate = byDate }
-                Toggle("Incluir RAW (.DNG) y audio de respaldo (.WAV) cuando existan", isOn: $sidecars)
+                Toggle("Include RAW (.DNG) and backup audio (.WAV) when present", isOn: $sidecars)
                     .onChange(of: sidecars) { Preferences.includeSidecars = sidecars }
-                Toggle("Sonido y aviso al terminar de descargar", isOn: $notifyWhenDone)
+                Toggle("Play a sound and notify when downloads finish", isOn: $notifyWhenDone)
                     .onChange(of: notifyWhenDone) { Preferences.notifyWhenDone = notifyWhenDone }
             }
-            Section("Conexión") {
-                Toggle("Volver a mi Wi-Fi al desconectar", isOn: $restoreWifi)
+            Section("Connection") {
+                Toggle("Go back to my Wi-Fi when disconnecting", isOn: $restoreWifi)
                     .onChange(of: restoreWifi) { Preferences.restoreWifi = restoreWifi }
-                Toggle("Desconectar automáticamente al terminar de descargar", isOn: $disconnectWhenDone)
+                Toggle("Disconnect automatically when downloads finish", isOn: $disconnectWhenDone)
                     .onChange(of: disconnectWhenDone) { Preferences.disconnectWhenDone = disconnectWhenDone }
             }
-            Section("Mantenimiento") {
-                LabeledContent("Cámaras guardadas") {
-                    Button("Olvidar todas…") { confirmForget = true }
+            Section("Maintenance") {
+                LabeledContent("Saved cameras") {
+                    Button("Forget All…") { confirmForget = true }
                         .disabled(model.savedCameras.isEmpty)
                 }
-                LabeledContent("Registro técnico") {
-                    Button("Abrir carpeta") { NSWorkspace.shared.open(logSink.directory) }
+                LabeledContent("Technical log") {
+                    Button("Open Folder") { NSWorkspace.shared.open(logSink.directory) }
                 }
             }
         }
         .formStyle(.grouped)
         .frame(width: 560)
-        .confirmationDialog("¿Olvidar las cámaras guardadas?", isPresented: $confirmForget) {
-            Button("Olvidar", role: .destructive) {
+        .confirmationDialog("Forget the saved cameras?", isPresented: $confirmForget) {
+            Button("Forget", role: .destructive) {
                 for c in model.savedCameras { SavedCameraStore.remove(c.id) }
             }
         } message: {
-            Text("La próxima vez vas a tener que buscarlas de nuevo. El historial de descargas se mantiene.")
+            Text("Next time you’ll have to find them again. Your download history is kept.")
         }
     }
 
@@ -65,7 +65,7 @@ struct SettingsView: View {
         panel.canChooseFiles = false
         panel.canCreateDirectories = true
         panel.directoryURL = folder
-        panel.prompt = "Elegir"
+        panel.prompt = String(localized: "Choose")
         if panel.runModal() == .OK, let url = panel.url { setFolder(url) }
     }
 

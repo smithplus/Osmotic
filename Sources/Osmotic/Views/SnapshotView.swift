@@ -10,7 +10,7 @@ struct SnapshotView: View {
             switch model.screen {
             case .library:
                 TopPlate {
-                    LED(color: Theme.success, state: .on, label: "Enlazada")
+                    LED(color: Theme.success, state: .on, label: "Linked")
                 }
                 ControlDeck(confirmDisconnect: .constant(false))
                     .padding(.horizontal, Theme.s3)

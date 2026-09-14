@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import Foundation
 import Observation
 import OsmoticCore
@@ -16,18 +17,27 @@ final class AppModel {
 
         var title: String {
             switch self {
-            case .bluetooth: "Bluetooth"
-            case .pairing: "Emparejamiento"
-            case .wifi: "Wi-Fi de la cámara"
-            case .datalink: "Enlace con la cámara"
-            case .library: "Biblioteca"
+            case .bluetooth: String(localized: "Bluetooth")
+            case .pairing: String(localized: "Pairing")
+            case .wifi: String(localized: "Camera Wi-Fi")
+            case .datalink: String(localized: "Camera link")
+            case .library: String(localized: "Library")
             }
         }
     }
 
     enum Filter: String, CaseIterable, Identifiable {
-        case all = "Todo", videos = "Videos", photos = "Fotos", favorites = "Favoritos", new = "Nuevos"
+        case all, videos, photos, favorites, new
         var id: String { rawValue }
+        var title: LocalizedStringKey {
+            switch self {
+            case .all: "All"
+            case .videos: "Videos"
+            case .photos: "Photos"
+            case .favorites: "Starred"
+            case .new: "New"
+            }
+        }
     }
 
     struct Target: Equatable {
@@ -60,7 +70,11 @@ final class AppModel {
 
     // ---- transfers ----------------------------------------------------------------------------
     private(set) var transfer: TransferState?
-    private(set) var lastTransferSummary: String?
+    struct TransferSummary: Equatable {
+        let ok: Bool
+        let text: String
+    }
+    private(set) var lastTransferSummary: TransferSummary?
 
     let ble = BluetoothService()
     let http = CameraHTTP()
@@ -128,7 +142,7 @@ final class AppModel {
             screen = .connecting
             stage = .pairing
             needsApproval = true
-            stageDetail = "Aprobá la conexión en la pantalla de la cámara"
+            stageDetail = String(localized: "Approve the connection on the camera’s screen")
         case "cameras":
             screen = .cameras
             ble.injectDemo(DiscoveredCamera(id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
@@ -175,7 +189,7 @@ final class AppModel {
         passwordPromptSSID = nil
         linkLost = false
         stage = .bluetooth
-        stageDetail = "Buscando \(t.name)…"
+        stageDetail = String(localized: "Looking for \(t.name)…")
         datalinkProgress = 0
         screen = .connecting
         ble.stopScan()
@@ -226,7 +240,7 @@ final class AppModel {
 
             // 2. Join the camera's access point.
             stage = .wifi
-            stageDetail = "Esperando que la cámara encienda su Wi-Fi…"
+            stageDetail = String(localized: "Waiting for the camera to turn on its Wi-Fi…")
             Preferences.pendingRestoreSSID = previousSSID
             Preferences.pendingCameraSSID = ssid
             joinedCameraSSID = ssid
@@ -239,19 +253,19 @@ final class AppModel {
 
             // 3. Datalink: register, playback, newest page.
             stage = .datalink
-            stageDetail = "Leyendo la tarjeta de la cámara…"
+            stageDetail = String(localized: "Reading the camera’s card…")
             let s = makeSession(model: t.model, interface: joined.interface)
             s.onProgress = { p in Task { @MainActor [weak self] in self?.datalinkProgress = p } }
             session = s   // owned from here on: teardown closes it on any exit
             let result = await s.connect()
             try live()
             guard result.handshakeOk else {
-                throw ConnectError.message("La cámara no respondió en el enlace de datos. Si macOS preguntó por acceso a la red local, permitilo y reintentá.")
+                throw ConnectError.message(String(localized: "The camera didn’t answer on the data link. If macOS asked about local network access, allow it and try again."))
             }
 
             // 4. Library.
             stage = .library
-            stageDetail = result.files.isEmpty ? "La tarjeta está vacía" : "\(result.files.count) archivos"
+            stageDetail = result.files.isEmpty ? String(localized: "The card is empty") : String(localized: "\(result.files.count) files")
             let resolved = await http.resolveStorage(result.files, singleSdStorage: result.model.singleSdStorage)
             try live()
             files = resolved
@@ -290,8 +304,8 @@ final class AppModel {
     private func pairAndGetCredentials(_ t: Target) async throws -> (String, String) {
         guard ble.power == .poweredOn else {
             throw ConnectError.message(ble.power == .unauthorized
-                ? "Osmotic no tiene permiso de Bluetooth. Activalo en Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
-                : "El Bluetooth del Mac está apagado.")
+                ? String(localized: "Osmotic doesn’t have Bluetooth permission. Turn it on in System Settings › Privacy & Security › Bluetooth.")
+                : String(localized: "The Mac’s Bluetooth is off."))
         }
         let flow = PairingFlow(bleName: t.name, savedPassword: SavedCameraStore.password(for: t.id))
         self.flow = flow
@@ -308,7 +322,7 @@ final class AppModel {
         ble.onReady = { [weak self] in
             guard let self else { return }
             self.stage = .pairing
-            self.stageDetail = "Emparejando con la cámara…"
+            self.stageDetail = String(localized: "Pairing with the camera…")
             self.isArmed = true
             self.armed?.resume()
             self.armed = nil
@@ -316,21 +330,21 @@ final class AppModel {
         }
         ble.onDisconnect = { [weak self] error in
             guard let self, self.stage <= .pairing, self.screen == .connecting else { return }
-            self.failPending(ConnectError.message("La cámara cerró la conexión Bluetooth\(error.map { " (\($0.localizedDescription))" } ?? "")."))
+            self.failPending(ConnectError.message(String(localized: "The camera closed the Bluetooth connection.") + (error.map { " (\($0.localizedDescription))" } ?? "")))
         }
 
         isArmed = false
         pendingCredentials = nil
         guard ble.connect(t.id) else {
-            throw ConnectError.message("No se encuentra la cámara. Encendela y acercala al Mac.")
+            throw ConnectError.message(String(localized: "Can’t find the camera. Turn it on and bring it close to the Mac."))
         }
         // Bluetooth link + GATT armed.
-        try await withTimeout(25, message: "No se pudo conectar por Bluetooth. ¿La cámara está encendida y cerca?") { [self] in
+        try await withTimeout(25, message: String(localized: "Couldn’t connect over Bluetooth. Is the camera on and nearby?")) { [self] in
             if isArmed { return }
             try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in armed = c }
         }
         // Pairing → credentials. Approval on the camera screen can take a while.
-        return try await withTimeout(120, message: "La cámara no entregó su Wi-Fi. Probá apagarla y encenderla.") { [self] in
+        return try await withTimeout(120, message: String(localized: "The camera didn’t hand over its Wi-Fi. Try turning it off and on again.")) { [self] in
             if let p = pendingCredentials { return (p.ssid, p.password) }
             let c = try await withCheckedThrowingContinuation { (c: CheckedContinuation<(ssid: String, password: String), Error>) in
                 credentials = c
@@ -343,10 +357,10 @@ final class AppModel {
         switch event {
         case .approvalRequired:
             needsApproval = true
-            stageDetail = "Aprobá la conexión en la pantalla de la cámara"
+            stageDetail = String(localized: "Approve the connection on the camera’s screen")
         case .paired:
             needsApproval = false
-            stageDetail = "Pidiendo la red Wi-Fi a la cámara…"
+            stageDetail = String(localized: "Asking the camera for its Wi-Fi network…")
         case .credentials(let ssid, let password):
             passwordPromptSSID = nil
             if let c = credentials {
@@ -356,10 +370,10 @@ final class AppModel {
                 pendingCredentials = (ssid, password)
             }
         case .needsPassword(let ssid):
-            stageDetail = "Ingresá la contraseña Wi-Fi de la cámara"
+            stageDetail = String(localized: "Enter the camera’s Wi-Fi password")
             passwordPromptSSID = ssid
         case .notActivated:
-            failPending(ConnectError.message("Esta cámara nunca fue activada, así que no enciende su Wi-Fi. Activala una vez con DJI Mimo."))
+            failPending(ConnectError.message(String(localized: "This camera was never activated, so it won’t turn on its Wi-Fi. Activate it once with DJI Mimo.")))
         }
     }
 
@@ -433,7 +447,7 @@ final class AppModel {
             joinedCameraSSID = nil
             if restoreWifi {
                 restoringWifi = true
-                stageDetail = "Volviendo a tu Wi-Fi…"
+                stageDetail = String(localized: "Going back to your Wi-Fi…")
                 await WiFiService.restore(previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP)
                 restoringWifi = false
             }
@@ -750,7 +764,7 @@ final class AppModel {
         transferTask?.cancel()
         transferTask = nil
         transfer = nil
-        lastTransferSummary = "Descarga cancelada — lo que ya bajó quedó guardado"
+        lastTransferSummary = TransferSummary(ok: false, text: String(localized: "Download cancelled — what already arrived is saved"))
     }
 
     private func runQueue(generation gen: Int) async {
@@ -810,10 +824,13 @@ final class AppModel {
         let failed = transfer?.failed ?? []
         let cancelled = Task.isCancelled
         transfer = nil
-        lastTransferSummary = cancelled ? "Descarga cancelada"
-            : failed.isEmpty ? "Listo: \(saved) archivo\(saved == 1 ? "" : "s") en \(Preferences.downloadFolder.lastPathComponent)"
-            : "\(failed.count) archivo\(failed.count == 1 ? "" : "s") no se pudieron bajar — reintentá para reanudar"
-        log("transfer: finished — \(lastTransferSummary ?? "")")
+        let folderName = Preferences.downloadFolder.lastPathComponent
+        lastTransferSummary = cancelled
+            ? TransferSummary(ok: false, text: String(localized: "Download cancelled"))
+            : failed.isEmpty
+            ? TransferSummary(ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
+            : TransferSummary(ok: false, text: String(localized: "\(String(localized: "\(failed.count) files")) couldn’t be downloaded — try again to resume"))
+        log("transfer: finished — \(lastTransferSummary?.text ?? "")")
         if !cancelled { TransferNotifier.finished(saved: saved, failed: failed.count, folder: Preferences.downloadFolder) }
         if !cancelled && failed.isEmpty && Preferences.disconnectWhenDone && screen == .library {
             // Not awaited: disconnect() cancels this very task.

@@ -26,8 +26,8 @@ struct PreviewView: View {
                 } else if let photo {
                     Image(nsImage: photo).resizable().scaledToFit()
                 } else if failed {
-                    ContentUnavailableView("No se pudo abrir la vista previa", systemImage: "eye.slash",
-                                           description: Text("Descargalo para verlo en calidad completa."))
+                    ContentUnavailableView("Couldn’t open the preview", systemImage: "eye.slash",
+                                           description: Text("Download it to watch it in full quality."))
                         .foregroundStyle(.white)
                 } else {
                     ProgressView().controlSize(.large).tint(.white)
@@ -38,22 +38,22 @@ struct PreviewView: View {
             HStack(spacing: Theme.s3) {
                 Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left") }
                     .keyboardShortcut(.leftArrow, modifiers: [])
-                    .help("Anterior (←)")
+                    .help("Previous (←)")
                 Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right") }
                     .keyboardShortcut(.rightArrow, modifiers: [])
-                    .help("Siguiente (→)")
+                    .help("Next (→)")
                 VStack(alignment: .leading, spacing: 2) {
                     Text(current.name).font(.headline).lineLimit(1).truncationMode(.middle)
                     Text(info(current)).font(.callout).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer()
                 if model.isOnDisk(current) {
-                    Button("Mostrar en Finder") { model.revealInFinder(current) }
+                    Button("Show in Finder") { model.revealInFinder(current) }
                 } else {
-                    Button("Descargar") { model.enqueue([current]) }
+                    Button("Download") { model.enqueue([current]) }
                         .buttonStyle(.borderedProminent)
                 }
-                Button("Cerrar") { dismiss() }
+                Button("Close") { dismiss() }
                     .keyboardShortcut(.cancelAction)
             }
             .padding(Theme.s3)
@@ -84,7 +84,7 @@ struct PreviewView: View {
         if f.isVideo {
             if onDisk {
                 // Already on the Mac: the original, instantly and at full quality.
-                start(AVPlayer(url: local), source: "original en tu Mac")
+                start(AVPlayer(url: local), source: String(localized: "original on your Mac"))
                 return
             }
             for path in f.previewURLPaths {
@@ -96,7 +96,7 @@ struct PreviewView: View {
                     guard !Task.isCancelled else { return }
                     log("preview: streaming \(path)")
                     start(AVPlayer(playerItem: AVPlayerItem(asset: asset)),
-                          source: path.hasSuffix(".LRF") ? "vista previa liviana" : "original desde la cámara")
+                          source: path.hasSuffix(".LRF") ? String(localized: "lightweight preview") : String(localized: "original from the camera"))
                     return
                 }
                 log("preview: \(path) not playable")
@@ -108,7 +108,7 @@ struct PreviewView: View {
             guard !Task.isCancelled else { return }
             if let data, let img = NSImage(data: data) {
                 photo = img
-                source = onDisk ? "en tu Mac" : "desde la cámara"
+                source = onDisk ? String(localized: "on your Mac") : String(localized: "from the camera")
             } else if photo == nil {
                 failed = true
             }

@@ -14,53 +14,53 @@ struct TransferBar: View {
         }
     }
 
-    /// The transfer display: an LCD set into the plate, with its keys beside it.
+    /// The transfer display: an LCD set into the plate, with its key beside it. Values sit in fixed
+    /// columns under small legends so nothing jumps while the numbers change.
     private func active(_ t: AppModel.TransferState) -> some View {
-        HStack(spacing: Theme.s3) {
+        HStack(alignment: .bottom, spacing: Theme.s3) {
             LCDGlass {
-                HStack(spacing: Theme.s4) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        LCDText(text: "DESCARGANDO", size: 9.5, weight: .bold, color: Theme.lcdText.opacity(0.55))
-                        LCDText(text: t.current?.name ?? "PREPARANDO…", size: 11.5)
+                VStack(alignment: .leading, spacing: 9) {
+                    HStack(spacing: Theme.s4) {
+                        LCDText(text: t.current?.name ?? String(localized: "Preparing…").uppercased(), size: 12, weight: .medium)
+                            .truncationMode(.middle)
+                        Spacer(minLength: Theme.s2)
+                        LCDPair(label: "File", value: "\(min(t.done + 1, t.total))/\(t.total)")
+                        if t.speed > 0 { LCDPair(label: "Speed", value: Format.bytes(Int(t.speed)).uppercased() + "/S") }
+                        if let eta = t.eta { LCDPair(label: "Left", value: Format.clock(eta)) }
+                        LCDText(text: "\(Int((t.fraction * 100).rounded()))%", size: 12, weight: .medium)
+                            .frame(width: 44, alignment: .trailing)
                     }
-                    .frame(width: 250, alignment: .leading)
-                    VStack(alignment: .leading, spacing: 6) {
-                        SegmentMeter(value: t.fraction, segments: 44).frame(height: 10)
-                        HStack(spacing: Theme.s3) {
-                            LCDText(text: "\(Int((t.fraction * 100).rounded()))%", size: 13, weight: .bold)
-                            LCDText(text: String(format: "%02d/%02d", min(t.done + 1, t.total), t.total), size: 11,
-                                    color: Theme.lcdText.opacity(0.75))
-                            if t.speed > 0 {
-                                LCDText(text: Format.bytes(Int(t.speed)).uppercased() + "/S", size: 11, color: Theme.lcdText.opacity(0.75))
-                            }
-                            if let eta = t.eta { LCDText(text: "−" + Format.clock(eta), size: 11, color: Theme.lcdText.opacity(0.75)) }
-                        }
-                    }
+                    SegmentMeter(value: t.fraction, segments: 60).frame(height: 5)
                 }
-                .padding(.horizontal, Theme.s3)
-                .padding(.vertical, 10)
+                .padding(.horizontal, Theme.s3 + 2)
+                .padding(.vertical, 12)
             }
-            Button("Cancelar") { model.cancelTransfers() }
-                .buttonStyle(KeyButtonStyle(kind: .ghost))
+            CassetteKeyBank {
+                Button("Cancel") { model.cancelTransfers() }
+                    .buttonStyle(CassetteKeyStyle(height: 40))
+            }
+            .fixedSize()
         }
         .padding(.horizontal, Theme.s3)
         .padding(.bottom, Theme.s3)
     }
 
-    private func finished(_ summary: String) -> some View {
-        let ok = summary.hasPrefix("Listo")
-        return HStack(spacing: Theme.s3) {
+    private func finished(_ summary: AppModel.TransferSummary) -> some View {
+        HStack(alignment: .bottom, spacing: Theme.s3) {
             LCDGlass {
                 HStack(spacing: Theme.s3) {
-                    LED(color: ok ? Theme.success : Theme.warning, state: .on)
-                    LCDText(text: summary.uppercased(), size: 12, weight: .semibold)
+                    LED(color: summary.ok ? Theme.success : Theme.warning, state: .on)
+                    LCDText(text: summary.text.uppercased(), size: 12, weight: .medium)
                     Spacer()
                 }
-                .padding(.horizontal, Theme.s3)
-                .padding(.vertical, 12)
+                .padding(.horizontal, Theme.s3 + 2)
+                .padding(.vertical, 14)
             }
-            Button("Mostrar en Finder") { model.openDownloadFolder() }
-                .buttonStyle(.signalKey)
+            CassetteKeyBank {
+                Button("Show in Finder") { model.openDownloadFolder() }
+                    .buttonStyle(CassetteKeyStyle(finish: .orange, height: 40))
+            }
+            .fixedSize()
         }
         .padding(.horizontal, Theme.s3)
         .padding(.bottom, Theme.s3)

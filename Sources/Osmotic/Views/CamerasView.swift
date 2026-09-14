@@ -37,11 +37,11 @@ struct CamerasView: View {
         VStack(alignment: .leading, spacing: Theme.s4) {
             display
             if let error = model.connectError { ErrorBanner(message: error) }
-            if model.restoringWifi { Notice(text: "Volviendo a tu red Wi-Fi…") }
+            if model.restoringWifi { Notice(text: "Going back to your Wi-Fi…") }
             bluetoothNotice
 
             VStack(alignment: .leading, spacing: Theme.s2 + 2) {
-                SectionIndex(number: 1, title: "Cerca")
+                SectionIndex(number: 1, title: "Nearby")
                 if nearby.isEmpty {
                     EmptyNearby()
                 } else {
@@ -56,7 +56,7 @@ struct CamerasView: View {
 
             if !savedOutOfRange.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
-                    SectionIndex(number: 2, title: "Conectadas antes")
+                    SectionIndex(number: 2, title: "Connected before")
                     ForEach(savedOutOfRange) { cam in
                         CameraModule(title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false) {
                             model.connect(saved: cam)
@@ -79,11 +79,9 @@ struct CamerasView: View {
         LCDGlass {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 6) {
-                    LCDText(text: nearby.isEmpty ? (model.ble.isScanning ? "BUSCANDO CÁMARAS…" : "EN PAUSA")
-                                                 : String(format: "%02d CÁMARA%@ CERCA", nearby.count, nearby.count == 1 ? "" : "S"),
-                            size: 17, weight: .bold)
-                    LCDText(text: "OSMO › MAC  ·  SIN CABLES  ·  SIN APP", size: 10.5, weight: .medium,
-                            color: Theme.lcdText.opacity(0.55))
+                    LCDText(text: headline, size: 16, weight: .medium)
+                    LCDText(text: String(localized: "Osmo › Mac  ·  No cables  ·  No app").uppercased(), size: 10.5,
+                            weight: .medium, color: Theme.lcdText.opacity(0.55))
                 }
                 Spacer()
                 ScanBars(active: model.ble.isScanning)
@@ -93,11 +91,16 @@ struct CamerasView: View {
         }
     }
 
+    private var headline: String {
+        if !nearby.isEmpty { return String(format: "%02ld ", nearby.count) + String(localized: "Nearby").uppercased() }
+        return (model.ble.isScanning ? String(localized: "Searching…") : String(localized: "Paused")).uppercased()
+    }
+
     @ViewBuilder private var bluetoothNotice: some View {
         switch model.ble.power {
-        case .poweredOff: Notice(text: "El Bluetooth está apagado. Encendelo para encontrar tu cámara.")
-        case .unauthorized: Notice(text: "Osmotic necesita permiso de Bluetooth: Ajustes del Sistema › Privacidad y seguridad › Bluetooth.")
-        case .unsupported: Notice(text: "Este Mac no tiene Bluetooth LE.")
+        case .poweredOff: Notice(text: "Bluetooth is off. Turn it on to find your camera.")
+        case .unauthorized: Notice(text: "Osmotic needs Bluetooth permission: System Settings › Privacy & Security › Bluetooth.")
+        case .unsupported: Notice(text: "This Mac doesn’t have Bluetooth LE.")
         default: EmptyView()
         }
     }
@@ -146,19 +149,20 @@ private struct CameraModule: View {
                     .foregroundStyle(Theme.ink)
                 HStack(spacing: 6) {
                     Text(subtitle).font(Theme.readout(11)).foregroundStyle(Theme.muted)
-                    if saved { Silk("· guardada") }
-                    if !inRange { Silk("· fuera de alcance") }
+                    if saved { Silk("· saved") }
+                    if !inRange { Silk("· out of range") }
                 }
             }
             Spacer()
             if let rssi {
-                SignalLEDs(level: Self.level(rssi)).help("Señal \(rssi) dBm")
+                SignalLEDs(level: Self.level(rssi)).help("Signal \(rssi) dBm")
             }
-            Button(inRange ? "Conectar" : "Intentar", action: connect)
+            Button(action: connect) { inRange ? Text("Connect") : Text("Try") }
                 .buttonStyle(KeyButtonStyle(kind: inRange ? .signal : .ghost))
         }
-        .padding(Theme.s3 - 2)
-        .raisedPanel()
+        .padding(.vertical, Theme.s3 - 2)
+        .padding(.horizontal, Theme.s3)
+        .raisedPanel(screws: true)
     }
 
     static func level(_ rssi: Int) -> Int { min(4, max(1, (rssi + 100) / 11)) }
@@ -172,7 +176,7 @@ private struct SignalLEDs: View {
             HStack(spacing: 3) {
                 ForEach(0..<4, id: \.self) { i in LED(color: Theme.success, state: i < level ? .on : .off, size: 6) }
             }
-            Silk("señal", size: 8)
+            Silk("signal", size: 8)
         }
     }
 }
@@ -186,7 +190,7 @@ private struct EmptyNearby: View {
                 .frame(width: 46, height: 46)
                 .recessed()
             VStack(alignment: .leading, spacing: 3) {
-                Text("Encendé tu cámara y acercala al Mac")
+                Text("Turn on your camera and bring it close to the Mac")
                     .font(.system(size: 14, weight: .bold))
                     .foregroundStyle(Theme.ink)
                 Text("Pocket 3 · Pocket 4 · Nano · Action 4 · 5 Pro · 6")
@@ -202,7 +206,7 @@ private struct EmptyNearby: View {
 
 /// A printed notice with an amber LED.
 struct Notice: View {
-    let text: String
+    let text: LocalizedStringKey
     var body: some View {
         HStack(spacing: Theme.s2 + 2) {
             LED(color: Theme.warning, state: .on)
@@ -233,7 +237,7 @@ private struct DownloadFolderFooter: View {
 
     var body: some View {
         HStack(spacing: Theme.s2 + 2) {
-            Silk("Destino", color: Theme.ink)
+            Silk("Saving to", color: Theme.ink)
             Text(folder.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
                 .font(Theme.readout(11.5, weight: .medium))
                 .foregroundStyle(Theme.ink)
@@ -242,9 +246,9 @@ private struct DownloadFolderFooter: View {
                 .padding(.horizontal, 10)
                 .frame(maxWidth: .infinity, minHeight: 28, alignment: .leading)
                 .recessed(radius: 6)
-            Button("Abrir") { model.openDownloadFolder() }
+            Button("Open") { model.openDownloadFolder() }
                 .buttonStyle(.ghostKey)
-            SettingsLink { Text("Cambiar") }
+            SettingsLink { Text("Change") }
                 .buttonStyle(.ghostKey)
         }
         .padding(.top, Theme.s2)

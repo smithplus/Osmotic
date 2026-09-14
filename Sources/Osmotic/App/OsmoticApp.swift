@@ -21,24 +21,24 @@ struct OsmoticApp: App {
         .defaultSize(width: 1120, height: 740)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandMenu("Cámara") {
-                Button("Descargar nuevos") { model.downloadNew() }
+            CommandMenu("Camera") {
+                Button("Download New") { model.downloadNew() }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
                     .disabled(!model.isConnected || model.newFiles.isEmpty)
-                Button("Descargar selección") { model.downloadSelected() }
+                Button("Download Selection") { model.downloadSelected() }
                     .keyboardShortcut("d", modifiers: .command)
                     .disabled(!model.isConnected || model.selection.isEmpty)
-                Button("Seleccionar todo") { model.selectAllVisible() }
+                Button("Select All") { model.selectAllVisible() }
                     .disabled(!model.isConnected)
-                Button("Seleccionar nuevos") { model.selectNew() }
+                Button("Select New") { model.selectNew() }
                     .disabled(!model.isConnected || model.newFiles.isEmpty)
-                Button("Vista previa") { model.previewSelection() }
+                Button("Preview") { model.previewSelection() }
                     .disabled(!model.isConnected || model.selection.isEmpty)
                 Divider()
-                Button("Abrir carpeta de descargas") { model.openDownloadFolder() }
+                Button("Open Downloads Folder") { model.openDownloadFolder() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
                 Divider()
-                Button("Desconectar") { Task { await model.disconnect() } }
+                Button("Disconnect") { Task { await model.disconnect() } }
                     .disabled(!model.isConnected)
             }
             CommandGroup(after: .windowList) {
@@ -52,7 +52,7 @@ struct OsmoticApp: App {
                 .tint(Theme.accent)
         }
 
-        Window("Registro", id: "log") {
+        Window("Log", id: "log") {
             LogView()
                 .tint(Theme.accent)
         }
@@ -63,7 +63,7 @@ struct OsmoticApp: App {
 private struct OpenLogButton: View {
     @Environment(\.openWindow) private var openWindow
     var body: some View {
-        Button("Registro técnico") { openWindow(id: "log") }
+        Button("Technical Log") { openWindow(id: "log") }
             .keyboardShortcut("l", modifiers: [.command, .option])
     }
 }

@@ -3,7 +3,12 @@
 <plist version="1.0">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>es</string>
+	<string>en</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>en</string>
+		<string>es</string>
+	</array>
 	<key>CFBundleExecutable</key>
 	<string>Osmotic</string>
 	<key>CFBundleIconFile</key>
@@ -29,19 +34,19 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>MIT. Protocolo por KonradIT/osmosis y colaboradores. No afiliado a DJI.</string>
+	<string>MIT. Protocol by KonradIT/osmosis and contributors. Not affiliated with DJI.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>Osmotic usa Bluetooth para encontrar tu cámara DJI y pedirle que encienda su Wi-Fi.</string>
+	<string>Osmotic uses Bluetooth to find your DJI camera and ask it to turn on its Wi-Fi.</string>
 	<key>NSLocalNetworkUsageDescription</key>
-	<string>Osmotic se comunica con tu cámara en su propia red Wi-Fi (192.168.2.1) para listar y descargar tus archivos.</string>
+	<string>Osmotic talks to your camera on its own Wi-Fi network (192.168.2.1) to list and download your files.</string>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_osmotic._udp</string>
 	</array>
 	<key>NSLocationUsageDescription</key>
-	<string>macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.</string>
+	<string>macOS only shows your Wi-Fi network’s name to apps with Location permission. Osmotic uses it to get you back on your network when it’s done. It never records your location.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.</string>
+	<string>macOS only shows your Wi-Fi network’s name to apps with Location permission. Osmotic uses it to get you back on your network when it’s done. It never records your location.</string>
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsLocalNetworking</key>

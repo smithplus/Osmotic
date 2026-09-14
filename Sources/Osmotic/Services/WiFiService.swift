@@ -17,8 +17,8 @@ enum WiFiService {
 
         var errorDescription: String? {
             switch self {
-            case .noInterface: "Este Mac no tiene una interfaz Wi-Fi disponible."
-            case .timedOut(let ssid): "No se pudo conectar a la red Wi-Fi de la cámara (\(ssid))."
+            case .noInterface: String(localized: "This Mac has no Wi-Fi interface available.")
+            case .timedOut(let ssid): String(localized: "Couldn’t join the camera’s Wi-Fi network (\(ssid)).")
             }
         }
     }
@@ -91,7 +91,7 @@ enum WiFiService {
             var associated = false
             // CoreWLAN first: needs the network visible in a scan.
             if let network = scan(iface, for: ssid) {
-                status("Conectando a \(ssid)…")
+                status(String(localized: "Joining \(ssid)…"))
                 do {
                     try iface.associate(to: network, password: password)
                     associated = true
@@ -100,7 +100,7 @@ enum WiFiService {
                     log("wifi: CoreWLAN associate failed: \(error.localizedDescription)")
                 }
             } else {
-                status("Esperando la red \(ssid)…")
+                status(String(localized: "Waiting for the \(ssid) network…"))
                 log("wifi: \(ssid) not in scan yet (attempt \(attempt))")
             }
             try Task.checkCancellation()

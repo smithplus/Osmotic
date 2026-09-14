@@ -35,6 +35,7 @@ enum Theme {
     static let lcd = rgb(19, 20, 18)
     static let lcdText = rgb(255, 146, 52)
     static let lcdDim = rgb(255, 146, 52, 0.10)
+    static let lcdCaption = rgb(236, 228, 214, 0.55)          // warm white legends on the glass
     // Signals
     static let success = rgb(74, 190, 88)
     static let warning = rgb(255, 176, 32)
@@ -59,7 +60,7 @@ enum Theme {
     /// Printed wordmark / headings on metal.
     static func display(_ size: CGFloat = 26) -> Font { .system(size: size, weight: .bold, design: .default) }
     /// Silkscreen: small caps sans.
-    static func label(_ size: CGFloat = 9.5) -> Font { .system(size: size, weight: .semibold, design: .default) }
+    static func label(_ size: CGFloat = 9.5) -> Font { .system(size: size, weight: .medium, design: .default) }
     /// LCD / numeric readouts.
     static func readout(_ size: CGFloat = 13, weight: Font.Weight = .medium) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
@@ -102,7 +103,7 @@ struct AluminumPlate: View {
 
 extension View {
     /// A raised module milled from the plate: lit top edge, contact shadow.
-    func raisedPanel(radius: CGFloat = Theme.radiusL) -> some View {
+    func raisedPanel(radius: CGFloat = Theme.radiusL, screws: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return self
             .background {
@@ -111,11 +112,17 @@ extension View {
                     .overlay { BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.14).blendMode(.overlay).clipShape(shape) }
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(colors: [Theme.metalEdgeLight, Theme.metalEdgeDark],
-                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                // Machined edge: a bright chamfer on top, the darker side of the part at the bottom.
+                shape.strokeBorder(LinearGradient(stops: [
+                    .init(color: Theme.metalEdgeLight, location: 0),
+                    .init(color: .white.opacity(0.25), location: 0.25),
+                    .init(color: .black.opacity(0.06), location: 0.7),
+                    .init(color: .black.opacity(0.22), location: 1),
+                ], startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.14), radius: 1, y: 1)
-            .shadow(color: .black.opacity(0.10), radius: 10, y: 6)
+            .overlay { if screws { CornerScrews(inset: min(radius * 0.55, 8) + 2) } }
+            .shadow(color: .black.opacity(0.18), radius: 0, y: 1)      // hard contact edge
+            .shadow(color: .black.opacity(0.08), radius: 8, y: 5)
     }
 
     /// A pocket milled into the plate: shadow inside at the top, a lit lip at the bottom.
@@ -135,7 +142,8 @@ extension View {
     func card(padding: CGFloat = Theme.s3) -> some View { self.padding(padding).raisedPanel() }
 }
 
-/// Black glass display: bezel, inner shadow, a faint diagonal glare.
+/// Dark glass display set into the plate: charcoal bezel, recessed glass with a soft inner shadow and
+/// a faint glare. Kept quiet on purpose — the readout is the only thing that should glow.
 struct LCDGlass<Content: View>: View {
     var radius: CGFloat = Theme.radiusM
     @ViewBuilder var content: Content
@@ -148,48 +156,182 @@ struct LCDGlass<Content: View>: View {
             }
             .overlay {
                 shape.fill(LinearGradient(stops: [
-                    .init(color: .white.opacity(0.07), location: 0),
-                    .init(color: .white.opacity(0.0), location: 0.45),
+                    .init(color: .white.opacity(0.06), location: 0),
+                    .init(color: .white.opacity(0.0), location: 0.35),
                 ], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .allowsHitTesting(false)
             }
-            .overlay { shape.strokeBorder(Color.black.opacity(0.55), lineWidth: 1) }
-            .padding(3)
+            .overlay { shape.strokeBorder(Color.black.opacity(0.6), lineWidth: 1) }
+            .padding(4)
             .background {
-                // The bezel the glass sits in.
-                RoundedRectangle(cornerRadius: radius + 3, style: .continuous)
+                RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
                     .fill(LinearGradient(colors: [Theme.charcoalTop, Theme.charcoalBottom], startPoint: .top, endPoint: .bottom))
             }
             .overlay {
-                RoundedRectangle(cornerRadius: radius + 3, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.18), .black.opacity(0.4)],
+                RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.2), .black.opacity(0.45)],
                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(0.18), radius: 1, y: 1)
+            .shadow(color: .white.opacity(0.6), radius: 0, y: 1)      // lit lip of the cut-out below
+            .shadow(color: .black.opacity(0.2), radius: 1.5, y: 1)
     }
 }
 
-/// Amber LCD text with the unlit segments faintly behind it, like a real segment display.
+/// `FILES: 29` — a warm-white legend and an amber value on one baseline, like the readouts on studio gear.
+struct LCDPair: View {
+    let label: LocalizedStringKey
+    let value: String
+    var size: CGFloat = 11.5
+    var color: Color = Theme.lcdText
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 0) {
+            (Text(label) + Text(verbatim: ":"))
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.lcdCaption)
+            Text(verbatim: " " + value)
+                .foregroundStyle(color)
+                .shadow(color: color.opacity(0.35), radius: 2)
+        }
+        .font(.system(size: size, weight: .regular, design: .monospaced))
+        .tracking(1.4)
+        .lineLimit(1)
+        .fixedSize()
+    }
+}
+
+// MARK: - Cassette keys
+
+/// A bank of cassette-deck keys: rectangular keys side by side in a dark slot. A key that is up shows
+/// its front edge; a latched key sits low in the slot, its face shaded, with an indicator stripe.
+struct CassetteKeyBank<Content: View>: View {
+    @ViewBuilder var content: Content
+    var body: some View {
+        HStack(spacing: 2) { content }
+            .padding(3)
+            .background {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(Color(white: 0.12).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
+            }
+            .overlay {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.35), .white.opacity(0.6)],
+                                                 startPoint: .top, endPoint: .bottom), lineWidth: 1)
+            }
+    }
+}
+
+struct CassetteKeyStyle: ButtonStyle {
+    enum Finish { case light, orange, charcoal }
+    @Environment(\.isEnabled) private var isEnabled
+    var latched = false
+    var finish: Finish = .light
+    /// Minimum width; keys still grow to fit a longer label.
+    var width: CGFloat? = nil
+    var height: CGFloat = 36
+
+    func makeBody(configuration: Configuration) -> some View {
+        let down = latched || configuration.isPressed
+        let travel: CGFloat = 6                               // front edge visible when the key is up
+        let sink: CGFloat = down ? travel - 1.5 : 0           // how far the face drops into the slot
+        let (top, bottom, skirt, text): (Color, Color, Color, Color) = switch finish {
+        case .light: (Theme.greyTop, Theme.greyBottom, Color(white: 0.60), Theme.ink)
+        case .orange: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
+        case .charcoal: (Theme.charcoalTop, Theme.charcoalBottom, Color(white: 0.05), Color(white: 0.9))
+        }
+        let face = configuration.label
+            .font(.system(size: 9.5, weight: .semibold))
+            .tracking(0.9)
+            .textCase(.uppercase)
+            .foregroundStyle(text.opacity(down && finish == .light ? 0.8 : 1))
+            .padding(.horizontal, width == nil ? 14 : 0)
+            .frame(minWidth: width ?? 44)             // grows for longer translations
+            .frame(height: height)
+            .background {
+                // Face: lit from above; flatter and darker once pushed into the slot.
+                Rectangle().fill(LinearGradient(colors: down ? [bottom.opacity(0.94), bottom] : [top, bottom],
+                                                startPoint: .top, endPoint: .bottom))
+            }
+            .overlay(alignment: .top) {
+                if latched {
+                    Rectangle().fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom))
+                        .frame(height: 4)
+                        .shadow(color: Theme.accent.opacity(0.6), radius: 2, y: 1)
+                } else if !down {
+                    Rectangle().fill(.white.opacity(finish == .light ? 0.95 : 0.3)).frame(height: 1)
+                }
+            }
+            .overlay {
+                if down {   // the slot's walls shade the top of a sunk key
+                    LinearGradient(colors: [.black.opacity(0.38), .black.opacity(0.06)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.6))
+                        .allowsHitTesting(false)
+                }
+            }
+            // Side bevels keep neighbouring keys distinct.
+            .overlay(alignment: .leading) { Rectangle().fill(.white.opacity(finish == .light ? 0.6 : 0.15)).frame(width: 1) }
+            .overlay(alignment: .trailing) { Rectangle().fill(.black.opacity(0.18)).frame(width: 1) }
+
+        return face
+            .offset(y: sink)
+            .padding(.bottom, travel)
+            .background(alignment: .bottom) {
+                Rectangle()
+                    .fill(LinearGradient(colors: [skirt, skirt.opacity(0.75)], startPoint: .top, endPoint: .bottom))
+                    .frame(height: travel + 1)
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 2.5, style: .continuous))
+            .saturation(isEnabled ? 1 : 0.2)
+            .opacity(isEnabled ? 1 : 0.55)
+            .contentShape(Rectangle())
+            .animation(.snappy(duration: 0.07), value: down)
+    }
+}
+
+/// Amber LCD text: regular-weight mono, generously tracked, with a soft glow.
 struct LCDText: View {
     let text: String
     var size: CGFloat = 13
-    var weight: Font.Weight = .semibold
+    var weight: Font.Weight = .regular
     var color: Color = Theme.lcdText
-    /// Width, in characters, of the ghost segments behind the value.
-    var ghost: Int? = nil
 
     var body: some View {
-        ZStack(alignment: .leading) {
-            if let ghost {
-                Text(String(repeating: "8", count: ghost))
-                    .foregroundStyle(Theme.lcdDim)
-            }
-            Text(text)
-                .foregroundStyle(color)
-                .shadow(color: color.opacity(0.55), radius: 3)
+        Text(text)
+            .font(.system(size: size, weight: weight, design: .monospaced))
+            .tracking(size * 0.11)
+            .foregroundStyle(color)
+            .shadow(color: color.opacity(0.35), radius: 2)
+            .lineLimit(1)
+    }
+}
+
+/// Printed group legend: `VIEW ————` with a little tick at the end, like the brackets on hardware.
+struct BankLegend: View {
+    let text: LocalizedStringKey
+    var body: some View {
+        HStack(spacing: 6) {
+            Silk(text, color: Theme.ink, size: 8.5)
+            Rectangle().fill(Theme.ink.opacity(0.3)).frame(height: 1)
         }
-        .font(.system(size: size, weight: weight, design: .monospaced))
-        .lineLimit(1)
+    }
+}
+
+/// Four tiny screw heads in the corners of a module.
+struct CornerScrews: View {
+    var inset: CGFloat = 8
+    var body: some View {
+        VStack {
+            HStack { dot; Spacer(); dot }
+            Spacer()
+            HStack { dot; Spacer(); dot }
+        }
+        .padding(inset)
+        .allowsHitTesting(false)
+    }
+    private var dot: some View {
+        Circle()
+            .fill(Color.black.opacity(0.3))
+            .frame(width: 3.5, height: 3.5)
+            .shadow(color: .white.opacity(0.7), radius: 0, y: 0.5)
     }
 }
 
@@ -197,20 +339,27 @@ struct LCDText: View {
 
 /// Silkscreen label printed on the metal.
 struct Silk: View {
-    let text: String
+    let text: Text
     var color: Color = Theme.muted
     var size: CGFloat = 9.5
 
-    init(_ text: String, color: Color = Theme.muted, size: CGFloat = 9.5) {
-        self.text = text
+    init(_ key: LocalizedStringKey, color: Color = Theme.muted, size: CGFloat = 9.5) {
+        self.text = Text(key)
+        self.color = color
+        self.size = size
+    }
+
+    init(verbatim string: String, color: Color = Theme.muted, size: CGFloat = 9.5) {
+        self.text = Text(verbatim: string)
         self.color = color
         self.size = size
     }
 
     var body: some View {
-        Text(text.uppercased())
+        text
+            .textCase(.uppercase)
             .font(Theme.label(size))
-            .tracking(0.9)
+            .tracking(1.2)
             .foregroundStyle(color)
             .lineLimit(1)
     }
@@ -221,7 +370,7 @@ struct LED: View {
     enum State { case off, on, blink }
     var color: Color = Theme.accent
     var state: State = .on
-    var label: String? = nil
+    var label: LocalizedStringKey? = nil
     var size: CGFloat = 8
     @SwiftUI.State private var phase = false
 
@@ -252,7 +401,7 @@ struct LED: View {
 /// Section header printed on the plate: `01 CERCA` with a thin engraved rule.
 struct SectionIndex: View {
     let number: Int
-    let title: String
+    let title: LocalizedStringKey
     var trailing: AnyView? = nil
 
     var body: some View {
@@ -292,8 +441,8 @@ struct KeyButtonStyle: ButtonStyle {
         }
         let shape = RoundedRectangle(cornerRadius: compact ? 6 : 8, style: .continuous)
         return configuration.label
-            .font(.system(size: compact ? 10 : 11, weight: .bold))
-            .tracking(0.7)
+            .font(.system(size: compact ? 9.5 : 10.5, weight: .semibold))
+            .tracking(0.9)
             .textCase(.uppercase)
             .foregroundStyle(text)
             .padding(.horizontal, compact ? 11 : 16)
@@ -386,39 +535,35 @@ enum Format {
     }
 
     static func eta(_ seconds: TimeInterval) -> String {
-        if seconds < 60 { return "menos de 1 min" }
+        if seconds < 60 { return String(localized: "under 1 min") }
         let f = DateComponentsFormatter()
         f.allowedUnits = seconds >= 3600 ? [.hour, .minute] : [.minute]
         f.unitsStyle = .abbreviated
-        f.calendar?.locale = Locale(identifier: "es")
         return f.string(from: seconds) ?? ""
     }
 
     static let dayHeader: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es")
         f.setLocalizedDateFormatFromTemplate("EEEE d MMMM yyyy")
         return f
     }()
 
     static let shortDay: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es")
         f.setLocalizedDateFormatFromTemplate("EEE d MMM yyyy")
         return f
     }()
 
     static let time: DateFormatter = {
         let f = DateFormatter()
-        f.locale = Locale(identifier: "es")
         f.setLocalizedDateFormatFromTemplate("HH:mm")
         return f
     }()
 
     static func day(_ date: Date) -> String {
         let cal = Calendar.current
-        if cal.isDateInToday(date) { return "Hoy" }
-        if cal.isDateInYesterday(date) { return "Ayer" }
+        if cal.isDateInToday(date) { return String(localized: "Today") }
+        if cal.isDateInYesterday(date) { return String(localized: "Yesterday") }
         return shortDay.string(from: date).replacingOccurrences(of: ".", with: "")
     }
 

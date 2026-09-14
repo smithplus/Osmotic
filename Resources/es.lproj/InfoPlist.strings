@@ -1,0 +1,6 @@
+/* Permission prompts and bundle strings, Spanish. English lives in Info.plist. */
+"NSBluetoothAlwaysUsageDescription" = "Osmotic usa Bluetooth para encontrar tu cámara DJI y pedirle que encienda su Wi-Fi.";
+"NSLocalNetworkUsageDescription" = "Osmotic se comunica con tu cámara en su propia red Wi-Fi (192.168.2.1) para listar y descargar tus archivos.";
+"NSLocationUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
+"NSLocationWhenInUseUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
+"NSHumanReadableCopyright" = "MIT. Protocolo por KonradIT/osmosis y colaboradores. No afiliado a DJI.";

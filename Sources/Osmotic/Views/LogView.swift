@@ -13,15 +13,15 @@ struct LogView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack {
-                TextField("Filtrar", text: $filter)
+                TextField("Filter", text: $filter)
                     .textFieldStyle(.roundedBorder)
                     .frame(maxWidth: 260)
                 Spacer()
-                Button("Copiar todo") {
+                Button("Copy All") {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(store.lines.joined(separator: "\n"), forType: .string)
                 }
-                Button("Mostrar archivo") { NSWorkspace.shared.activateFileViewerSelecting([logSink.url]) }
+                Button("Show File") { NSWorkspace.shared.activateFileViewerSelecting([logSink.url]) }
             }
             .padding(Theme.s2)
             Divider()
