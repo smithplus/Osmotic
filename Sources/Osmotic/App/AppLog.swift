@@ -70,3 +70,11 @@ final class FileSink: @unchecked Sendable {
         for old in logs.dropFirst(keep - 1) { try? fm.removeItem(at: old) }
     }
 }
+
+/// The user's own network names don't belong in a log they may send around: keep the first letter
+/// and the length — enough to tell networks apart while diagnosing. (The camera's SSID is logged
+/// in full; it names the camera, not the user.)
+nonisolated func redactedSSID(_ ssid: String) -> String {
+    guard let first = ssid.first else { return "\"\"" }
+    return "\"\(first)…\" (\(ssid.count) chars)"
+}

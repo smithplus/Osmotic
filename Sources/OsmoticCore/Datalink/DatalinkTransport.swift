@@ -176,13 +176,21 @@ public final class DatalinkTransport {
         var buf = [UInt8](repeating: 0, count: 65536)
         while DispatchTime.now().uptimeNanoseconds < deadline {
             if shouldAbort() { break }
-            let n = buf.withUnsafeMutableBytes { recv(fd, $0.baseAddress, $0.count, 0) }
+            var from = sockaddr_in()
+            var fromLen = socklen_t(MemoryLayout<sockaddr_in>.size)
+            let n = buf.withUnsafeMutableBytes { b in
+                withUnsafeMutablePointer(to: &from) {
+                    $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { recvfrom(fd, b.baseAddress, b.count, 0, $0, &fromLen) }
+                }
+            }
             if n < 0 {
                 if errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR { continue }
                 // A dying link (AP gone) — back off instead of spinning.
                 Thread.sleep(forTimeInterval: 0.05)
                 continue
             }
+            // Only the camera speaks on this socket: anyone else on its network is ignored.
+            guard from.sin_addr.s_addr == peer.sin_addr.s_addr else { continue }
             let data = Array(buf[0..<n])
             out.append(data)
             if data.count >= 10 {

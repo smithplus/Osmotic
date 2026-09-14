@@ -383,7 +383,7 @@ public final class CameraSession: @unchecked Sendable {
         var lastCount = -1
         var stable = 0
         for batch in 0..<15 {
-            for r in recv(800) { blob += r }
+            collect(into: &blob, recv(800))
             tx.sendAck()
             beat()
             if batch == 1 { send(0x00, 0x26, Pagination.trigger, rType: 0x01, rId: 0) }
@@ -409,7 +409,7 @@ public final class CameraSession: @unchecked Sendable {
         var blob = first
         send(0x00, 0x26, Pagination.listCommand(ctr: Pagination.sdQueryCtr, cursor: Pagination.newestSd), rType: 0x01, rId: 0)
         for batch in 0..<6 {
-            for r in recv(700) { blob += r }
+            collect(into: &blob, recv(700))
             tx.sendAck()
             beat()
             if batch == 1 { send(0x00, 0x26, Pagination.trigger, rType: 0x01, rId: 0) }
@@ -455,7 +455,7 @@ public final class CameraSession: @unchecked Sendable {
         var lastCount = -1
         var stable = 0
         for batch in 0..<12 {
-            for r in recv(800) { blob += r }
+            collect(into: &blob, recv(800))
             tx.sendAck()
             beat()
             if batch == 1 { send(0x00, 0x26, Pagination.trigger, rType: 0x01, rId: 0) }
@@ -475,6 +475,20 @@ public final class CameraSession: @unchecked Sendable {
         return fresh
     }
 
+    /// A real card's listing is a few hundred KB; past this, whatever is sending is not a camera
+    /// listing its card, and the rest is dropped (the decoder rescans the blob every tick).
+    static let maxManifestBytes = 8 << 20
+
+    private func collect(into blob: inout [UInt8], _ datagrams: [[UInt8]]) {
+        for d in datagrams {
+            guard blob.count + d.count <= Self.maxManifestBytes else {
+                log("datalink: manifest over \(Self.maxManifestBytes >> 20) MB — ignoring the rest")
+                return
+            }
+            blob += d
+        }
+    }
+
     /// A manifest-stream query on the live session: send the query, then each prime frame one tick
     /// apart, and collect until the camera closes every answer, the count sits still, or the deadline.
     private func runManifestQuery(_ payload: [UInt8], prime: [[UInt8]], timeout: TimeInterval) -> [UInt8] {
@@ -485,7 +499,7 @@ public final class CameraSession: @unchecked Sendable {
         let deadline = Date().addingTimeInterval(timeout)
         while true {
             if isClosed { return blob }
-            for r in recv(200) { blob += r }
+            collect(into: &blob, recv(200))
             ticks += 1
             if ticks <= prime.count { send(0x00, 0x26, prime[ticks - 1], rType: 0x01, rId: 0) }
             let cnt = ManifestDecoder.countMediaPaths(ManifestDecoder.manifestBytes(blob))

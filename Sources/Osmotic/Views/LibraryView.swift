@@ -4,6 +4,8 @@ import SwiftUI
 /// The camera's card, newest first, grouped by day.
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
+    @State private var gridWidth: CGFloat = 800
+    @FocusState private var gridFocused: Bool
 
     private struct DaySection: Identifiable {
         let id: String
@@ -99,13 +101,52 @@ struct LibraryView: View {
         }
     }
 
+    /// Columns the adaptive grid lays out at this width (same arithmetic as `GridItem.adaptive`).
+    private var columnCount: Int {
+        max(1, Int((gridWidth - Theme.s3 * 2 + Theme.s3) / (196 + Theme.s3)))
+    }
+
+    /// The grid as rows of ids: each day starts a new row, so ↑/↓ land where the eye expects.
+    private var rows: [[String]] {
+        sections.flatMap { section in
+            stride(from: 0, to: section.files.count, by: columnCount).map { start in
+                section.files[start..<min(start + columnCount, section.files.count)].map(\.id)
+            }
+        }
+    }
+
+    private func move(_ direction: MoveCommandDirection, proxy: ScrollViewProxy) {
+        let rows = rows
+        guard !rows.isEmpty else { return }
+        let extend = NSEvent.modifierFlags.contains(.shift)
+        guard let cur = model.cursor ?? model.visibleFiles.first(where: { model.selection.contains($0.id) })?.id,
+              let r = rows.firstIndex(where: { $0.contains(cur) }), let c = rows[r].firstIndex(of: cur) else {
+            model.moveCursor(to: rows[0][0], extend: false)
+            proxy.scrollTo(rows[0][0])
+            return
+        }
+        var target: String?
+        switch direction {
+        case .left: target = c > 0 ? rows[r][c - 1] : (r > 0 ? rows[r - 1].last : nil)
+        case .right: target = c + 1 < rows[r].count ? rows[r][c + 1] : (r + 1 < rows.count ? rows[r + 1].first : nil)
+        case .up: target = r > 0 ? rows[r - 1][min(c, rows[r - 1].count - 1)] : nil
+        case .down: target = r + 1 < rows.count ? rows[r + 1][min(c, rows[r + 1].count - 1)] : nil
+        @unknown default: target = nil
+        }
+        guard let target else { return }
+        model.moveCursor(to: target, extend: extend)
+        proxy.scrollTo(target)
+    }
+
     private var grid: some View {
+        ScrollViewReader { proxy in
         ScrollView {
             LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.s3, pinnedViews: [.sectionHeaders]) {
                 ForEach(sections) { section in
                     Section {
                         ForEach(section.files) { f in
-                            MediaCell(file: f)
+                            MediaCell(file: f, keyboardFocus: gridFocused && model.cursor == f.id)
+                                .simultaneousGesture(TapGesture().onEnded { gridFocused = true })
                                 .onAppear { if f.id == model.visibleFiles.last?.id { model.loadMoreIfNeeded() } }
                         }
                     } header: {
@@ -126,8 +167,13 @@ struct LibraryView: View {
         }
         .scrollContentBackground(.hidden)
         .clipShape(RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { gridWidth = $0 }
         .focusable()
+        .focused($gridFocused)
+        .defaultFocus($gridFocused, true)
+        // The grid's own focus is shown on the cell under the cursor, not as a ring round the tray.
         .focusEffectDisabled()
+        .onMoveCommand { move($0, proxy: proxy) }
         .onKeyPress(.escape) {
             model.selection = []
             return .handled
@@ -136,6 +182,7 @@ struct LibraryView: View {
             guard !model.selection.isEmpty else { return .ignored }
             model.previewSelection()
             return .handled
+        }
         }
     }
 }

@@ -244,7 +244,7 @@ final class AppModel {
             try live()
             previousSSID = WiFiService.currentSSID()
             if let stale = Preferences.pendingCameraSSID, previousSSID == stale { previousSSID = Preferences.pendingRestoreSSID }
-            log("wifi: current network \(previousSSID.map { "\"\($0)\"" } ?? "unknown (no Location permission or not on Wi-Fi)")")
+            log("wifi: current network \(previousSSID.map(redactedSSID) ?? "unknown (no Location permission or not on Wi-Fi)")")
 
             // 1. Bluetooth + pairing → the camera's own Wi-Fi credentials.
             let (ssid, password) = try await pairAndGetCredentials(t)
@@ -446,6 +446,7 @@ final class AppModel {
         connectGeneration += 1
         files = []
         selection = []
+        cursor = nil
         previewFile = nil
         if !keepSummary { lastTransferSummary = nil }
         retryCounts = [:]
@@ -705,6 +706,8 @@ final class AppModel {
     func cachedThumbnail(for f: CameraFile) -> NSImage? { thumbCache[f.id] }
 
     @ObservationIgnored private var selectionAnchor: String?
+    /// The keyboard's place in the grid (arrow keys move it; it gets a focus outline).
+    private(set) var cursor: String?
 
     /// A click on a cell, Finder-style: plain selects just this one (again to clear), ⌘ adds or
     /// removes it, ⇧ selects the range from the last clicked file.
@@ -721,6 +724,20 @@ final class AppModel {
         }
         selection = selection == [f.id] ? [] : [f.id]
         selectionAnchor = f.id
+        cursor = f.id
+    }
+
+    /// Arrow keys: move the cursor to `id` and select it; with ⇧, extend from the anchor instead.
+    func moveCursor(to id: String, extend: Bool) {
+        cursor = id
+        if extend, let anchor = selectionAnchor,
+           let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
+           let b = visibleFiles.firstIndex(where: { $0.id == id }) {
+            selection = Set(visibleFiles[min(a, b)...max(a, b)].map(\.id))
+        } else {
+            selection = [id]
+            selectionAnchor = id
+        }
     }
 
     /// The checkbox on a thumbnail: add or remove this file, keeping the rest.

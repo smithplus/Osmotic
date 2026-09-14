@@ -28,7 +28,9 @@ Corregido (con tests en `PathSafetyTests` y `DownloaderTests`):
 - **Flujo**: "Try Again" volvía a no hacer nada; una conexión nueva espera la restauración de Wi-Fi anterior, la recuperación de arranque y la de enlace; la recuperación se cancela al desconectar y, si se rinde, la biblioteca ofrece Reconectar/Desconectar; `CameraSession.close()` idempotente y sin doble `close(fd)`.
 - **UI/accesibilidad**: VoiceOver en celdas (acciones seleccionar/vista previa), filtros (`isSelected`), LEDs y etapas (valor + ✓/✕ además del color); LEDs respetan Reducir movimiento; contraste ≥ 4.5:1; plurales en español; confirmación al desconectar desde el menú; estados de Bluetooth apagado/sin permiso con acceso a Ajustes.
 
-Pendiente (bajo): socket UDP sin `connect()` (acepta paquetes de cualquier host de la red de la cámara), tope de tamaño del manifiesto, `NSAllowsArbitraryLoads` (verificar que `NSAllowsLocalNetworking` alcanza), hardened runtime/firma Developer ID, SSIDs en el log, navegación por flechas en la grilla y foco visible, colisión de nombres entre carpetas/tarjetas.
+También cerrado: el datalink descarta paquetes que no vienen de la IP de la cámara; manifiesto con tope de 8 MB; sin `NSAllowsArbitraryLoads` (las cargas a IPs siempre están permitidas y `NSAllowsLocalNetworking` lo anulaba igual); firma con hardened runtime; los SSID propios se abrevian en el log; grilla navegable con flechas (⇧ extiende) con contorno en la celda activa.
+
+Pendiente (bajo): firma Developer ID + notarización; dos archivos con el mismo nombre en carpetas/tarjetas distintas van al mismo destino (el Pocket 3 usa nombres con fecha y hora, no pasa en la práctica).
 
 ## Todavía sin probar con hardware
 

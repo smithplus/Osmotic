@@ -7,6 +7,8 @@ import SwiftUI
 struct MediaCell: View {
     @Environment(AppModel.self) private var model
     let file: CameraFile
+    /// The keyboard cursor is on this cell (arrow keys), shown as a light outline.
+    var keyboardFocus = false
     @State private var image: NSImage?
     @State private var hovering = false
 
@@ -152,6 +154,13 @@ struct MediaCell: View {
                 .strokeBorder(selected ? Theme.accent : Color.white.opacity(hovering ? 0.22 : 0.08),
                               lineWidth: selected ? 2.5 : 1)
         )
+        .overlay {
+            if keyboardFocus {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .strokeBorder(Theme.ink.opacity(0.85), lineWidth: 1.5)
+                    .padding(-4)
+            }
+        }
         .raisedShadow()
         // A print on a tray doesn't grow under the pointer: the mount catches the light instead.
         .motion(Motion.quick, value: hovering)

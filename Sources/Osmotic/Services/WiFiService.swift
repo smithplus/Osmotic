@@ -185,10 +185,10 @@ enum WiFiService {
         if let previous, !previous.isEmpty, previous != cameraSSID {
             for attempt in 1...3 {
                 let out = runNetworksetup(["-setairportnetwork", name, previous])
-                log("wifi: rejoin \"\(previous)\" (attempt \(attempt)) → \(out.isEmpty ? "ok" : out)")
-                if await home() { log("wifi: back on \"\(previous)\""); return }
+                log("wifi: rejoin \(redactedSSID(previous)) (attempt \(attempt)) → \(out.isEmpty ? "ok" : out)")
+                if await home() { log("wifi: back on \(redactedSSID(previous))"); return }
             }
-            log("wifi: could not rejoin \"\(previous)\" — falling back to auto-join")
+            log("wifi: could not rejoin \(redactedSSID(previous)) — falling back to auto-join")
         }
         iface.disassociate()
         log("wifi: disassociated from the camera; waiting for macOS to auto-join")
@@ -202,8 +202,8 @@ enum WiFiService {
         let candidates = visible.isEmpty ? Array(preferred.prefix(3)) : preferred.filter(visible.contains)
         for ssid in candidates {
             let out = runNetworksetup(["-setairportnetwork", name, ssid])
-            log("wifi: trying preferred \"\(ssid)\" → \(out.isEmpty ? "ok" : out)")
-            if await home() { log("wifi: joined \"\(ssid)\""); return }
+            log("wifi: trying preferred \(redactedSSID(ssid)) → \(out.isEmpty ? "ok" : out)")
+            if await home() { log("wifi: joined \(redactedSSID(ssid))"); return }
         }
         log("wifi: could not rejoin a network automatically — pick one from the menu bar")
     }

@@ -30,5 +30,6 @@ done
 mkdir -p "$APP_DIR/Contents/Resources/en.lproj"
 chmod +x "$APP_DIR/Contents/MacOS/Osmotic"
 
-codesign --force --sign - --identifier io.github.smithplus.osmotic "$APP_DIR"
+# Hardened runtime: no JIT, no unsigned libraries, no debugger attach — the app needs none of them.
+codesign --force --sign - --options runtime --identifier io.github.smithplus.osmotic "$APP_DIR"
 echo "$APP_DIR"
