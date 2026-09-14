@@ -70,8 +70,10 @@ public final class CameraSession: @unchecked Sendable {
     private static let playbackLeave = [UInt8](hex: "01010000")
     private static let streamQuiet: TimeInterval = 2.5
 
-    public init(ip: String = "192.168.2.1", model: CameraModel, interfaceName: String?,
-                log: @escaping @Sendable (String) -> Void) {
+    public init(
+        ip: String = "192.168.2.1", model: CameraModel, interfaceName: String?,
+        log: @escaping @Sendable (String) -> Void
+    ) {
         self.ip = ip
         self.model = model
         self.interfaceName = interfaceName
@@ -156,7 +158,7 @@ public final class CameraSession: @unchecked Sendable {
     /// Release playback, close the socket and stop the session thread. A job already running aborts
     /// at its next receive; jobs queued behind it return empty.
     public func close() async {
-        guard markClosed() else { return }   // already closed (or closing): never tear down twice
+        guard markClosed() else { return }  // already closed (or closing): never tear down twice
         await submit { [self] in
             teardown()
         }
@@ -279,7 +281,9 @@ public final class CameraSession: @unchecked Sendable {
             }
         }
         pagination.seed(with: files, slices: lastSlices)
-        log("datalink: parsed \(files.count) media files (newest page; \(pagination.cursorDescription); more=\(pagination.moreAvailable))")
+        log(
+            "datalink: parsed \(files.count) media files (newest page; \(pagination.cursorDescription); more=\(pagination.moreAvailable))"
+        )
         progress(1.0)
         return ConnectResult(handshakeOk: true, files: files, moreAvailable: pagination.moreAvailable, model: m)
     }
@@ -292,8 +296,9 @@ public final class CameraSession: @unchecked Sendable {
             return false
         }
         if m.tcpPoke {
-            let ok = TCPProbe.connect(ip: ip, port: 7001, timeout: 1.2, payload: OsmoCommands.setPairingPin(),
-                                      hold: 0.4, interfaceName: interfaceName)
+            let ok = TCPProbe.connect(
+                ip: ip, port: 7001, timeout: 1.2, payload: OsmoCommands.setPairingPin(),
+                hold: 0.4, interfaceName: interfaceName)
             log("datalink: tcp/7001 poke \(ok ? "sent" : "not accepted")")
         }
         guard tx.handshake() != nil else {
@@ -443,7 +448,9 @@ public final class CameraSession: @unchecked Sendable {
             let count = ManifestDecoder.countMediaPaths(ManifestDecoder.manifestBytes(blob))
             if count != lastCount { log("datalink: \(count) files (batch \(batch))") }
             progress(min(0.95, 0.55 + Double(batch) * 0.06))
-            if batch >= 3 && ManifestDecoder.streamsEnded(blob, required: [Pagination.sdQueryCtr, Pagination.internalQueryCtr]) { break }
+            if batch >= 3 && ManifestDecoder.streamsEnded(blob, required: [Pagination.sdQueryCtr, Pagination.internalQueryCtr]) {
+                break
+            }
             if batch >= 4 && count > 0 && count == lastCount { stable += 1; if stable >= 2 { break } } else { stable = 0 }
             lastCount = count
         }
@@ -477,14 +484,18 @@ public final class CameraSession: @unchecked Sendable {
         if keepAliveOn && tx.isOpen {
             let blob = runManifestQuery(
                 Pagination.listCommand(ctr: Pagination.sdQueryCtr, cursor: pagination.sdCursor),
-                prime: [Pagination.trigger,
-                        Pagination.listCommand(ctr: Pagination.internalQueryCtr, cursor: pagination.internalCursor)],
+                prime: [
+                    Pagination.trigger,
+                    Pagination.listCommand(ctr: Pagination.internalQueryCtr, cursor: pagination.internalCursor),
+                ],
                 timeout: 12)
             let (page, slices) = ManifestDecoder.collectStores(blob, log: log)
             let truncated = slices.values.contains(where: \.incomplete)
             if !page.isEmpty && !truncated {
                 let fresh = pagination.step(page: page, slices: slices)
-                log("datalink: next page(inline) \(pagination.cursorDescription) +\(fresh.count) new (more=\(pagination.moreAvailable))")
+                log(
+                    "datalink: next page(inline) \(pagination.cursorDescription) +\(fresh.count) new (more=\(pagination.moreAvailable))"
+                )
                 return fresh
             }
             log("datalink: next page(inline) \(truncated ? "TRUNCATED" : "empty") — fresh-session fallback")
@@ -512,11 +523,14 @@ public final class CameraSession: @unchecked Sendable {
             beat()
             if batch == 1 { send(0x00, 0x26, Pagination.trigger, rType: 0x01, rId: 0) }
             if batch == 2 {
-                send(0x00, 0x26, Pagination.listCommand(ctr: Pagination.internalQueryCtr, cursor: pagination.internalCursor),
-                     rType: 0x01, rId: 0)
+                send(
+                    0x00, 0x26, Pagination.listCommand(ctr: Pagination.internalQueryCtr, cursor: pagination.internalCursor),
+                    rType: 0x01, rId: 0)
             }
             let c = ManifestDecoder.countMediaPaths(ManifestDecoder.manifestBytes(blob))
-            if batch >= 3 && ManifestDecoder.streamsEnded(blob, required: [Pagination.sdQueryCtr, Pagination.internalQueryCtr]) { break }
+            if batch >= 3 && ManifestDecoder.streamsEnded(blob, required: [Pagination.sdQueryCtr, Pagination.internalQueryCtr]) {
+                break
+            }
             if batch >= 4 && c > 0 && c == lastCount { stable += 1; if stable >= 2 { break } } else { stable = 0 }
             lastCount = c
         }
@@ -621,7 +635,7 @@ public final class CameraSession: @unchecked Sendable {
         tx.onVideo = nil
         if keepAliveOn && playbackHeld && mode == .media && tx.isOpen {
             send(0x02, 0x0C, Self.playbackLeave, rType: 0x01, rId: 0)
-            Thread.sleep(forTimeInterval: 0.15)   // let the leave land before the socket goes
+            Thread.sleep(forTimeInterval: 0.15)  // let the leave land before the socket goes
             log("datalink: playback mode released")
         }
         keepAliveOn = false
@@ -635,9 +649,9 @@ public final class CameraSession: @unchecked Sendable {
     // notes) and Osmosis' MEDIA_PROTOCOL; see docs/CONTROL.md. Everything below runs on the session
     // thread. Several steps are unverified on hardware and log what the camera answered.
 
-    private static let liveStart = [UInt8](hex: "0100000000040000000501")   // 0x01/0x01, no reply
+    private static let liveStart = [UInt8](hex: "0100000000040000000501")  // 0x01/0x01, no reply
     private static let liveIdle = [UInt8](hex: "0000000000040000000401")
-    private static let liveRequest = [UInt8](hex: "00040200000000000000")   // 0x09/0xA8 = keyframe + stream
+    private static let liveRequest = [UInt8](hex: "00040200000000000000")  // 0x09/0xA8 = keyframe + stream
 
     /// Receive a short burst, keep the windows acknowledged (≥ 40 Hz while anything flows) and the
     /// presence beat going. The pump every wait in capture mode goes through.
@@ -702,7 +716,8 @@ public final class CameraSession: @unchecked Sendable {
             onLinkRestored?()
         }
         if mode == .live, lastVideoAt == nil, !liveFallbackTried,
-           let asked = liveRequestedAt, now.timeIntervalSince(asked) > 8 {
+            let asked = liveRequestedAt, now.timeIntervalSince(asked) > 8
+        {
             // No picture from the Kaze request: try OpenPocketCine's once (0x02/0x68 [08], then 0x09/0xA8
             // to receiver 0x08). Never loop the request — each one resets the encoder's GOP.
             liveFallbackTried = true
@@ -734,7 +749,7 @@ public final class CameraSession: @unchecked Sendable {
         // unless we echo them. Stray video must never reach the status parser.
         tx.windowModel = .mimo
         tx.dropVideo = true
-        playbackHeld = false          // stops the periodic playback re-assert
+        playbackHeld = false  // stops the periodic playback re-assert
         lastRxAt = Date()
         mode = .capture
         let out = { self.tracker.playbackReported == false }

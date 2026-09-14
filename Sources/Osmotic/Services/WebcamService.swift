@@ -20,9 +20,10 @@ final class WebcamService {
     init() {
         let nc = NotificationCenter.default
         for name in [AVCaptureDevice.wasConnectedNotification, AVCaptureDevice.wasDisconnectedNotification] {
-            observers.append(nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
-                MainActor.assumeIsolated { self?.refresh() }
-            })
+            observers.append(
+                nc.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                    MainActor.assumeIsolated { self?.refresh() }
+                })
         }
         refresh()
     }
@@ -67,7 +68,7 @@ final class WebcamService {
         s.addInput(input)
         session = s
         let running = SessionBox(s)
-        Task.detached { running.session.startRunning() }   // blocking call: keep it off the main thread
+        Task.detached { running.session.startRunning() }  // blocking call: keep it off the main thread
         log("webcam: preview running")
     }
 

@@ -41,46 +41,51 @@ struct LibraryView: View {
                     .padding(.bottom, Theme.s3)
                     .frame(maxHeight: .infinity, alignment: .top)
             } else {
-            ControlDeck()
-                .padding(.horizontal, Theme.s3)
-                .padding(.bottom, Theme.s3)
+                ControlDeck()
+                    .padding(.horizontal, Theme.s3)
+                    .padding(.bottom, Theme.s3)
 
-            if model.linkGaveUp {
-                HStack(spacing: Theme.s3) {
-                    ErrorBanner(message: String(localized: "Lost contact with the camera. Check that it’s on and nearby, then reconnect."))
-                    CassetteKeyBank {
-                        Button("Reconnect") { model.reconnectLink() }
-                            .buttonStyle(.primaryKey)
-                        Button("Disconnect") { model.requestDisconnect() }
-                            .buttonStyle(.secondaryKey)
+                if model.linkGaveUp {
+                    HStack(spacing: Theme.s3) {
+                        ErrorBanner(
+                            message: String(
+                                localized: "Lost contact with the camera. Check that it’s on and nearby, then reconnect."))
+                        CassetteKeyBank {
+                            Button("Reconnect") { model.reconnectLink() }
+                                .buttonStyle(.primaryKey)
+                            Button("Disconnect") { model.requestDisconnect() }
+                                .buttonStyle(.secondaryKey)
+                        }
+                    }
+                    .padding(.horizontal, Theme.s3)
+                    .padding(.bottom, Theme.s3)
+                    .transition(.panelFromTop)
+                }
+
+                Group {
+                    if model.files.isEmpty {
+                        trayMessage("The card is empty", "There are no videos or photos on the camera.")
+                    } else if model.visibleFiles.isEmpty {
+                        trayMessage("Nothing to show here", "Try another view.")
+                    } else {
+                        grid
                     }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .recessed(radius: Theme.radiusL)
                 .padding(.horizontal, Theme.s3)
                 .padding(.bottom, Theme.s3)
-                .transition(.panelFromTop)
-            }
-
-            Group {
-                if model.files.isEmpty {
-                    trayMessage("The card is empty", "There are no videos or photos on the camera.")
-                } else if model.visibleFiles.isEmpty {
-                    trayMessage("Nothing to show here", "Try another view.")
-                } else {
-                    grid
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .recessed(radius: Theme.radiusL)
-            .padding(.horizontal, Theme.s3)
-            .padding(.bottom, Theme.s3)
             }
 
             TransferBar()
         }
         .motion(Motion.panel, value: model.linkGaveUp)
         // One sheet that stays up while ← / → change the file (sheet(item:) would re-present on each).
-        .sheet(isPresented: Binding(get: { model.previewFile != nil },
-                                    set: { if !$0 { model.previewFile = nil } })) {
+        .sheet(
+            isPresented: Binding(
+                get: { model.previewFile != nil },
+                set: { if !$0 { model.previewFile = nil } })
+        ) {
             if let f = model.previewFile { PreviewView(file: f).environment(model) }
         }
         .confirmationDialog("Disconnect while files are downloading?", isPresented: $model.confirmingDisconnect) {
@@ -116,7 +121,8 @@ struct LibraryView: View {
         guard !rows.isEmpty else { return }
         let extend = NSEvent.modifierFlags.contains(.shift)
         guard let cur = model.cursor ?? model.visibleFiles.first(where: { model.selection.contains($0.id) })?.id,
-              let r = rows.firstIndex(where: { $0.contains(cur) }), let c = rows[r].firstIndex(of: cur) else {
+            let r = rows.firstIndex(where: { $0.contains(cur) }), let c = rows[r].firstIndex(of: cur)
+        else {
             model.moveCursor(to: rows[0][0], extend: false)
             proxy.scrollTo(rows[0][0])
             return
@@ -136,49 +142,53 @@ struct LibraryView: View {
 
     private var grid: some View {
         ScrollViewReader { proxy in
-        ScrollView {
-            LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.s3, pinnedViews: [.sectionHeaders]) {
-                ForEach(sections) { section in
-                    Section {
-                        ForEach(section.files) { f in
-                            MediaCell(file: f, keyboardFocus: gridFocused && model.cursor == f.id)
-                                .simultaneousGesture(TapGesture().onEnded { gridFocused = true })
-                                .onAppear { if f.id == model.visibleFiles.last?.id { model.loadMoreIfNeeded() } }
+            ScrollView {
+                LazyVGrid(columns: columns, alignment: .leading, spacing: Theme.s3, pinnedViews: [.sectionHeaders]) {
+                    ForEach(sections) { section in
+                        Section {
+                            ForEach(section.files) { f in
+                                MediaCell(file: f, keyboardFocus: gridFocused && model.cursor == f.id)
+                                    .simultaneousGesture(TapGesture().onEnded { gridFocused = true })
+                                    .onAppear { if f.id == model.visibleFiles.last?.id { model.loadMoreIfNeeded() } }
+                            }
+                        } header: {
+                            SectionHeader(title: section.title, files: section.files)
                         }
-                    } header: {
-                        SectionHeader(title: section.title, files: section.files)
                     }
                 }
-            }
-            .padding(.horizontal, Theme.s3)
-            .padding(.bottom, Theme.s3)
-            if model.moreAvailable || model.loadingMore {
-                HStack(spacing: Theme.s2) {
-                    LED(color: Theme.accent, state: .blink)
-                    Silk("Loading older files")
+                .padding(.horizontal, Theme.s3)
+                .padding(.bottom, Theme.s3)
+                if model.moreAvailable || model.loadingMore {
+                    HStack(spacing: Theme.s2) {
+                        LED(color: Theme.accent, state: .blink)
+                        Silk("Loading older files")
+                    }
+                    .padding(.bottom, Theme.s4)
+                    .onAppear { model.loadMoreIfNeeded() }
                 }
-                .padding(.bottom, Theme.s4)
-                .onAppear { model.loadMoreIfNeeded() }
             }
-        }
-        .scrollContentBackground(.hidden)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { gridWidth = $0 }
-        .focusable()
-        .focused($gridFocused)
-        .defaultFocus($gridFocused, true)
-        // The grid's own focus is shown on the cell under the cursor, not as a ring round the tray.
-        .focusEffectDisabled()
-        .onMoveCommand { move($0, proxy: proxy) }
-        .onKeyPress(.escape) {
-            model.selection = []
-            return .handled
-        }
-        .onKeyPress(.space) {
-            guard !model.selection.isEmpty else { return .ignored }
-            model.previewSelection()
-            return .handled
-        }
+            .scrollContentBackground(.hidden)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
+            .onGeometryChange(for: CGFloat.self) {
+                $0.size.width
+            } action: {
+                gridWidth = $0
+            }
+            .focusable()
+            .focused($gridFocused)
+            .defaultFocus($gridFocused, true)
+            // The grid's own focus is shown on the cell under the cursor, not as a ring round the tray.
+            .focusEffectDisabled()
+            .onMoveCommand { move($0, proxy: proxy) }
+            .onKeyPress(.escape) {
+                model.selection = []
+                return .handled
+            }
+            .onKeyPress(.space) {
+                guard !model.selection.isEmpty else { return .ignored }
+                model.previewSelection()
+                return .handled
+            }
         }
     }
 }
@@ -215,11 +225,14 @@ struct LibraryTopPlate: View {
             WorkspaceTabs()
         } trailing: {
             HStack(spacing: Theme.s3) {
-                LED(color: model.linkLost ? Theme.danger : Theme.success,
+                LED(
+                    color: model.linkLost ? Theme.danger : Theme.success,
                     state: model.linkLost || model.switchingWorkspace ? .blink : .on,
                     label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
                 CassetteKeyBank(compact: true) {
-                    Button { model.requestDisconnect() } label: {
+                    Button {
+                        model.requestDisconnect()
+                    } label: {
                         Label("Disconnect", systemImage: "eject.fill")
                     }
                     .buttonStyle(.compactKey)
@@ -260,7 +273,9 @@ struct ControlDeck: View {
                         .help("Download the selection (⌘D)")
                 } else {
                     let pending = model.newNotQueued.count
-                    Button { model.downloadNew() } label: {
+                    Button {
+                        model.downloadNew()
+                    } label: {
                         if pending > 0 {
                             Text("Download \(pending) new")
                         } else if model.transfer != nil {
@@ -294,8 +309,9 @@ private struct StatusDisplay: View {
                     LCDPair(label: "Selected", value: "\(model.selection.count)")
                 }
                 Spacer(minLength: Theme.s2)
-                LCDPair(label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
-                        color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
+                LCDPair(
+                    label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
+                    color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
                 if let st = s.displayStorage {
                     LCDPair(label: "Free", value: Format.compact(bytes: st.freeMb * 1_048_576))
                         .help(String(localized: "\(Format.megabytes(st.freeMb)) free of \(Format.megabytes(st.totalMb))"))

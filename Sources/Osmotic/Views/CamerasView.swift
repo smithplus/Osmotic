@@ -59,9 +59,11 @@ struct CamerasView: View {
                     if bluetoothReady { EmptyNearby() }
                 } else {
                     ForEach(nearby) { cam in
-                        CameraModule(title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
-                                     saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true,
-                                     enabled: bluetoothReady) {
+                        CameraModule(
+                            title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
+                            saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true,
+                            enabled: bluetoothReady
+                        ) {
                             model.connect(cam)
                         }
                     }
@@ -72,8 +74,10 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                     SectionIndex(number: 2, title: "Connected before")
                     ForEach(savedOutOfRange) { cam in
-                        CameraModule(title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false,
-                                     enabled: bluetoothReady) {
+                        CameraModule(
+                            title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false,
+                            enabled: bluetoothReady
+                        ) {
                             model.connect(saved: cam)
                         }
                     }
@@ -95,8 +99,9 @@ struct CamerasView: View {
             HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 6) {
                     LCDText(text: headline, size: 16, weight: .medium)
-                    LCDText(text: String(localized: "Osmo › Mac  ·  No cables  ·  No app").uppercased(), size: 10.5,
-                            weight: .medium, color: Theme.lcdText.opacity(0.75))
+                    LCDText(
+                        text: String(localized: "Osmo › Mac  ·  No cables  ·  No app").uppercased(), size: 10.5,
+                        weight: .medium, color: Theme.lcdText.opacity(0.75))
                 }
                 Spacer()
                 ScanBars(active: model.ble.isScanning)
@@ -109,14 +114,16 @@ struct CamerasView: View {
     private var bluetoothReady: Bool { model.ble.power == .poweredOn || model.ble.power == .unknown }
 
     private var headline: String {
-        let text: String = switch model.ble.power {
-        case .poweredOff: String(localized: "Bluetooth off")
-        case .unauthorized: String(localized: "No Bluetooth access")
-        case .unsupported: String(localized: "No Bluetooth LE")
-        default:
-            nearby.isEmpty ? (model.ble.isScanning ? String(localized: "Searching…") : String(localized: "Paused"))
-                           : String(localized: "\(nearby.count) cameras found")
-        }
+        let text: String =
+            switch model.ble.power {
+            case .poweredOff: String(localized: "Bluetooth off")
+            case .unauthorized: String(localized: "No Bluetooth access")
+            case .unsupported: String(localized: "No Bluetooth LE")
+            default:
+                nearby.isEmpty
+                    ? (model.ble.isScanning ? String(localized: "Searching…") : String(localized: "Paused"))
+                    : String(localized: "\(nearby.count) cameras found")
+            }
         return text.uppercased()
     }
 

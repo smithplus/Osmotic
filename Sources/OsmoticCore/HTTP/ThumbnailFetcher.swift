@@ -43,7 +43,8 @@ public actor ThumbnailFetcher {
         }
         if data == nil && file.isImage {
             if let head = await http.range(file.originalURLPath, from: 0, to: EmbeddedJpeg.headBytes - 1),
-               let jpeg = EmbeddedJpeg.fromHeader([UInt8](head)) {
+                let jpeg = EmbeddedJpeg.fromHeader([UInt8](head))
+            {
                 data = Data(jpeg)
             }
         }

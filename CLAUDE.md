@@ -16,6 +16,7 @@ swift test --filter Golden       # solo los snapshots del decodificador
 scripts/package_app.sh [debug]   # build/Osmotic.app, firmado ad-hoc
 scripts/snapshot.sh out.png [library|connecting|cameras]   # render de UI sin hardware (OSMOTIC_LANG=es para español)
 scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstrings; lista los que faltan traducir
+scripts/lint.sh [--fix]          # formato con swift-format (.swift-format: 4 espacios, 130 columnas); --fix reescribe
 ```
 
 - Log de cada ejecución: `~/Library/Logs/Osmotic/osmotic-*.log` (también Ventana › Registro técnico). Es la fuente de verdad para diagnosticar pruebas con la cámara real.

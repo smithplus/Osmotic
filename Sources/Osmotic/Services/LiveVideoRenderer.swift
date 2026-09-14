@@ -55,7 +55,7 @@ nonisolated final class LiveVideoRenderer: @unchecked Sendable {
             case H264AnnexB.NALType.slice.rawValue:
                 picture.append(u)
             default:
-                break   // AUD, SEI, others: not needed to show the picture
+                break  // AUD, SEI, others: not needed to show the picture
             }
         }
         guard !picture.isEmpty else { return }
@@ -99,28 +99,39 @@ nonisolated final class LiveVideoRenderer: @unchecked Sendable {
 
     private func makeSample(_ avcc: [UInt8], format: CMVideoFormatDescription, keyframe: Bool) -> CMSampleBuffer? {
         var block: CMBlockBuffer?
-        guard CMBlockBufferCreateWithMemoryBlock(allocator: kCFAllocatorDefault, memoryBlock: nil, blockLength: avcc.count,
-                                                 blockAllocator: kCFAllocatorDefault, customBlockSource: nil, offsetToData: 0,
-                                                 dataLength: avcc.count, flags: 0, blockBufferOut: &block) == noErr,
-              let block,
-              avcc.withUnsafeBytes({ CMBlockBufferReplaceDataBytes(with: $0.baseAddress!, blockBuffer: block,
-                                                                  offsetIntoDestination: 0, dataLength: avcc.count) }) == noErr
+        guard
+            CMBlockBufferCreateWithMemoryBlock(
+                allocator: kCFAllocatorDefault, memoryBlock: nil, blockLength: avcc.count,
+                blockAllocator: kCFAllocatorDefault, customBlockSource: nil, offsetToData: 0,
+                dataLength: avcc.count, flags: 0, blockBufferOut: &block) == noErr,
+            let block,
+            avcc.withUnsafeBytes({
+                CMBlockBufferReplaceDataBytes(
+                    with: $0.baseAddress!, blockBuffer: block,
+                    offsetIntoDestination: 0, dataLength: avcc.count)
+            }) == noErr
         else { return nil }
         var sample: CMSampleBuffer?
         var size = avcc.count
-        guard CMSampleBufferCreateReady(allocator: kCFAllocatorDefault, dataBuffer: block, formatDescription: format,
-                                        sampleCount: 1, sampleTimingEntryCount: 0, sampleTimingArray: nil,
-                                        sampleSizeEntryCount: 1, sampleSizeArray: &size, sampleBufferOut: &sample) == noErr,
-              let sample else { return nil }
+        guard
+            CMSampleBufferCreateReady(
+                allocator: kCFAllocatorDefault, dataBuffer: block, formatDescription: format,
+                sampleCount: 1, sampleTimingEntryCount: 0, sampleTimingArray: nil,
+                sampleSizeEntryCount: 1, sampleSizeArray: &size, sampleBufferOut: &sample) == noErr,
+            let sample
+        else { return nil }
         // Live: show each frame as soon as it arrives.
         if let attachments = CMSampleBufferGetSampleAttachmentsArray(sample, createIfNecessary: true),
-           CFArrayGetCount(attachments) > 0 {
+            CFArrayGetCount(attachments) > 0
+        {
             let dict = unsafeBitCast(CFArrayGetValueAtIndex(attachments, 0), to: CFMutableDictionary.self)
-            CFDictionarySetValue(dict, Unmanaged.passUnretained(kCMSampleAttachmentKey_DisplayImmediately).toOpaque(),
-                                 Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
+            CFDictionarySetValue(
+                dict, Unmanaged.passUnretained(kCMSampleAttachmentKey_DisplayImmediately).toOpaque(),
+                Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
             if !keyframe {
-                CFDictionarySetValue(dict, Unmanaged.passUnretained(kCMSampleAttachmentKey_NotSync).toOpaque(),
-                                     Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
+                CFDictionarySetValue(
+                    dict, Unmanaged.passUnretained(kCMSampleAttachmentKey_NotSync).toOpaque(),
+                    Unmanaged.passUnretained(kCFBooleanTrue).toOpaque())
             }
         }
         return sample

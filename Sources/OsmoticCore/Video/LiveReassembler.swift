@@ -35,8 +35,8 @@ public struct LiveReassembler: Sendable {
             buffer += d[36...]
             startedAt = now
         } else {
-            guard expected != nil else { return nil }   // joined mid-message: wait for the next start
-            if let last = lastSeq, seq == last { return nil }   // duplicate
+            guard expected != nil else { return nil }  // joined mid-message: wait for the next start
+            if let last = lastSeq, seq == last { return nil }  // duplicate
             if let last = lastSeq, seq != (last + 8) & 0xFFFF { dropped += 1; reset(); return nil }
             if now - startedAt > Self.staleAfter { dropped += 1; reset(); return nil }
             buffer += d[20...]

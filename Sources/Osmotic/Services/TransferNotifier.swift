@@ -22,7 +22,8 @@ enum TransferNotifier {
         NSApp.requestUserAttention(.informationalRequest)
         let content = UNMutableNotificationContent()
         content.title = failed == 0 ? String(localized: "Download finished") : String(localized: "Download incomplete")
-        content.body = failed == 0
+        content.body =
+            failed == 0
             ? String(localized: "\(String(localized: "\(saved) files")) in \(folder.lastPathComponent)")
             : String(localized: "\(saved) arrived, \(failed) didn’t — open Osmotic to try again")
         let request = UNNotificationRequest(identifier: "transfer-\(UUID().uuidString)", content: content, trigger: nil)

@@ -11,8 +11,9 @@ struct WebcamView: View {
         VStack(alignment: .leading, spacing: Theme.s3) {
             LCDGlass {
                 HStack(spacing: Theme.s4) {
-                    LCDText(text: (cam.device?.localizedName ?? String(localized: "No USB camera")).uppercased(),
-                            size: 12.5, weight: .medium, color: cam.device == nil ? Theme.lcdText.opacity(0.75) : Theme.lcdText)
+                    LCDText(
+                        text: (cam.device?.localizedName ?? String(localized: "No USB camera")).uppercased(),
+                        size: 12.5, weight: .medium, color: cam.device == nil ? Theme.lcdText.opacity(0.75) : Theme.lcdText)
                     if cam.device != nil {
                         LCDPair(label: "Link", value: "USB")
                         if let res = cam.resolution { LCDPair(label: "Picture", value: res) }
@@ -47,7 +48,8 @@ struct WebcamView: View {
                 WebcamPreview(session: session)
             } else if cam.access == .denied {
                 VStack(spacing: Theme.s3) {
-                    LCDText(text: String(localized: "No camera access").uppercased(), size: 12, weight: .medium, color: Theme.warning)
+                    LCDText(
+                        text: String(localized: "No camera access").uppercased(), size: 12, weight: .medium, color: Theme.warning)
                     CassetteKeyBank {
                         Button("Open Settings") {
                             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Camera") {
@@ -73,10 +75,12 @@ struct WebcamView: View {
             step(2, "On the camera, choose Webcam when it asks how to connect.")
             step(3, "It shows up here, and as a camera in Zoom, Meet, FaceTime or OBS.")
             EngravedRule().padding(.vertical, Theme.s1)
-            Text("As a webcam the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality.")
-                .font(.callout)
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "As a webcam the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality."
+            )
+            .font(.callout)
+            .foregroundStyle(Theme.muted)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .padding(Theme.s4)
         .frame(maxWidth: 620, alignment: .leading)

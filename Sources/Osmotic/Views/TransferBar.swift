@@ -29,8 +29,9 @@ struct TransferBar: View {
                         LCDPair(label: "File", value: "\(min(t.done + 1, t.total))/\(t.total)")
                         if model.linkLost {
                             // Speed and time left would be stale numbers over a stalled meter.
-                            LCDText(text: String(localized: "Waiting for the camera…").uppercased(), size: 12,
-                                    color: Theme.warning)
+                            LCDText(
+                                text: String(localized: "Waiting for the camera…").uppercased(), size: 12,
+                                color: Theme.warning)
                         } else {
                             if t.speed > 0 { LCDPair(label: "Speed", value: Format.bytes(Int(t.speed)).uppercased() + "/S") }
                             if let eta = t.eta { LCDPair(label: "Left", value: Format.clock(eta)) }

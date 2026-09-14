@@ -62,8 +62,10 @@ enum WiFiService {
     /// Join `ssid` and wait until the camera answers on `192.168.2.1:80`. The AP can take several
     /// seconds to come up after the BLE wake, so this keeps trying until `timeout`.
     @concurrent
-    static func join(ssid: String, password: String, timeout: TimeInterval = 60,
-                     status: @escaping @Sendable (String) -> Void) async throws -> Joined {
+    static func join(
+        ssid: String, password: String, timeout: TimeInterval = 60,
+        status: @escaping @Sendable (String) -> Void
+    ) async throws -> Joined {
         guard let iface = CWWiFiClient.shared().interface(), let name = iface.interfaceName else { throw JoinError.noInterface }
         if !iface.powerOn() { try? iface.setPower(true); try await Task.sleep(for: .seconds(2)) }
         let deadline = Date().addingTimeInterval(timeout)
@@ -149,12 +151,15 @@ enum WiFiService {
         guard (try? p.run()) != nil else { return }
         p.waitUntilExit()
         let out = String(decoding: pipe.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
-        let iface = out.split(separator: "\n").first { $0.contains("interface:") }?
+        let iface =
+            out.split(separator: "\n").first { $0.contains("interface:") }?
             .split(separator: ":").last?.trimmingCharacters(in: .whitespaces) ?? "?"
         if iface == expected {
             log("wifi: route to \(cameraIP) goes via \(iface) ✓")
         } else {
-            log("wifi: WARNING route to \(cameraIP) goes via \(iface), not \(expected) — a VPN may be capturing local traffic; downloads can fail")
+            log(
+                "wifi: WARNING route to \(cameraIP) goes via \(iface), not \(expected) — a VPN may be capturing local traffic; downloads can fail"
+            )
         }
     }
 
@@ -210,8 +215,10 @@ enum WiFiService {
 
     /// Back on a network that isn't the camera's: by name when macOS lets us read it, otherwise by an
     /// IPv4 address other than the one the camera's DHCP handed out.
-    nonisolated private static func waitForHomeNetwork(_ iface: CWInterface, _ interface: String, cameraSSID: String?,
-                                                       cameraSideIP: String?, seconds: Int) async -> Bool {
+    nonisolated private static func waitForHomeNetwork(
+        _ iface: CWInterface, _ interface: String, cameraSSID: String?,
+        cameraSideIP: String?, seconds: Int
+    ) async -> Bool {
         for _ in 0..<seconds {
             await pause(1)
             if let ssid = iface.ssid() {
@@ -231,7 +238,8 @@ enum WiFiService {
         for ptr in sequence(first: first, next: { $0.pointee.ifa_next }) {
             let ifa = ptr.pointee
             guard String(validatingCString: ifa.ifa_name) == interface, let addr = ifa.ifa_addr,
-                  addr.pointee.sa_family == UInt8(AF_INET) else { continue }
+                addr.pointee.sa_family == UInt8(AF_INET)
+            else { continue }
             var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
             if getnameinfo(addr, socklen_t(addr.pointee.sa_len), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 {
                 return String(decoding: host.prefix { $0 != 0 }.map { UInt8(bitPattern: $0) }, as: UTF8.self)

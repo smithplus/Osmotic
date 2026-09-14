@@ -17,7 +17,13 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
 
     /// `total` is the file's full size as the server stated it (Content-Length of a 200, the
     /// `/TOTAL` of a 206 or 416 Content-Range), when it said.
-    private enum Attempt { case done(total: Int?), alreadyComplete, interrupted(total: Int?), rangeIgnored, failed(Int) }
+    private enum Attempt {
+        case done(total: Int?)
+        case alreadyComplete
+        case interrupted(total: Int?)
+        case rangeIgnored
+        case failed(Int)
+    }
 
     /// Total attempts per file, productive or not — a runaway guard.
     static let maxAttempts = 20
@@ -72,8 +78,10 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
 
     /// Download `urlPath` to `destination`. `expectedSize` (from the manifest) of 0 means unknown.
     /// `progress` receives the file's running byte count, throttled.
-    public func download(urlPath: String, to destination: URL, expectedSize: Int,
-                         progress: @escaping @Sendable (Int) -> Void) async -> Result {
+    public func download(
+        urlPath: String, to destination: URL, expectedSize: Int,
+        progress: @escaping @Sendable (Int) -> Void
+    ) async -> Result {
         let fm = FileManager.default
         // Never write outside the folder we were given: the name must be a plain file name.
         let leaf = destination.lastPathComponent
@@ -152,14 +160,18 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             case .rangeIgnored: what = "range ignored"
             default: what = "link dropped"
             }
-            log("\(what) at \(after / 1_000_000) MB — resuming \(destination.lastPathComponent) in \(Int(wait * 1000)) ms (attempt \(attempt + 1))")
+            log(
+                "\(what) at \(after / 1_000_000) MB — resuming \(destination.lastPathComponent) in \(Int(wait * 1000)) ms (attempt \(attempt + 1))"
+            )
             try? await Task.sleep(for: .seconds(wait))
         }
     }
 
     /// One HTTP attempt, appending to `part` from `offset`.
-    private func fetch(urlPath: String, into part: URL, from offset: Int,
-                       progress: @escaping @Sendable (Int) -> Void) async -> Attempt {
+    private func fetch(
+        urlPath: String, into part: URL, from offset: Int,
+        progress: @escaping @Sendable (Int) -> Void
+    ) async -> Attempt {
         guard let handle = try? FileHandle(forWritingTo: part) else { return .failed(-1) }
         do { try handle.seek(toOffset: UInt64(offset)) } catch { try? handle.close(); return .failed(-1) }
         var req = http.request(urlPath)
@@ -192,8 +204,10 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
 
     // ---- URLSessionDataDelegate (serial delegate queue) -------------------------------------------
 
-    public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
-                           completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
+    public func urlSession(
+        _ session: URLSession, dataTask: URLSessionDataTask, didReceive response: URLResponse,
+        completionHandler: @escaping (URLSession.ResponseDisposition) -> Void
+    ) {
         guard let st = state(dataTask) else { completionHandler(.cancel); return }
         let code = (response as? HTTPURLResponse)?.statusCode ?? -1
         let http = response as? HTTPURLResponse
@@ -219,22 +233,27 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             completionHandler(.cancel)
             return
         }
-        st.total = code == 206 ? Self.contentRangeTotal(http)
-                               : (response.expectedContentLength > 0 ? Int(response.expectedContentLength) : nil)
+        st.total =
+            code == 206
+            ? Self.contentRangeTotal(http)
+            : (response.expectedContentLength > 0 ? Int(response.expectedContentLength) : nil)
         completionHandler(.allow)
     }
 
     /// `Content-Range: bytes 100-199/1000` or `bytes */1000` → 1000.
     static func contentRangeTotal(_ response: HTTPURLResponse?) -> Int? {
         guard let value = response?.value(forHTTPHeaderField: "Content-Range"),
-              let slash = value.lastIndex(of: "/") else { return nil }
+            let slash = value.lastIndex(of: "/")
+        else { return nil }
         return Int(value[value.index(after: slash)...].trimmingCharacters(in: .whitespaces))
     }
 
     /// Never follow a redirect: the camera doesn't send them, and following one could fetch from any
     /// host. The 3xx then arrives as the response and counts as a refusal.
-    public func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
-                           newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+    public func urlSession(
+        _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void
+    ) {
         completionHandler(nil)
     }
 
@@ -255,11 +274,13 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
     }
 
     public func urlSession(_ session: URLSession, task: URLSessionTask, didCompleteWithError error: Error?) {
-        guard let st = lock.withLock({ () -> TaskState? in
-            let st = handlers.removeValue(forKey: task.taskIdentifier)
-            if st == nil { completedEarly.insert(task.taskIdentifier) }
-            return st
-        }) else { return }
+        guard
+            let st = lock.withLock({ () -> TaskState? in
+                let st = handlers.removeValue(forKey: task.taskIdentifier)
+                if st == nil { completedEarly.insert(task.taskIdentifier) }
+                return st
+            })
+        else { return }
         st.progress(st.written)
         if let outcome = st.outcome {
             st.done(outcome)

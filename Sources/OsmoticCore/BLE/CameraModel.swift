@@ -99,8 +99,10 @@ public struct CameraModel: Sendable, Equatable {
     public var singleSdStorage = false
     public var isDrone = false
 
-    public init(name: String, datalinkPort: UInt16 = 9004, tcpPoke: Bool = true, wpa3: Bool = false,
-                verified: Bool = false, singleSdStorage: Bool = false, isDrone: Bool = false) {
+    public init(
+        name: String, datalinkPort: UInt16 = 9004, tcpPoke: Bool = true, wpa3: Bool = false,
+        verified: Bool = false, singleSdStorage: Bool = false, isDrone: Bool = false
+    ) {
         self.name = name
         self.datalinkPort = datalinkPort
         self.tcpPoke = tcpPoke

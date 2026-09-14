@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 final class LogSink: @unchecked Sendable {
@@ -55,8 +56,9 @@ final class LogSink: @unchecked Sendable {
 
     @Test(.timeLimit(.minutes(1)))
     func `a full card pages inline on the live session`() async throws {
-        let cam = try FakeCamera(manifest: try fixture("oa4_45.bin"), olderPage: try fixture("op3_15.bin"),
-                                 refusePlaybackCommand: true)
+        let cam = try FakeCamera(
+            manifest: try fixture("oa4_45.bin"), olderPage: try fixture("op3_15.bin"),
+            refusePlaybackCommand: true)
         defer { cam.stop() }
         var model = CameraModel.resolve(modelId: 0x0020, name: "OsmoPocket3")
         model.datalinkPort = cam.port
@@ -77,7 +79,7 @@ final class LogSink: @unchecked Sendable {
     @Test(.timeLimit(.minutes(1)))
     func `nothing listening means no handshake, on both ports`() async {
         var model = CameraModel.default
-        model.datalinkPort = 1   // nothing answers here
+        model.datalinkPort = 1  // nothing answers here
         model.tcpPoke = false
         let session = CameraSession(ip: "127.0.0.1", model: model, interfaceName: nil, log: { _ in })
         let result = await session.connect()

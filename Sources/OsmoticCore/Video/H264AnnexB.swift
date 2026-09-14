@@ -4,7 +4,12 @@ import Foundation
 /// NAL units that matter for decoding.
 public enum H264AnnexB {
     public enum NALType: UInt8 {
-        case slice = 1, idr = 5, sei = 6, sps = 7, pps = 8, aud = 9
+        case slice = 1
+        case idr = 5
+        case sei = 6
+        case sps = 7
+        case pps = 8
+        case aud = 9
     }
 
     /// NAL unit type of a unit without its start code.

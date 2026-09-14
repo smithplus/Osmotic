@@ -83,7 +83,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(Double(ProcessInfo.processInfo.environment["OSMOTIC_SNAPSHOT_DELAY"] ?? "") ?? 3))
             guard let model = self.model else { return }
-            let renderer = ImageRenderer(content: SnapshotView().environment(model).tint(Theme.accent).environment(\.colorScheme, .dark))
+            let renderer = ImageRenderer(
+                content: SnapshotView().environment(model).tint(Theme.accent).environment(\.colorScheme, .dark))
             renderer.scale = 2
             guard let cg = renderer.cgImage else { return }
             let rep = NSBitmapImageRep(cgImage: cg)

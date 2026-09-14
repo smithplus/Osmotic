@@ -79,8 +79,11 @@ public struct Pagination: Sendable {
         sdCursor = sdOldest ?? Self.newestSd
         internalCursor = intOldest ?? Self.newestInternal
         moreAvailable =
-            Self.storeHasOlderPage(sliceSize: Self.slice(files, Self.sdStore).count, cursorMoved: sdOldest != nil, info: slices[Self.sdStore]) ||
-            Self.storeHasOlderPage(sliceSize: Self.slice(files, Self.internalStore).count, cursorMoved: intOldest != nil, info: slices[Self.internalStore])
+            Self.storeHasOlderPage(
+                sliceSize: Self.slice(files, Self.sdStore).count, cursorMoved: sdOldest != nil, info: slices[Self.sdStore])
+            || Self.storeHasOlderPage(
+                sliceSize: Self.slice(files, Self.internalStore).count, cursorMoved: intOldest != nil,
+                info: slices[Self.internalStore])
     }
 
     /// Advance both cursors past a freshly decoded page; returns only the files not seen before.
@@ -88,9 +91,13 @@ public struct Pagination: Sendable {
         let fresh = page.filter { seen.insert(Self.key($0)).inserted }
         let sdOldest = Self.oldestHandle(page, store: Self.sdStore, below: sdCursor)
         let intOldest = Self.oldestHandle(page, store: Self.internalStore, below: internalCursor)
-        moreAvailable = !fresh.isEmpty && (
-            Self.storeHasOlderPage(sliceSize: Self.slice(page, Self.sdStore).count, cursorMoved: sdOldest != nil, info: slices[Self.sdStore]) ||
-            Self.storeHasOlderPage(sliceSize: Self.slice(page, Self.internalStore).count, cursorMoved: intOldest != nil, info: slices[Self.internalStore]))
+        moreAvailable =
+            !fresh.isEmpty
+            && (Self.storeHasOlderPage(
+                sliceSize: Self.slice(page, Self.sdStore).count, cursorMoved: sdOldest != nil, info: slices[Self.sdStore])
+                || Self.storeHasOlderPage(
+                    sliceSize: Self.slice(page, Self.internalStore).count, cursorMoved: intOldest != nil,
+                    info: slices[Self.internalStore]))
         sdCursor = sdOldest ?? sdCursor
         internalCursor = intOldest ?? internalCursor
         return fresh
@@ -109,14 +116,16 @@ extension ManifestDecoder {
             let storeName = ctr == Pagination.sdQueryCtr ? "SD" : "internal"
             let bytes = manifestBytes(raw, requestCtr: ctr)
             let files = bytes.isEmpty ? [] : decode(bytes, store: storeName, log: log)
-            let info = SliceInfo(declared: bytes.count >= 4 ? bytes.u32le(0) : -1,
-                                 records: countMediaPaths(bytes),
-                                 endMarker: hasEndMarker(bytes),
-                                 ended: (tally[ctr]?[0x03] ?? 0) > 0)
+            let info = SliceInfo(
+                declared: bytes.count >= 4 ? bytes.u32le(0) : -1,
+                records: countMediaPaths(bytes),
+                endMarker: hasEndMarker(bytes),
+                ended: (tally[ctr]?[0x03] ?? 0) > 0)
             slices[ctr == Pagination.sdQueryCtr ? Pagination.sdStore : Pagination.internalStore] = info
             if info.incomplete {
-                log("datalink: \(storeName) slice TRUNCATED — header declares \(info.declared) records, " +
-                    "\(info.records) arrived (end frame \(info.ended ? "seen" : "missing"))")
+                log(
+                    "datalink: \(storeName) slice TRUNCATED — header declares \(info.declared) records, "
+                        + "\(info.records) arrived (end frame \(info.ended ? "seen" : "missing"))")
             }
             return files
         }
@@ -126,8 +135,9 @@ extension ManifestDecoder {
         let ambiguous = !sd.isEmpty && !internalFiles.isEmpty && Set(sd.map(\.path)) == Set(internalFiles.map(\.path))
         if (sd.isEmpty && internalFiles.isEmpty) || ambiguous {
             let merged = decode(manifestBytes(raw), log: log)
-            log("datalink: store split unavailable (\(ambiguous ? "both queries same list" : "no counter echo")) — " +
-                "\(merged.count) files, storage resolved per file")
+            log(
+                "datalink: store split unavailable (\(ambiguous ? "both queries same list" : "no counter echo")) — "
+                    + "\(merged.count) files, storage resolved per file")
             return (inferMissingExtensions(merged, log: log), slices)
         }
         log("datalink: per-store lists — SD \(sd.count), internal \(internalFiles.count)")

@@ -2,8 +2,10 @@ import Foundation
 
 /// The camera never redirects; following one could send requests to any host.
 private final class RefuseRedirects: NSObject, URLSessionTaskDelegate, Sendable {
-    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
-                    newRequest request: URLRequest) async -> URLRequest? { nil }
+    func urlSession(
+        _ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest
+    ) async -> URLRequest? { nil }
 }
 
 /// Thin async client for the camera's lighttpd `/v2` file API at `http://192.168.2.1`.
@@ -88,8 +90,11 @@ public final class CameraHTTP: Sendable {
                     } else {
                         let other = 1 - bit
                         var chosen = bit
-                        if await headStatus(CameraFile.urlPath(storage: bit, path: f.path))?.status == 200 { chosen = bit }
-                        else if await headStatus(CameraFile.urlPath(storage: other, path: f.path))?.status == 200 { chosen = other }
+                        if await headStatus(CameraFile.urlPath(storage: bit, path: f.path))?.status == 200 {
+                            chosen = bit
+                        } else if await headStatus(CameraFile.urlPath(storage: other, path: f.path))?.status == 200 {
+                            chosen = other
+                        }
                         byBit[bit] = chosen
                         f.storage = chosen
                     }

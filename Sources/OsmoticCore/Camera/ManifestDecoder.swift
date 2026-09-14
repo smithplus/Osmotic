@@ -41,7 +41,8 @@ public enum ManifestDecoder {
                 ctrOk = true
             }
             if raw[i + 9] == 0x00, raw[i + 10] == 0x27, ctrOk, plLen > 10,
-               raw[plStart] == 0x4A, raw[plStart + 1] == 0x01 {
+                raw[plStart] == 0x4A, raw[plStart + 1] == 0x01
+            {
                 out.append(contentsOf: raw[(plStart + 10)..<(plStart + plLen)])
             }
             i += len
@@ -74,7 +75,12 @@ public enum ManifestDecoder {
         let tally = chunkTally(raw)
         if tally.isEmpty { return "none" }
         func name(_ s: Int) -> String {
-            switch s { case 0x04: "start"; case 0x01: "data"; case 0x03: "end"; default: "sub\(s)" }
+            switch s {
+            case 0x04: "start";
+            case 0x01: "data";
+            case 0x03: "end";
+            default: "sub\(s)"
+            }
         }
         return tally.keys.sorted().map { ctr in
             let subs = tally[ctr]!.keys.sorted().map { "\(name($0))=\(tally[ctr]![$0]!)" }.joined(separator: ",")
@@ -136,9 +142,10 @@ public enum ManifestDecoder {
     public static func decode(_ bytes: [UInt8], store: String = "", log: Log = { _ in }) -> [CameraFile] {
         let comp = decodeComposite(bytes, store: store, log: log)
         if !comp.isEmpty {
-            log("datalink: decoded \(comp.count) CompositePack records\(store.isEmpty ? "" : " [\(store)]") " +
-                "(\(comp.filter { $0.resLabel != nil }.count) fps, \(comp.filter { $0.proxyPath != nil }.count) proxies, " +
-                "\(comp.filter(\.starred).count) starred, \(comp.filter { $0.sizeBytes > 0 }.count) sized)")
+            log(
+                "datalink: decoded \(comp.count) CompositePack records\(store.isEmpty ? "" : " [\(store)]") "
+                    + "(\(comp.filter { $0.resLabel != nil }.count) fps, \(comp.filter { $0.proxyPath != nil }.count) proxies, "
+                    + "\(comp.filter(\.starred).count) starred, \(comp.filter { $0.sizeBytes > 0 }.count) sized)")
             return flagHandleCollisions(comp, log: log)
         }
         log("datalink: no CompositePack records — falling back to flat scrape (\(bytes.count) B)")
@@ -309,10 +316,14 @@ public enum ManifestDecoder {
                 if len > baseLen && n + 2 + len <= b.count {
                     let v = b.latin1(n + 2, len)
                     if v.utf8.count > baseLen + 1, v.hasPrefix(base),
-                       v.utf8[v.utf8.index(v.utf8.startIndex, offsetBy: baseLen)] == UInt8(ascii: ".") {
+                        v.utf8[v.utf8.index(v.utf8.startIndex, offsetBy: baseLen)] == UInt8(ascii: ".")
+                    {
                         let e = String(v.dropFirst(baseLen + 1)).uppercased()
-                        if videoExts.contains(e) || stillExts.contains(e) { ext = e }
-                        else if proxyExtsListed.contains(e) { proxyExt = e }
+                        if videoExts.contains(e) || stillExts.contains(e) {
+                            ext = e
+                        } else if proxyExtsListed.contains(e) {
+                            proxyExt = e
+                        }
                     }
                 }
             }
@@ -324,8 +335,8 @@ public enum ManifestDecoder {
         var m = lo
         while m < markerEnd - 4 {
             let kind = b[m], star = b[m + 1]
-            if (kind == 0x03 || kind == 0x00) && (star == 0xFF || star == 0xFE) &&
-                b[m + 2] == 0x19 && b[m + 3] == 0x06 && m >= 8 {
+            if (kind == 0x03 || kind == 0x00) && (star == 0xFF || star == 0xFE) && b[m + 2] == 0x19 && b[m + 3] == 0x06 && m >= 8
+            {
                 head = m - 8
                 break
             }
@@ -495,8 +506,9 @@ public enum ManifestDecoder {
             let start = namePos >= 0 ? recordStart(bytes, namePos) : -1
             let handle = start >= 0 ? bytes.u32le(start) : 0
             let size = (isVid && start >= 0 && start + 42 <= bytes.count) ? bytes.u32le(start + 38) : 0
-            return CameraFile(path: mediaPath, thumbPath: thumb, resLabel: fps.map { "\($0)fps" },
-                              proxyPath: proxyByBase[base].map { "\(p).\($0)" }, handle: handle, sizeBytes: size)
+            return CameraFile(
+                path: mediaPath, thumbPath: thumb, resLabel: fps.map { "\($0)fps" },
+                proxyPath: proxyByBase[base].map { "\(p).\($0)" }, handle: handle, sizeBytes: size)
         }
     }
 

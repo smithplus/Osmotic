@@ -1,13 +1,19 @@
 import Darwin
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 /// A tiny HTTP/1.1 server on loopback that serves one byte blob and misbehaves the way the camera's
 /// lighttpd does on long reads: it cuts transfers mid-stream, answers transient 404/500, and can
 /// ignore `Range`.
 final class FakeHTTPServer: @unchecked Sendable {
-    enum Behavior { case serve, cutAfter(Int), status(Int), ignoreRange, html, redirect }
+    enum Behavior {
+        case serve
+        case cutAfter(Int)
+        case status(Int)
+        case ignoreRange, html, redirect
+    }
 
     let port: UInt16
     private let body: [UInt8]
@@ -26,11 +32,15 @@ final class FakeHTTPServer: @unchecked Sendable {
         var addr = sockaddr_in()
         addr.sin_family = sa_family_t(AF_INET)
         inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr)
-        _ = withUnsafePointer(to: &addr) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(s, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) } }
+        _ = withUnsafePointer(to: &addr) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { bind(s, $0, socklen_t(MemoryLayout<sockaddr_in>.size)) }
+        }
         listen(s, 8)
         var bound = sockaddr_in()
         var len = socklen_t(MemoryLayout<sockaddr_in>.size)
-        _ = withUnsafeMutablePointer(to: &bound) { $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(s, $0, &len) } }
+        _ = withUnsafeMutablePointer(to: &bound) {
+            $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { getsockname(s, $0, &len) }
+        }
         port = UInt16(bigEndian: bound.sin_port)
         fd = s
         Thread { self.acceptLoop() }.start()
@@ -66,7 +76,10 @@ final class FakeHTTPServer: @unchecked Sendable {
         }
         let isHead = req.hasPrefix("HEAD")
         if start >= body.count, start > 0 {
-            write(c, "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */\(body.count)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            write(
+                c,
+                "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */\(body.count)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n"
+            )
             return
         }
         switch behavior {
@@ -75,7 +88,9 @@ final class FakeHTTPServer: @unchecked Sendable {
             write(c, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: \(page.count)\r\nConnection: close\r\n\r\n")
             if !isHead { send(c, page) }
         case .redirect:
-            write(c, "HTTP/1.1 302 Found\r\nLocation: http://127.0.0.1:9/elsewhere\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            write(
+                c,
+                "HTTP/1.1 302 Found\r\nLocation: http://127.0.0.1:9/elsewhere\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
         case .status(let code):
             write(c, "HTTP/1.1 \(code) Busy\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
         case .ignoreRange:
@@ -83,7 +98,8 @@ final class FakeHTTPServer: @unchecked Sendable {
             if !isHead { send(c, body) }
         case .serve, .cutAfter:
             let slice = Array(body[start...])
-            let head = start > 0
+            let head =
+                start > 0
                 ? "HTTP/1.1 206 Partial Content\r\nContent-Range: bytes \(start)-\(body.count - 1)/\(body.count)\r\n"
                 : "HTTP/1.1 200 OK\r\n"
             write(c, head + "Content-Length: \(slice.count)\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n")
@@ -108,14 +124,18 @@ final class FakeHTTPServer: @unchecked Sendable {
 @Suite(.serialized) struct DownloaderTests {
     let body: [UInt8] = (0..<3_000_000).map { UInt8(truncatingIfNeeded: $0 &* 31 &+ 7) }
 
-    func run(_ script: [FakeHTTPServer.Behavior], expected: Int? = nil) async throws -> (FileDownloader.Result, [UInt8], FakeHTTPServer) {
+    func run(_ script: [FakeHTTPServer.Behavior], expected: Int? = nil) async throws -> (
+        FileDownloader.Result, [UInt8], FakeHTTPServer
+    ) {
         let server = try FakeHTTPServer(body: body, script: script)
         let http = CameraHTTP(ip: "127.0.0.1", port: Int(server.port))
         let dl = FileDownloader(http: http, log: { _ in })
         let dir = FileManager.default.temporaryDirectory.appendingPathComponent("osmotic-dl-\(UUID().uuidString)")
         let dest = dir.appendingPathComponent("DJI_20260101120000_0001_D.MP4")
-        let result = await dl.download(urlPath: "/v2?storage=0&path=DCIM/DJI_001/x.MP4", to: dest,
-                                       expectedSize: expected ?? body.count) { _ in }
+        let result = await dl.download(
+            urlPath: "/v2?storage=0&path=DCIM/DJI_001/x.MP4", to: dest,
+            expectedSize: expected ?? body.count
+        ) { _ in }
         let got = (try? Data(contentsOf: dest)).map { [UInt8]($0) } ?? []
         server.stop()
         try? FileManager.default.removeItem(at: dir)

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 /// Byte-level vectors for the capture/live-view transport (Kaze for DJI's published test vectors).
@@ -8,7 +9,9 @@ import Testing
         let rt = DatalinkHeaders.routingHeader(seq: 0x5678, peerAck: 0x1234, cmdCounter: 0x9A, drone: false)
         #expect(rt.hexString.lowercased() == "34127856000000009a010000")
         // Without it, the media model's seq-8 stays exactly as before.
-        #expect(DatalinkHeaders.routingHeader(seq: 0x5678, cmdCounter: 0x9A, drone: false).hexString.lowercased() == "70567856000000009a010000")
+        #expect(
+            DatalinkHeaders.routingHeader(seq: 0x5678, cmdCounter: 0x9A, drone: false).hexString.lowercased()
+                == "70567856000000009a010000")
     }
 
     @Test func `window ack echoes video, reply and tx windows`() {
@@ -61,7 +64,7 @@ import Testing
         var r = LiveReassembler()
         let m = message([UInt8](repeating: 7, count: 3000))
         _ = r.feed(datagram(seq: 8, Array(m[0..<1400])), now: 0)
-        #expect(r.feed(datagram(seq: 24, Array(m[2800...])), now: 0) == nil)   // seq 16 lost
+        #expect(r.feed(datagram(seq: 24, Array(m[2800...])), now: 0) == nil)  // seq 16 lost
         #expect(r.dropped == 1)
         let next: [UInt8] = [0, 0, 0, 1, 0x41, 5]
         #expect(r.feed(datagram(seq: 32, message(next)), now: 0) == next)
@@ -75,7 +78,10 @@ import Testing
 
     @Test func `absurd lengths are rejected`() {
         var r = LiveReassembler()
-        #expect(r.feed(datagram(seq: 8, [0, 0, 1, 0xFF] + LE.u32(LiveReassembler.maxMessage + 1) + [UInt8](repeating: 0, count: 12)), now: 0) == nil)
+        #expect(
+            r.feed(
+                datagram(seq: 8, [0, 0, 1, 0xFF] + LE.u32(LiveReassembler.maxMessage + 1) + [UInt8](repeating: 0, count: 12)),
+                now: 0) == nil)
         #expect(r.invalid == 1)
     }
 }

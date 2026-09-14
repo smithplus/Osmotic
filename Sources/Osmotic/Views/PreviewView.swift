@@ -26,9 +26,11 @@ struct PreviewView: View {
                 } else if let photo {
                     Image(nsImage: photo).resizable().scaledToFit()
                 } else if failed {
-                    ContentUnavailableView("Couldn’t open the preview", systemImage: "eye.slash",
-                                           description: Text("Download it to watch it in full quality."))
-                        .foregroundStyle(.white)
+                    ContentUnavailableView(
+                        "Couldn’t open the preview", systemImage: "eye.slash",
+                        description: Text("Download it to watch it in full quality.")
+                    )
+                    .foregroundStyle(.white)
                 } else {
                     ProgressView().controlSize(.large).tint(.white)
                 }
@@ -37,14 +39,22 @@ struct PreviewView: View {
 
             HStack(spacing: Theme.s3) {
                 CassetteKeyBank {
-                    Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left").accessibilityLabel("Previous") }
-                        .buttonStyle(.secondaryKey)
-                        .keyboardShortcut(.leftArrow, modifiers: [])
-                        .help("Previous (←)")
-                    Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right").accessibilityLabel("Next") }
-                        .buttonStyle(.secondaryKey)
-                        .keyboardShortcut(.rightArrow, modifiers: [])
-                        .help("Next (→)")
+                    Button {
+                        model.stepPreview(by: -1)
+                    } label: {
+                        Image(systemName: "chevron.left").accessibilityLabel("Previous")
+                    }
+                    .buttonStyle(.secondaryKey)
+                    .keyboardShortcut(.leftArrow, modifiers: [])
+                    .help("Previous (←)")
+                    Button {
+                        model.stepPreview(by: 1)
+                    } label: {
+                        Image(systemName: "chevron.right").accessibilityLabel("Next")
+                    }
+                    .buttonStyle(.secondaryKey)
+                    .keyboardShortcut(.rightArrow, modifiers: [])
+                    .help("Next (→)")
                 }
                 VStack(alignment: .leading, spacing: 3) {
                     Text(current.name).font(Theme.readout(12.5, weight: .semibold)).foregroundStyle(Theme.ink)
@@ -105,8 +115,10 @@ struct PreviewView: View {
                 if (try? await asset.load(.isPlayable)) == true {
                     guard !Task.isCancelled else { return }
                     log("preview: streaming \(path)")
-                    start(AVPlayer(playerItem: AVPlayerItem(asset: asset)),
-                          source: path.hasSuffix(".LRF") ? String(localized: "lightweight preview") : String(localized: "original from the camera"))
+                    start(
+                        AVPlayer(playerItem: AVPlayerItem(asset: asset)),
+                        source: path.hasSuffix(".LRF")
+                            ? String(localized: "lightweight preview") : String(localized: "original from the camera"))
                     return
                 }
                 log("preview: \(path) not playable")

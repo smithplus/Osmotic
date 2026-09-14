@@ -16,14 +16,14 @@ struct SnapshotView: View {
                         .padding(.bottom, Theme.s3)
                         .frame(maxHeight: .infinity, alignment: .top)
                 } else {
-                ControlDeck()
-                    .padding(.horizontal, Theme.s3)
-                    .padding(.bottom, Theme.s3)
-                LibraryGridSnapshot()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                    .recessed(radius: Theme.radiusL)
-                    .padding(.horizontal, Theme.s3)
-                    .padding(.bottom, Theme.s3)
+                    ControlDeck()
+                        .padding(.horizontal, Theme.s3)
+                        .padding(.bottom, Theme.s3)
+                    LibraryGridSnapshot()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                        .recessed(radius: Theme.radiusL)
+                        .padding(.horizontal, Theme.s3)
+                        .padding(.bottom, Theme.s3)
                 }
                 TransferBar()
             case .connecting:

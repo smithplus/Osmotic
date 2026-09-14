@@ -38,23 +38,29 @@ public enum OsmoCommands {
     }
 
     /// Generic request frame (`cmd_type 0x40`).
-    public static func command(cmdSet: Int, cmdId: Int, payload: [UInt8] = [],
-                               target: Int = targetAppToCamera, id: Int = 0x8000) -> [UInt8] {
+    public static func command(
+        cmdSet: Int, cmdId: Int, payload: [UInt8] = [],
+        target: Int = targetAppToCamera, id: Int = 0x8000
+    ) -> [UInt8] {
         DjiMessage(target: target, id: id, type: 0x40 | (cmdSet << 8) | (cmdId << 16), payload: payload).encode()
     }
 
     /// SetPairingPIN (`0x07/0x45`): PackString(identifier) + PackString(pin).
     /// Reply `[00][status]`: `01` already paired, `02` approval required (then `0x07/0x46` arrives as a request).
-    public static func setPairingPin(_ pin: String = cameraPairingToken, id: Int = pairMessageId,
-                                     identifier: String = defaultIdentifier) -> [UInt8] {
-        command(cmdSet: 0x07, cmdId: 0x45, payload: packString(identifier) + packString(pin),
-                target: targetAppToWifi, id: id)
+    public static func setPairingPin(
+        _ pin: String = cameraPairingToken, id: Int = pairMessageId,
+        identifier: String = defaultIdentifier
+    ) -> [UInt8] {
+        command(
+            cmdSet: 0x07, cmdId: 0x45, payload: packString(identifier) + packString(pin),
+            target: targetAppToWifi, id: id)
     }
 
     /// ConnectToWiFi (`0x07/0x47`) — only a fallback for bodies that never hand over credentials.
     public static func connectWifi(ssid: String, password: String, id: Int = wifiMessageId) -> [UInt8] {
-        command(cmdSet: 0x07, cmdId: 0x47, payload: packString(ssid) + packString(password),
-                target: targetAppToWifi, id: id)
+        command(
+            cmdSet: 0x07, cmdId: 0x47, payload: packString(ssid) + packString(password),
+            target: targetAppToWifi, id: id)
     }
 
     /// Request to the WiFi subsystem: `0x07/0x07` SSID, `0x07/0x0e` passphrase, `0x07/0x0c` MAC.
@@ -76,7 +82,7 @@ public enum OsmoCommands {
     /// to register on the datalink.
     public static let appDeviceInfo: [UInt8] = {
         var b = [UInt8](repeating: 0, count: 62)
-        b[1] = 0x41; b[2] = 0x50; b[3] = 0x50      // "APP"
+        b[1] = 0x41; b[2] = 0x50; b[3] = 0x50  // "APP"
         b[41] = 0x02; b[50] = 0x02; b[51] = 0x08
         return b
     }()

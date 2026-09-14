@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 func fixture(_ name: String) throws -> [UInt8] {
@@ -8,7 +9,8 @@ func fixture(_ name: String) throws -> [UInt8] {
 }
 
 func golden(_ name: String) throws -> [String] {
-    let url = try #require(Bundle.module.url(forResource: "\(name).golden", withExtension: "txt", subdirectory: "Fixtures/golden"))
+    let url = try #require(
+        Bundle.module.url(forResource: "\(name).golden", withExtension: "txt", subdirectory: "Fixtures/golden"))
     let text = try String(contentsOf: url, encoding: .utf8)
     return text.trimmingCharacters(in: CharacterSet(charactersIn: "\n")).components(separatedBy: "\n")
 }
@@ -16,9 +18,10 @@ func golden(_ name: String) throws -> [String] {
 /// The same canonical line the upstream Kotlin golden test prints: every field the UI reads.
 func canon(_ files: [CameraFile]) -> [String] {
     files.map { f in
-        String(format: "%@|%@|%08lx|%08lx|%ld|%@|%@|%ld|%@|%ld|%ld|%@",
-               f.name, f.ext, f.handle, f.cmdHandle, f.sizeBytes, f.resolution ?? "", f.resLabel ?? "",
-               f.durationSec, f.starred ? "true" : "false", f.mediaType, f.group, f.deletable ? "true" : "false")
+        String(
+            format: "%@|%@|%08lx|%08lx|%ld|%@|%@|%ld|%@|%ld|%ld|%@",
+            f.name, f.ext, f.handle, f.cmdHandle, f.sizeBytes, f.resolution ?? "", f.resLabel ?? "",
+            f.durationSec, f.starred ? "true" : "false", f.mediaType, f.group, f.deletable ? "true" : "false")
     }.sorted()
 }
 
@@ -121,7 +124,7 @@ func canon(_ files: [CameraFile]) -> [String] {
     }
 
     @Test func `a cursor lands little-endian at bytes 10 to 13`() {
-        let q = Pagination.listCommand(ctr: 2, cursor: 0x401036C0)
+        let q = Pagination.listCommand(ctr: 2, cursor: 0x4010_36C0)
         #expect(q[4] == 2)
         #expect(Array(q[10..<14]) == [0xC0, 0x36, 0x10, 0x40])
     }
@@ -129,8 +132,9 @@ func canon(_ files: [CameraFile]) -> [String] {
     @Test func `an SD-only card pages on its own store`() {
         var p = Pagination()
         let files = (1...45).map { i -> CameraFile in
-            var f = CameraFile(path: String(format: "DCIM/DJI_001/DJI_20260101120000_%04d_D.MP4", 100 - i),
-                               thumbPath: "", handle: 0x0004_0000 + (100 - i) * 0x10)
+            var f = CameraFile(
+                path: String(format: "DCIM/DJI_001/DJI_20260101120000_%04d_D.MP4", 100 - i),
+                thumbPath: "", handle: 0x0004_0000 + (100 - i) * 0x10)
             f.storage = 0; f.storageKnown = true
             return f
         }

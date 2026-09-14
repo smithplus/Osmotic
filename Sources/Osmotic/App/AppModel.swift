@@ -1,8 +1,8 @@
 import AppKit
-import SwiftUI
 import Foundation
 import Observation
 import OsmoticCore
+import SwiftUI
 import UserNotifications
 
 /// The app's single source of truth: which screen is up, the connection in progress, the camera's
@@ -134,7 +134,9 @@ final class AppModel {
     }
 
     init() {
-        log("Osmotic \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") — log file \(logSink.url.path)")
+        log(
+            "Osmotic \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") — log file \(logSink.url.path)"
+        )
         if let demo = ProcessInfo.processInfo.environment["OSMOTIC_DEMO_MANIFEST"] {
             loadDemo(manifestPath: demo, screen: ProcessInfo.processInfo.environment["OSMOTIC_DEMO_SCREEN"])
             return
@@ -150,7 +152,9 @@ final class AppModel {
         log("demo: \(manifestPath)")
         let bytes = (try? Data(contentsOf: URL(fileURLWithPath: manifestPath))).map { [UInt8]($0) } ?? []
         target = Target(id: UUID(), name: "OsmoPocket3-D1E9", model: CameraModel.resolve(modelId: 0x20, name: nil), modelId: 0x20)
-        files = ManifestDecoder.inferMissingExtensions(ManifestDecoder.decodeBlob(bytes)).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
+        files = ManifestDecoder.inferMissingExtensions(ManifestDecoder.decodeBlob(bytes)).sorted {
+            $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq
+        }
         var st = CameraStatus()
         st.batteryPercent = 76
         st.sdTotalMb = 121_785
@@ -159,8 +163,9 @@ final class AppModel {
         moreAvailable = false
         refreshDownloaded()
         if let dir = ProcessInfo.processInfo.environment["OSMOTIC_DEMO_THUMBS"],
-           let names = try? FileManager.default.contentsOfDirectory(atPath: dir).filter({ $0.hasSuffix(".jpg") }).sorted(),
-           !names.isEmpty {
+            let names = try? FileManager.default.contentsOfDirectory(atPath: dir).filter({ $0.hasSuffix(".jpg") }).sorted(),
+            !names.isEmpty
+        {
             for (i, f) in files.enumerated() {
                 thumbCache[f.id] = NSImage(contentsOfFile: dir + "/" + names[i % names.count])
             }
@@ -185,8 +190,10 @@ final class AppModel {
             status = st
         case "cameras":
             screen = .cameras
-            ble.injectDemo(DiscoveredCamera(id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
-                                            model: CameraModel.resolve(modelId: 0x20, name: nil), brand: .dji, lastSeen: Date()))
+            ble.injectDemo(
+                DiscoveredCamera(
+                    id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
+                    model: CameraModel.resolve(modelId: 0x20, name: nil), brand: .dji, lastSeen: Date()))
         default:
             screen = .library
             if let first = files.first { downloaded.insert(first.id) }
@@ -307,23 +314,30 @@ final class AppModel {
             stageDetail = String(localized: "Reading the camera’s card…")
             let s = makeSession(model: t.model, interface: joined.interface)
             s.onProgress = { p in Task { @MainActor [weak self] in self?.datalinkProgress = p } }
-            session = s   // owned from here on: teardown closes it on any exit
+            session = s  // owned from here on: teardown closes it on any exit
             let result = await s.connect()
             try live()
             guard result.handshakeOk else {
-                throw ConnectError.message(String(localized: "The camera didn’t answer on the data link. If macOS asked about local network access, allow it and try again."))
+                throw ConnectError.message(
+                    String(
+                        localized:
+                            "The camera didn’t answer on the data link. If macOS asked about local network access, allow it and try again."
+                    ))
             }
 
             // 4. Library.
             stage = .library
-            stageDetail = result.files.isEmpty ? String(localized: "The card is empty") : String(localized: "\(result.files.count) files")
+            stageDetail =
+                result.files.isEmpty ? String(localized: "The card is empty") : String(localized: "\(result.files.count) files")
             let resolved = await http.resolveStorage(result.files, singleSdStorage: result.model.singleSdStorage)
             try live()
             files = resolved
             moreAvailable = result.moreAvailable
             refreshDownloaded()
-            SavedCameraStore.save(SavedCamera(id: t.id, bleName: t.name, modelId: t.modelId,
-                                              modelName: result.model.name, lastConnected: Date()))
+            SavedCameraStore.save(
+                SavedCamera(
+                    id: t.id, bleName: t.name, modelId: t.modelId,
+                    modelName: result.model.name, lastConnected: Date()))
             screen = .library
             log("library: \(files.count) files on screen, more=\(moreAvailable)")
             Task { await loadOlderWhileNew() }
@@ -354,9 +368,13 @@ final class AppModel {
 
     private func pairAndGetCredentials(_ t: Target) async throws -> (String, String) {
         guard ble.power == .poweredOn else {
-            throw ConnectError.message(ble.power == .unauthorized
-                ? String(localized: "Osmotic doesn’t have Bluetooth permission. Turn it on in System Settings › Privacy & Security › Bluetooth.")
-                : String(localized: "The Mac’s Bluetooth is off."))
+            throw ConnectError.message(
+                ble.power == .unauthorized
+                    ? String(
+                        localized:
+                            "Osmotic doesn’t have Bluetooth permission. Turn it on in System Settings › Privacy & Security › Bluetooth."
+                    )
+                    : String(localized: "The Mac’s Bluetooth is off."))
         }
         let flow = PairingFlow(bleName: t.name, savedPassword: SavedCameraStore.password(for: t.id))
         self.flow = flow
@@ -381,7 +399,10 @@ final class AppModel {
         }
         ble.onDisconnect = { [weak self] error in
             guard let self, self.stage <= .pairing, self.screen == .connecting else { return }
-            self.failPending(ConnectError.message(String(localized: "The camera closed the Bluetooth connection.") + (error.map { " (\($0.localizedDescription))" } ?? "")))
+            self.failPending(
+                ConnectError.message(
+                    String(localized: "The camera closed the Bluetooth connection.")
+                        + (error.map { " (\($0.localizedDescription))" } ?? "")))
         }
 
         isArmed = false
@@ -390,14 +411,18 @@ final class AppModel {
             throw ConnectError.message(String(localized: "Can’t find the camera. Turn it on and bring it close to the Mac."))
         }
         // Bluetooth link + GATT armed.
-        try await withTimeout(25, message: String(localized: "Couldn’t connect over Bluetooth. Is the camera on and nearby?")) { [self] in
+        try await withTimeout(25, message: String(localized: "Couldn’t connect over Bluetooth. Is the camera on and nearby?")) {
+            [self] in
             if isArmed { return }
             try await withCheckedThrowingContinuation { (c: CheckedContinuation<Void, Error>) in armed = c }
         }
         // Pairing → credentials. Approval on the camera screen can take a while.
-        return try await withTimeout(120, message: String(localized: "The camera didn’t hand over its Wi-Fi. Try turning it off and on again.")) { [self] in
+        return try await withTimeout(
+            120, message: String(localized: "The camera didn’t hand over its Wi-Fi. Try turning it off and on again.")
+        ) { [self] in
             if let p = pendingCredentials { return (p.ssid, p.password) }
-            let c = try await withCheckedThrowingContinuation { (c: CheckedContinuation<(ssid: String, password: String), Error>) in
+            let c = try await withCheckedThrowingContinuation {
+                (c: CheckedContinuation<(ssid: String, password: String), Error>) in
                 credentials = c
             }
             return (c.ssid, c.password)
@@ -424,7 +449,11 @@ final class AppModel {
             stageDetail = String(localized: "Enter the camera’s Wi-Fi password")
             passwordPromptSSID = ssid
         case .notActivated:
-            failPending(ConnectError.message(String(localized: "This camera was never activated, so it won’t turn on its Wi-Fi. Activate it once with DJI Mimo.")))
+            failPending(
+                ConnectError.message(
+                    String(
+                        localized:
+                            "This camera was never activated, so it won’t turn on its Wi-Fi. Activate it once with DJI Mimo.")))
         }
     }
 
@@ -443,8 +472,10 @@ final class AppModel {
     }
 
     /// Run `body`, failing with `message` if it takes longer than `seconds`.
-    private func withTimeout<T: Sendable>(_ seconds: Double, message: String,
-                                          _ body: @escaping @MainActor () async throws -> T) async throws -> T {
+    private func withTimeout<T: Sendable>(
+        _ seconds: Double, message: String,
+        _ body: @escaping @MainActor () async throws -> T
+    ) async throws -> T {
         let timer = Task { @MainActor [weak self] in
             try await Task.sleep(for: .seconds(seconds))
             // The stage may have finished while this was waking up: never fail the next one.
@@ -518,8 +549,9 @@ final class AppModel {
             if restoreWifi {
                 restoringWifi = true
                 stageDetail = String(localized: "Going back to your Wi-Fi…")
-                await WiFiService.restore(previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP,
-                                          forgetCamera: forgetCameraNetwork)
+                await WiFiService.restore(
+                    previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP,
+                    forgetCamera: forgetCameraNetwork)
                 restoringWifi = false
             }
         }
@@ -542,11 +574,11 @@ final class AppModel {
 
     func retry() {
         guard let t = target else { return }
-        start(t)   // clears the error itself; `start` only runs while one is showing
+        start(t)  // clears the error itself; `start` only runs while one is showing
     }
 
     private func handleLinkLost(from s: CameraSession) {
-        guard screen == .library, session === s else { return }   // ignore a replaced session's last words
+        guard screen == .library, session === s else { return }  // ignore a replaced session's last words
         linkLost = true
         log("library: camera link lost — trying to recover")
         recoverTask = Task { await recoverLink() }
@@ -610,7 +642,9 @@ final class AppModel {
                     .filter { !known.contains($0.id) }
                 guard gen == connectGeneration, session === s else { return }
                 if !fresh.isEmpty {
-                    files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
+                    files = (fresh + files).sorted {
+                        $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq
+                    }
                     refreshDownloaded()
                 }
                 moreAvailable = moreAvailable || result.moreAvailable
@@ -644,8 +678,9 @@ final class AppModel {
         if onCamera {
             log("wifi: recovering from an interrupted session on \(cam)")
             restoringWifi = true
-            await WiFiService.restore(previous: Preferences.pendingRestoreSSID, cameraSSID: cam, cameraSideIP: nil,
-                                      forgetCamera: Preferences.pendingForgetCamera)
+            await WiFiService.restore(
+                previous: Preferences.pendingRestoreSSID, cameraSSID: cam, cameraSideIP: nil,
+                forgetCamera: Preferences.pendingForgetCamera)
             restoringWifi = false
         }
         Preferences.pendingRestoreSSID = nil
@@ -687,9 +722,10 @@ final class AppModel {
 
     private func refreshDownloaded() {
         let fm = FileManager.default
-        downloaded = Set(files.filter { f in
-            history.contains(f) || fm.fileExists(atPath: DownloadPaths.destination(for: f).path)
-        }.map(\.id))
+        downloaded = Set(
+            files.filter { f in
+                history.contains(f) || fm.fileExists(atPath: DownloadPaths.destination(for: f).path)
+            }.map(\.id))
     }
 
     func loadMoreIfNeeded() {
@@ -706,7 +742,7 @@ final class AppModel {
         let page = await s.nextPage()
         guard session === s else { return 0 }
         let resolved = await http.resolveStorage(page.files, singleSdStorage: s.model.singleSdStorage)
-        guard session === s else { return 0 }   // disconnected (or replaced) while resolving
+        guard session === s else { return 0 }  // disconnected (or replaced) while resolving
         let known = Set(files.map(\.id))
         let added = resolved.filter { !known.contains($0.id) }
         files += added
@@ -747,8 +783,9 @@ final class AppModel {
     /// removes it, ⇧ selects the range from the last clicked file.
     func click(_ f: CameraFile, modifiers: NSEvent.ModifierFlags) {
         if modifiers.contains(.shift), let anchor = selectionAnchor,
-           let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
-           let b = visibleFiles.firstIndex(where: { $0.id == f.id }) {
+            let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
+            let b = visibleFiles.firstIndex(where: { $0.id == f.id })
+        {
             selection.formUnion(visibleFiles[min(a, b)...max(a, b)].map(\.id))
             return
         }
@@ -765,8 +802,9 @@ final class AppModel {
     func moveCursor(to id: String, extend: Bool) {
         cursor = id
         if extend, let anchor = selectionAnchor,
-           let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
-           let b = visibleFiles.firstIndex(where: { $0.id == id }) {
+            let a = visibleFiles.firstIndex(where: { $0.id == anchor }),
+            let b = visibleFiles.firstIndex(where: { $0.id == id })
+        {
             selection = Set(visibleFiles[min(a, b)...max(a, b)].map(\.id))
         } else {
             selection = [id]
@@ -829,7 +867,7 @@ final class AppModel {
         var currentSize = 0
         var bytesTotal: Int
         var bytesDone = 0
-        var speed: Double = 0       // bytes/s, smoothed
+        var speed: Double = 0  // bytes/s, smoothed
         var started = Date()
 
         var fraction: Double {
@@ -887,7 +925,8 @@ final class AppModel {
         transferTask?.cancel()
         transferTask = nil
         transfer = nil
-        lastTransferSummary = TransferSummary(ok: false, text: String(localized: "Download cancelled — what already arrived is saved"))
+        lastTransferSummary = TransferSummary(
+            ok: false, text: String(localized: "Download cancelled — what already arrived is saved"))
     }
 
     private func runQueue(generation gen: Int) async {
@@ -900,7 +939,7 @@ final class AppModel {
             transfer?.currentSize = f.sizeBytes
             let dest = DownloadPaths.destination(for: f)
             log("transfer: \(f.name) → \(dest.path)")
-            speedSample = (Date(), -1)   // seeded by the first report, which includes any resumed bytes
+            speedSample = (Date(), -1)  // seeded by the first report, which includes any resumed bytes
             let result = await downloader.download(urlPath: f.originalURLPath, to: dest, expectedSize: f.sizeBytes) { bytes in
                 Task { @MainActor [weak self] in self?.transferProgress(fileId: f.id, bytes: bytes) }
             }
@@ -948,11 +987,14 @@ final class AppModel {
         let cancelled = Task.isCancelled
         transfer = nil
         let folderName = Preferences.downloadFolder.lastPathComponent
-        lastTransferSummary = cancelled
+        lastTransferSummary =
+            cancelled
             ? TransferSummary(ok: false, text: String(localized: "Download cancelled"))
             : failed.isEmpty
-            ? TransferSummary(ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
-            : TransferSummary(ok: false, text: String(localized: "\(failed.count) files couldn’t be downloaded — try again to resume"))
+                ? TransferSummary(
+                    ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
+                : TransferSummary(
+                    ok: false, text: String(localized: "\(failed.count) files couldn’t be downloaded — try again to resume"))
         log("transfer: finished — \(lastTransferSummary?.text ?? "")")
         if !cancelled { TransferNotifier.finished(saved: saved, failed: failed.count, folder: Preferences.downloadFolder) }
         if !cancelled && failed.isEmpty && Preferences.disconnectWhenDone && screen == .library {
@@ -1054,7 +1096,9 @@ extension AppModel {
                     let known = Set(files.map(\.id))
                     let fresh = resolved.filter { !known.contains($0.id) }
                     if !fresh.isEmpty {
-                        files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
+                        files = (fresh + files).sorted {
+                            $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq
+                        }
                         refreshDownloaded()
                     }
                     log("control: card relisted, \(fresh.count) new file(s)")

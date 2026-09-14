@@ -32,10 +32,12 @@ public struct CameraFile: Sendable, Hashable, Identifiable {
     /// The handle at the record's fixed position, before the fit vouches for it.
     public var handleCandidate: Int = 0
 
-    public init(path: String, thumbPath: String, storage: Int = 0, resLabel: String? = nil,
-                proxyPath: String? = nil, handle: Int = 0, sizeBytes: Int = 0, starred: Bool = false,
-                resolution: String? = nil, durationSec: Int = 0, mediaType: Int = -1,
-                handleCandidate: Int = 0) {
+    public init(
+        path: String, thumbPath: String, storage: Int = 0, resLabel: String? = nil,
+        proxyPath: String? = nil, handle: Int = 0, sizeBytes: Int = 0, starred: Bool = false,
+        resolution: String? = nil, durationSec: Int = 0, mediaType: Int = -1,
+        handleCandidate: Int = 0
+    ) {
         self.path = path
         self.thumbPath = thumbPath
         self.storage = storage

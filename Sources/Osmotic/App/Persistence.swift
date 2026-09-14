@@ -1,6 +1,6 @@
 import Foundation
-import Security
 import OsmoticCore
+import Security
 
 /// A camera the user has connected to at least once.
 struct SavedCamera: Codable, Hashable, Identifiable {
@@ -17,7 +17,8 @@ enum Preferences {
     private static let d = UserDefaults.standard
 
     static var defaultDownloadFolder: URL {
-        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0].appendingPathComponent("DJI", isDirectory: true)
+        FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask)[0].appendingPathComponent(
+            "DJI", isDirectory: true)
     }
 
     static var downloadFolder: URL {
@@ -74,7 +75,8 @@ enum SavedCameraStore {
 
     static func all() -> [SavedCamera] {
         guard let data = UserDefaults.standard.data(forKey: key),
-              let list = try? JSONDecoder().decode([SavedCamera].self, from: data) else { return [] }
+            let list = try? JSONDecoder().decode([SavedCamera].self, from: data)
+        else { return [] }
         return list.sorted { $0.lastConnected > $1.lastConnected }
     }
 
@@ -117,9 +119,11 @@ enum Keychain {
     private static let service = "io.github.smithplus.osmotic.camera-wifi"
 
     private static func query(_ account: String) -> [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: service,
-         kSecAttrAccount as String: account]
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+        ]
     }
 
     static func read(account: String) -> String? {
@@ -177,8 +181,10 @@ final class DownloadHistory {
 
 enum DownloadPaths {
     /// Where a file lands: the download folder, optionally inside a `YYYY-MM-DD` subfolder.
-    static func destination(for f: CameraFile, root: URL = Preferences.downloadFolder,
-                            byDate: Bool = Preferences.organizeByDate) -> URL {
+    static func destination(
+        for f: CameraFile, root: URL = Preferences.downloadFolder,
+        byDate: Bool = Preferences.organizeByDate
+    ) -> URL {
         var dir = root
         if byDate, let date = f.captureDate {
             let fmt = DateFormatter()

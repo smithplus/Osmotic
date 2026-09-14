@@ -32,8 +32,9 @@ struct CameraControlView: View {
                 LiveVideoView(renderer: model.liveRenderer)
             }
             if model.liveView != .live && snapshotStill == nil {
-                LCDText(text: liveCaption.uppercased(), size: 12, weight: .medium,
-                        color: model.liveView == .unavailable ? Theme.warning : Theme.lcdText.opacity(0.75))
+                LCDText(
+                    text: liveCaption.uppercased(), size: 12, weight: .medium,
+                    color: model.liveView == .unavailable ? Theme.warning : Theme.lcdText.opacity(0.75))
             }
         }
         // The picture's own shape: landscape, or portrait when the camera films vertically.
@@ -44,8 +45,9 @@ struct CameraControlView: View {
             if model.status.recording {
                 HStack(spacing: 7) {
                     LED(color: Theme.danger, state: .blink, spokenState: "Recording")
-                    LCDText(text: "REC " + Format.clock(TimeInterval(model.status.recordingSeconds)), size: 12, weight: .medium,
-                            color: .white)
+                    LCDText(
+                        text: "REC " + Format.clock(TimeInterval(model.status.recordingSeconds)), size: 12, weight: .medium,
+                        color: .white)
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
                 .background(.black.opacity(0.55), in: Capsule())
@@ -88,7 +90,9 @@ struct CameraControlView: View {
             CassetteKeyBank {
                 let recording = model.status.recording
                 let records = model.status.captureMode?.records ?? true
-                Button { model.pressShutter() } label: {
+                Button {
+                    model.pressShutter()
+                } label: {
                     if recording {
                         Label("Stop", systemImage: "stop.fill")
                     } else if records {
@@ -117,11 +121,13 @@ private struct CaptureDisplay: View {
             HStack(spacing: Theme.s4) {
                 LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 12.5, weight: .medium)
                 LCDPair(label: "Mode", value: (s.captureMode?.shortTitle ?? "--").uppercased())
-                LCDPair(label: "Rec", value: s.recording ? Format.clock(TimeInterval(s.recordingSeconds)) : "--:--",
-                        color: s.recording ? Theme.danger : Theme.lcdText)
+                LCDPair(
+                    label: "Rec", value: s.recording ? Format.clock(TimeInterval(s.recordingSeconds)) : "--:--",
+                    color: s.recording ? Theme.danger : Theme.lcdText)
                 Spacer(minLength: Theme.s2)
-                LCDPair(label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
-                        color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
+                LCDPair(
+                    label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
+                    color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
                 if let st = s.displayStorage {
                     LCDPair(label: "Free", value: Format.compact(bytes: st.freeMb * 1_048_576))
                 }

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 @Suite struct ThroughputProbe {

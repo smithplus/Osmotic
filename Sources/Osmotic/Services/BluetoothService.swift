@@ -136,7 +136,7 @@ final class BluetoothService: NSObject {
 
     private func pumpWrites() {
         guard !writing, !writeQueue.isEmpty, let p = peripheral, let c = fff5 else { return }
-        guard p.canSendWriteWithoutResponse else { return }   // resumed by peripheralIsReady
+        guard p.canSendWriteWithoutResponse else { return }  // resumed by peripheralIsReady
         writing = true
         let frame = writeQueue.removeFirst()
         p.writeValue(Data(frame), for: c, type: .withoutResponse)
@@ -186,14 +186,19 @@ extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
         }
     }
 
-    func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
-                        advertisementData: [String: Any], rssi RSSI: NSNumber) {
+    // `RSSI` is the name CBCentralManagerDelegate gives this parameter.
+    // swift-format-ignore: AlwaysUseLowerCamelCase
+    func centralManager(
+        _ central: CBCentralManager, didDiscover peripheral: CBPeripheral,
+        advertisementData: [String: Any], rssi RSSI: NSNumber
+    ) {
         let name = (advertisementData[CBAdvertisementDataLocalNameKey] as? String) ?? peripheral.name
         var modelId: Int?
         var payload: [UInt8]?
         var djiCid = false
         if let data = advertisementData[CBAdvertisementDataManufacturerDataKey] as? Data,
-           let split = BleAdvert.splitManufacturerData([UInt8](data)), BleConstants.isDjiCompanyId(split.companyId) {
+            let split = BleAdvert.splitManufacturerData([UInt8](data)), BleConstants.isDjiCompanyId(split.companyId)
+        {
             djiCid = true
             payload = split.payload
             modelId = BleAdvert.modelId(split.payload)
@@ -201,14 +206,15 @@ extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
         let brand = Brand.of(name: name, manufacturerPayload: payload, djiCompanyId: djiCid)
         guard brand != .unknown || modelId != nil else { others += 1; return }
         let model = CameraModel.resolve(modelId: modelId, name: name, brand: brand)
-        guard !model.isDrone else { return }   // this app offloads cameras only
+        guard !model.isDrone else { return }  // this app offloads cameras only
         let id = peripheral.identifier
         let rssi = RSSI.intValue == 127 ? (cameras[id]?.rssi ?? -80) : RSSI.intValue
         if cameras[id] == nil {
             log("BLE: found \(name ?? "?") model=\(model.name)\(payload.map { " mfr=\($0.hexString)" } ?? "") rssi=\(rssi)")
         }
-        cameras[id] = DiscoveredCamera(id: id, name: name ?? cameras[id]?.name ?? model.name, rssi: rssi,
-                                       modelId: modelId ?? cameras[id]?.modelId, model: model, brand: brand, lastSeen: Date())
+        cameras[id] = DiscoveredCamera(
+            id: id, name: name ?? cameras[id]?.name ?? model.name, rssi: rssi,
+            modelId: modelId ?? cameras[id]?.modelId, model: model, brand: brand, lastSeen: Date())
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {
@@ -235,7 +241,9 @@ extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
 extension BluetoothService: @preconcurrency CBPeripheralDelegate {
     func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
         guard let svc = peripheral.services?.first(where: { $0.uuid == Self.service }) else {
-            log("BLE: service fff0 NOT found (present: \(peripheral.services?.map(\.uuid.uuidString).joined(separator: ",") ?? "none"))")
+            log(
+                "BLE: service fff0 NOT found (present: \(peripheral.services?.map(\.uuid.uuidString).joined(separator: ",") ?? "none"))"
+            )
             return
         }
         peripheral.discoverCharacteristics([Self.char4, Self.char5], for: svc)
@@ -243,7 +251,9 @@ extension BluetoothService: @preconcurrency CBPeripheralDelegate {
 
     func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
         let chars = service.characteristics ?? []
-        log("BLE: fff0 characteristics: " + chars.map { "\($0.uuid.uuidString)(0x\(String($0.properties.rawValue, radix: 16)))" }.joined(separator: " "))
+        log(
+            "BLE: fff0 characteristics: "
+                + chars.map { "\($0.uuid.uuidString)(0x\(String($0.properties.rawValue, radix: 16)))" }.joined(separator: " "))
         fff4 = chars.first { $0.uuid == Self.char4 }
         fff5 = chars.first { $0.uuid == Self.char5 }
         guard fff5 != nil else { log("BLE: fff5 missing — cannot talk to this camera"); return }
@@ -256,7 +266,9 @@ extension BluetoothService: @preconcurrency CBPeripheralDelegate {
     }
 
     func peripheral(_ peripheral: CBPeripheral, didUpdateNotificationStateFor characteristic: CBCharacteristic, error: Error?) {
-        log("BLE: notify on \(characteristic.uuid.uuidString) = \(characteristic.isNotifying)\(error.map { " error \($0.localizedDescription)" } ?? "")")
+        log(
+            "BLE: notify on \(characteristic.uuid.uuidString) = \(characteristic.isNotifying)\(error.map { " error \($0.localizedDescription)" } ?? "")"
+        )
         notifyPending.remove(characteristic.uuid)
         if notifyPending.isEmpty { arm(peripheral) }
     }

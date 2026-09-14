@@ -41,8 +41,10 @@ public final class PairingFlow {
     private var ssidKnown = false
     private var activationState = -1
 
-    public init(bleName: String, savedPassword: @autoclosure @escaping () -> String?,
-                identifier: String = OsmoCommands.defaultIdentifier) {
+    public init(
+        bleName: String, savedPassword: @autoclosure @escaping () -> String?,
+        identifier: String = OsmoCommands.defaultIdentifier
+    ) {
         self.ssid = bleName
         self.savedPassword = savedPassword
         self.identifier = identifier
@@ -93,8 +95,10 @@ public final class PairingFlow {
             case 0x45:
                 let status = p.count >= 2 ? Int(p[1]) : -1
                 if pairReplyStatus != status {
-                    log(String(format: "BLE: pairing reply 0x%02x (%@)", status,
-                               status == 1 ? "already paired" : status == 2 ? "approval required" : "?"))
+                    log(
+                        String(
+                            format: "BLE: pairing reply 0x%02x (%@)", status,
+                            status == 1 ? "already paired" : status == 2 ? "approval required" : "?"))
                 }
                 pairReplyStatus = status
                 if status == 0x02 && !approvalShown {
@@ -156,7 +160,9 @@ public final class PairingFlow {
         guard !credsRequested else { return }
         credsRequested = true
         emit(.paired)
-        after(0.1) { [self] in write(OsmoCommands.session5310()); log("BLE: sent 0x53/0x10 (wake)") }
+        after(0.1) { [self] in
+            write(OsmoCommands.session5310()); log("BLE: sent 0x53/0x10 (wake)")
+        }
         after(0.9) { [self] in write(OsmoCommands.wifiQuery(0x07, id: 0x8007)) }
         after(1.4) { [self] in write(OsmoCommands.wifiQuery(0x0E, id: 0x800E)) }
         // Reads are idempotent: ask once more in case a write-without-response was dropped.

@@ -26,7 +26,7 @@ struct TopPlate<Center: View, Trailing: View>: View {
     var body: some View {
         ZStack {
             HStack(spacing: Theme.s3) {
-                Spacer().frame(width: 64)   // traffic lights
+                Spacer().frame(width: 64)  // traffic lights
                 HStack(spacing: 6) {
                     Text("osmotic")
                         .font(.system(size: 15, weight: .heavy))

@@ -23,27 +23,26 @@ enum Theme {
     static let lip = Color.white.opacity(0.06)
     // Recess (a milled pocket in the plate)
     static let recess = rgb(25, 25, 24)
-    static let slot = rgb(17, 17, 16)                // the dark channel keys sit in
+    static let slot = rgb(17, 17, 16)  // the dark channel keys sit in
     // Silkscreen ink
     static let ink = rgb(232, 229, 222)
-    static let muted = rgb(160, 157, 150)            // ≥ 4.5:1 on every graphite surface
+    static let muted = rgb(160, 157, 150)  // ≥ 4.5:1 on every graphite surface
     static let hairline = rgb(255, 255, 255, 0.08)
     // Plastics
-    static let accent = rgb(238, 92, 36)            // orange key
-    static let accentTop = rgb(230, 84, 28)          // key face: dark enough for white text
+    static let accent = rgb(238, 92, 36)  // orange key
+    static let accentTop = rgb(230, 84, 28)  // key face: dark enough for white text
     static let accentBottom = rgb(196, 64, 16)
-    static let greyTop = rgb(66, 66, 65)            // graphite key
+    static let greyTop = rgb(66, 66, 65)  // graphite key
     static let greyBottom = rgb(53, 53, 52)
     // LCD
     static let lcd = rgb(16, 16, 15)
     static let lcdText = rgb(255, 146, 52)
     static let lcdDim = rgb(255, 146, 52, 0.10)
-    static let lcdCaption = rgb(236, 228, 214, 0.55)          // warm white legends on the glass
+    static let lcdCaption = rgb(236, 228, 214, 0.55)  // warm white legends on the glass
     // Signals
     static let success = rgb(74, 190, 88)
     static let warning = rgb(255, 176, 32)
     static let danger = rgb(232, 56, 42)
-
 
     static let s1: CGFloat = 4
     static let s2: CGFloat = 8
@@ -76,9 +75,11 @@ enum BrushedMetal {
         let blur: CGFloat = 36
         let noise = CIFilter.randomGenerator().outputImage!
             .cropped(to: CGRect(x: 0, y: 0, width: size + blur * 4, height: size))
-        let mono = noise.applyingFilter("CIColorControls", parameters: [
-            kCIInputSaturationKey: 0, kCIInputContrastKey: 1.6, kCIInputBrightnessKey: 0,
-        ])
+        let mono = noise.applyingFilter(
+            "CIColorControls",
+            parameters: [
+                kCIInputSaturationKey: 0, kCIInputContrastKey: 1.6, kCIInputBrightnessKey: 0,
+            ])
         let streaked = mono.applyingFilter("CIMotionBlur", parameters: [kCIInputRadiusKey: blur, kCIInputAngleKey: 0])
             .cropped(to: CGRect(x: blur * 2, y: 0, width: size, height: size))
         let ctx = CIContext()
@@ -193,7 +194,7 @@ struct LCDBoot: ViewModifier {
             .task {
                 // Debug snapshots render a single frame: never catch the display mid-flicker.
                 guard !reduceMotion, ProcessInfo.processInfo.environment["OSMOTIC_SNAPSHOT"] == nil else { return }
-                defer { level = 1 }   // however the sequence ends (cancelled, interrupted), end lit
+                defer { level = 1 }  // however the sequence ends (cancelled, interrupted), end lit
                 for (value, ms) in [(0.0, 45), (0.75, 55), (0.2, 45)] {
                     level = value
                     try? await Task.sleep(for: .milliseconds(ms))
@@ -214,8 +215,10 @@ struct Pocket: ViewModifier {
         content
             .background { shape.fill(fill.shadow(.inner(deep ? Depth.insetDeep : Depth.inset))) }
             .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.3), .clear, Theme.lip],
-                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                shape.strokeBorder(
+                    LinearGradient(
+                        colors: [.black.opacity(0.3), .clear, Theme.lip],
+                        startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
     }
 }
@@ -224,16 +227,21 @@ extension View {
     /// A raised module milled from the plate: a lit chamfer along the top, raised shadow below.
     func raisedPanel(radius: CGFloat = Theme.radiusL, screws: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        return self
+        return
+            self
             .background {
                 shape.fill(LinearGradient(colors: [Theme.metalTop, Theme.metalBottom], startPoint: .top, endPoint: .bottom))
-                    .overlay { BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.08).blendMode(.softLight).clipShape(shape) }
+                    .overlay {
+                        BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.08).blendMode(.softLight).clipShape(shape)
+                    }
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(stops: [
-                    .init(color: Theme.edgeLight, location: 0),
-                    .init(color: .clear, location: 0.4),
-                ], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+                shape.strokeBorder(
+                    LinearGradient(
+                        stops: [
+                            .init(color: Theme.edgeLight, location: 0),
+                            .init(color: .clear, location: 0.4),
+                        ], startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
             .overlay { if screws { CornerScrews(inset: min(radius * 0.55, 8) + 2) } }
             .raisedShadow()
@@ -259,10 +267,13 @@ struct LCDGlass<Content: View>: View {
             .modifier(LCDBoot())
             .modifier(Pocket(fill: Theme.lcd, radius: radius, deep: true))
             .overlay {
-                shape.fill(LinearGradient(stops: [
-                    .init(color: .white.opacity(0.04), location: 0),
-                    .init(color: .white.opacity(0.0), location: 0.35),
-                ], startPoint: .topLeading, endPoint: .bottomTrailing))
+                shape.fill(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white.opacity(0.04), location: 0),
+                            .init(color: .white.opacity(0.0), location: 0.35),
+                        ], startPoint: .topLeading, endPoint: .bottomTrailing)
+                )
                 .allowsHitTesting(false)
             }
     }
@@ -322,12 +333,13 @@ struct CassetteKeyStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         let down = latched || configuration.isPressed
         let height: CGFloat = compact ? 26 : 36
-        let travel: CGFloat = compact ? 4 : 6                 // front edge visible when the key is up
-        let sink: CGFloat = down ? travel - 1.5 : 0           // how far the face drops into the slot
-        let (top, bottom, skirt, text): (Color, Color, Color, Color) = switch finish {
-        case .secondary: (Theme.greyTop, Theme.greyBottom, Color(white: 0.14), Theme.ink)
-        case .primary: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
-        }
+        let travel: CGFloat = compact ? 4 : 6  // front edge visible when the key is up
+        let sink: CGFloat = down ? travel - 1.5 : 0  // how far the face drops into the slot
+        let (top, bottom, skirt, text): (Color, Color, Color, Color) =
+            switch finish {
+            case .secondary: (Theme.greyTop, Theme.greyBottom, Color(white: 0.14), Theme.ink)
+            case .primary: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
+            }
         let face = configuration.label
             .labelStyle(KeyLabelStyle())
             .font(.system(size: compact ? 9 : 9.5, weight: .semibold))
@@ -335,33 +347,40 @@ struct CassetteKeyStyle: ButtonStyle {
             .textCase(.uppercase)
             .foregroundStyle(text.opacity(down && finish == .secondary ? 0.8 : 1))
             .padding(.horizontal, width == nil ? (compact ? 10 : 14) : 8)
-            .frame(minWidth: width ?? 44)             // grows for longer translations
+            .frame(minWidth: width ?? 44)  // grows for longer translations
             .frame(height: height)
             .background {
                 // Face: lit from above; flatter and darker once pushed into the slot.
-                Rectangle().fill(LinearGradient(colors: down ? [bottom.opacity(0.94), bottom] : [top, bottom],
-                                                startPoint: .top, endPoint: .bottom))
+                Rectangle().fill(
+                    LinearGradient(
+                        colors: down ? [bottom.opacity(0.94), bottom] : [top, bottom],
+                        startPoint: .top, endPoint: .bottom))
             }
             .overlay(alignment: .top) {
                 if latched {
-                    Rectangle().fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom))
-                        .frame(height: 4)
-                        .shadow(Depth.glow(Theme.accent, 0.5))
+                    Rectangle().fill(
+                        LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom)
+                    )
+                    .frame(height: 4)
+                    .shadow(Depth.glow(Theme.accent, 0.5))
                 } else if !down {
                     Rectangle().fill(.white.opacity(finish == .primary ? 0.3 : 0.12)).frame(height: 1)
                 }
             }
             .overlay {
-                if down {   // the slot's walls shade the top of a sunk key
-                    LinearGradient(colors: [.black.opacity(0.38), .black.opacity(0.06)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.6))
-                        .allowsHitTesting(false)
+                if down {  // the slot's walls shade the top of a sunk key
+                    LinearGradient(
+                        colors: [.black.opacity(0.38), .black.opacity(0.06)], startPoint: .top, endPoint: .init(x: 0.5, y: 0.6)
+                    )
+                    .allowsHitTesting(false)
                 }
             }
             // Side bevels keep neighbouring keys distinct.
             .overlay(alignment: .leading) { Rectangle().fill(.white.opacity(0.07)).frame(width: 1) }
             .overlay(alignment: .trailing) { Rectangle().fill(.black.opacity(0.3)).frame(width: 1) }
 
-        return face
+        return
+            face
             .offset(y: sink)
             .padding(.bottom, travel)
             .background(alignment: .bottom) {
@@ -410,9 +429,13 @@ struct CornerScrews: View {
     var inset: CGFloat = 8
     var body: some View {
         VStack {
-            HStack { dot; Spacer(); dot }
+            HStack {
+                dot; Spacer(); dot
+            }
             Spacer()
-            HStack { dot; Spacer(); dot }
+            HStack {
+                dot; Spacer(); dot
+            }
         }
         .padding(inset)
         .allowsHitTesting(false)
@@ -482,18 +505,23 @@ struct LED: View {
             if let label { Silk(label, color: Theme.ink) }
         }
         .accessibilityElement(children: .combine)
-        .accessibilityValue(spokenState.map { Text($0) }
-                            ?? (state == .off ? Text("Off") : state == .blink ? Text("Blinking") : Text("On")))
+        .accessibilityValue(
+            spokenState.map { Text($0) }
+                ?? (state == .off ? Text("Off") : state == .blink ? Text("Blinking") : Text("On")))
     }
 
     private func lens(dim: Double) -> some View {
         let lit = state != .off
         return ZStack {
-            Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)   // bezel hole
+            Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)  // bezel hole
             Circle()
-                .fill(RadialGradient(colors: lit ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
-                                                 : [Color(white: 0.16), Color(white: 0.09)],
-                                     center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7))
+                .fill(
+                    RadialGradient(
+                        colors: lit
+                            ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
+                            : [Color(white: 0.16), Color(white: 0.09)],
+                        center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7)
+                )
                 .frame(width: size, height: size)
                 .opacity(1 - dim)
             Circle().fill(.white.opacity(lit ? 0.85 : 0.12))
@@ -597,7 +625,8 @@ enum Format {
 
     static func clock(_ seconds: TimeInterval) -> String {
         let s = max(0, Int(seconds.rounded()))
-        return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
+        return s >= 3600
+            ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
             : String(format: "%02d:%02d", s / 60, s % 60)
     }
 
@@ -615,7 +644,7 @@ enum Format {
 
     static let time: DateFormatter = {
         let f = DateFormatter()
-        f.setLocalizedDateFormatFromTemplate("jmm")   // 12- or 24-hour, as the user has it
+        f.setLocalizedDateFormatFromTemplate("jmm")  // 12- or 24-hour, as the user has it
         return f
     }()
 
@@ -628,7 +657,8 @@ enum Format {
 
     static func resolutionLabel(_ res: String?) -> String? {
         guard let res, let h = res.split(separator: "x").last.flatMap({ Int($0) }),
-              let w = res.split(separator: "x").first.flatMap({ Int($0) }) else { return nil }
+            let w = res.split(separator: "x").first.flatMap({ Int($0) })
+        else { return nil }
         switch max(w, h) {
         case 3840, 4096: return "4K"
         case 2688, 2720: return "2.7K"

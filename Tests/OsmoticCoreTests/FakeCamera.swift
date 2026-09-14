@@ -1,5 +1,6 @@
 import Darwin
 import Foundation
+
 @testable import OsmoticCore
 
 /// A loopback stand-in for an Osmo camera's datalink, faithful to the behaviours the session depends
@@ -32,10 +33,10 @@ final class FakeCamera: @unchecked Sendable {
     private(set) var handshakes = 0
     private(set) var leaveReceived = false
     private(set) var startFrames = 0
-    private(set) var recState: UInt8 = 0x01          // 01 idle, 41 starting, 81 recording, C1 stopping
-    private(set) var mode: UInt8 = 0x01              // video
+    private(set) var recState: UInt8 = 0x01  // 01 idle, 41 starting, 81 recording, C1 stopping
+    private(set) var mode: UInt8 = 0x01  // video
     private(set) var photos = 0
-    private(set) var videoRequests: [Int] = []       // receiver byte of each 0x09/0xA8
+    private(set) var videoRequests: [Int] = []  // receiver byte of each 0x09/0xA8
     private(set) var streaming = false
     private var recChangedAt = Date()
     private var recStartedAt = Date()
@@ -141,15 +142,15 @@ final class FakeCamera: @unchecked Sendable {
             if refusePlaybackCommand { reply(m, [0xE0]) } else { playback = true; reply(m, [0x00]) }
         case (0x01, 0x01):
             switch m.payload.first {
-            case 0x03:                       // playback prelude
+            case 0x03:  // playback prelude
                 enterFrames += 1
                 if enterFrames >= 5 { playback = true }
-            case 0x01:                       // live-view START: back to capture
+            case 0x01:  // live-view START: back to capture
                 startFrames += 1
                 playback = false
                 enterFrames = 0
             default:
-                break                        // IDLE / hold
+                break  // IDLE / hold
             }
         case (0x02, 0x02):
             guard !playback else { reply(m, [0xD9]); return }
@@ -218,7 +219,9 @@ final class FakeCamera: @unchecked Sendable {
     private func wrap(_ frame: [UInt8], pktType: Int) {
         seq = (seq + 8) & 0xFFFF
         let rt = LE.u16(seq) + LE.u16(seq) + [0, 0, 0, 0, 0, 1, 0, 0]
-        send(DatalinkHeaders.udpHeader(pktType: pktType, payloadLen: rt.count + frame.count, sessionId: 0x1234, seq: seq) + rt + frame)
+        send(
+            DatalinkHeaders.udpHeader(pktType: pktType, payloadLen: rt.count + frame.count, sessionId: 0x1234, seq: seq) + rt
+                + frame)
     }
 
     /// 01 → 41 → 81 on start, 81 → C1 → 01 on stop, 300 ms in between.
@@ -245,8 +248,9 @@ final class FakeCamera: @unchecked Sendable {
             let piece = Array(message.prefix(1400))
             message.removeFirst(piece.count)
             videoSeq = (videoSeq + 8) & 0xFFFF
-            send(DatalinkHeaders.udpHeader(pktType: 0x02, payloadLen: 12 + piece.count, sessionId: 0x1234, seq: videoSeq)
-                 + [UInt8](repeating: 0, count: 12) + piece)
+            send(
+                DatalinkHeaders.udpHeader(pktType: 0x02, payloadLen: 12 + piece.count, sessionId: 0x1234, seq: videoSeq)
+                    + [UInt8](repeating: 0, count: 12) + piece)
         }
     }
 

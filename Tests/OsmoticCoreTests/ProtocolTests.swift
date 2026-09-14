@@ -1,12 +1,15 @@
 import Foundation
 import Testing
+
 @testable import OsmoticCore
 
 @Suite struct DumlFramingTests {
     /// Frames lifted verbatim from MEDIA_PROTOCOL.md's decoder links — real captures.
     @Test func `the pairing frame is byte-identical to a captured one`() {
         let f = OsmoCommands.setPairingPin("osmo", id: 0xA000)
-        #expect(f.hexString == "553304c2020700a0400745203238346165356238643736623333373561303461363431376164373162656133046f736d6f8c02")
+        #expect(
+            f.hexString
+                == "553304c2020700a0400745203238346165356238643736623333373561303461363431376164373162656133046f736d6f8c02")
     }
 
     @Test func `session ping and wake match the Mimo capture`() {
@@ -25,7 +28,10 @@ import Testing
     @Test func `a datalink list query encodes like the capture`() {
         let payload = Pagination.listCommand(ctr: 1, cursor: 1)
         let f = DjiMessage(target: 0x0102, id: 0xA000, type: (2 << 5) | (0x00 << 8) | (0x26 << 16), payload: payload).encode()
-        #expect(f.hexString == "553704f9020100a04000264a002a10010000000000010000002d000d0100ffffffffffffffff0001000000000000000000000000008185")
+        #expect(
+            f.hexString
+                == "553704f9020100a04000264a002a10010000000000010000002d000d0100ffffffffffffffff0001000000000000000000000000008185"
+        )
     }
 
     @Test func `decode round-trips and rejects a corrupt header`() throws {

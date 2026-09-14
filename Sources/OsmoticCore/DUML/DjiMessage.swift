@@ -75,8 +75,9 @@ public struct DjiMessage: Sendable, Equatable {
     }
 
     public var summary: String {
-        String(format: "target=0x%04X id=0x%04X flags=0x%02X set=0x%02X cmd=0x%02X payload=%@",
-               target, id, flags, cmdSet, cmdId, payload.hexString)
+        String(
+            format: "target=0x%04X id=0x%04X flags=0x%02X set=0x%02X cmd=0x%02X payload=%@",
+            target, id, flags, cmdSet, cmdId, payload.hexString)
     }
 }
 
@@ -114,8 +115,9 @@ public enum DumlScanner {
             let want = Int(raw[i + len - 2]) | (Int(raw[i + len - 1]) << 8)
             guard Int(DjiCrc.crc16(raw[i..<(i + len - 2)])) == want else { return nil }
         }
-        return Frame(cmdSet: Int(raw[i + 9]), cmdId: Int(raw[i + 10]),
-                     payload: Array(raw[(i + 11)..<(i + len - 2)]), start: i, length: len)
+        return Frame(
+            cmdSet: Int(raw[i + 9]), cmdId: Int(raw[i + 10]),
+            payload: Array(raw[(i + 11)..<(i + len - 2)]), start: i, length: len)
     }
 
     /// Walks frames by header CRC and hops frame-to-frame, the way the camera session's status and
@@ -126,9 +128,12 @@ public enum DumlScanner {
             guard raw[i] == 0x55 else { i += 1; continue }
             let len = i + 2 < raw.count ? (Int(raw[i + 1]) | (Int(raw[i + 2]) << 8)) & 0x3FF : 0
             guard len >= 13, i + len <= raw.count,
-                  DjiCrc.crc8(raw[i..<(i + 3)]) == raw[i + 3] else { i += 1; continue }
-            body(Frame(cmdSet: Int(raw[i + 9]), cmdId: Int(raw[i + 10]),
-                       payload: Array(raw[(i + 11)..<(i + len - 2)]), start: i, length: len))
+                DjiCrc.crc8(raw[i..<(i + 3)]) == raw[i + 3]
+            else { i += 1; continue }
+            body(
+                Frame(
+                    cmdSet: Int(raw[i + 9]), cmdId: Int(raw[i + 10]),
+                    payload: Array(raw[(i + 11)..<(i + len - 2)]), start: i, length: len))
             i += len
         }
     }
@@ -163,7 +168,7 @@ public struct DumlFrameAccumulator: Sendable {
             guard buffer[i] == 0x55 else { i += 1; continue }
             let len = (Int(buffer[i + 1]) | (Int(buffer[i + 2]) << 8)) & 0x3FF
             guard len >= 13, DjiCrc.crc8(buffer[i..<(i + 3)]) == buffer[i + 3] else { i += 1; continue }
-            if i + len > buffer.count { break }          // header is sound, body still arriving
+            if i + len > buffer.count { break }  // header is sound, body still arriving
             if let m = DjiMessage(frame: Array(buffer[i..<(i + len)])) {
                 out.append(m)
                 i += len

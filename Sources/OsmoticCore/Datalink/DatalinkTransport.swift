@@ -174,7 +174,8 @@ public final class DatalinkTransport {
     }
 
     public func sendRaw(pktType: Int, payload: [UInt8]) {
-        let pkt = DatalinkHeaders.udpHeader(pktType: pktType, payloadLen: payload.count, sessionId: sessionId, seq: udpSeq) + payload
+        let pkt =
+            DatalinkHeaders.udpHeader(pktType: pktType, payloadLen: payload.count, sessionId: sessionId, seq: udpSeq) + payload
         if sendPacket(pkt) {
             if pktType != 0x00 { lastTxSeq = udpSeq }
             advance()
@@ -185,7 +186,8 @@ public final class DatalinkTransport {
     /// peer's download cursor is what keeps a long manifest streaming to its end.
     public func sendAck() {
         func group(_ v: Int) -> [UInt8] { LE.u16(v) + LE.u16(v) + [0, 0, 0, 0] }
-        let payload = windowModel == .mimo
+        let payload =
+            windowModel == .mimo
             ? DatalinkHeaders.windowAck(rxVideo: rxVideoSeq, rxReply: rxReplySeq, peerAckedTx: peerAckedTxSeq, lastTx: lastTxSeq)
             : group(peerCursor) + group(peerDownloadCursor) + group(baseSeq) + [0, 0]
         let hdr = DatalinkHeaders.udpHeader(pktType: 0x04, payloadLen: payload.count, sessionId: sessionId, seq: 0)
@@ -195,13 +197,16 @@ public final class DatalinkTransport {
     /// A command frame: receiver byte `(receiverId << 5) | receiverType`, sender App(0x02).
     public func sendDuml(set: Int, cmd: Int, payload: [UInt8], receiverType: Int, receiverId: Int, cmdType: Int = 2) {
         cmdCounter += 1
-        let rt = DatalinkHeaders.routingHeader(seq: udpSeq, peerAck: windowModel == .mimo ? peerAckedTxSeq : nil,
-                                               cmdCounter: cmdCounter, drone: false)
+        let rt = DatalinkHeaders.routingHeader(
+            seq: udpSeq, peerAck: windowModel == .mimo ? peerAckedTxSeq : nil,
+            cmdCounter: cmdCounter, drone: false)
         let target = 0x02 | (((receiverId << 5) | receiverType) << 8)
         let type = (cmdType << 5) | (set << 8) | (cmd << 16)
         let duml = DjiMessage(target: target, id: dumlSeq, type: type, payload: payload).encode()
         dumlSeq = (dumlSeq + 1) & 0xFFFF
-        let pkt = DatalinkHeaders.udpHeader(pktType: 0x05, payloadLen: rt.count + duml.count, sessionId: sessionId, seq: udpSeq) + rt + duml
+        let pkt =
+            DatalinkHeaders.udpHeader(pktType: 0x05, payloadLen: rt.count + duml.count, sessionId: sessionId, seq: udpSeq) + rt
+            + duml
         if sendPacket(pkt) {
             lastTxSeq = udpSeq
             advance()
@@ -297,8 +302,10 @@ public enum DatalinkError: Error, CustomStringConvertible {
 public enum TCPProbe {
     /// Connect to `ip:port` within `timeout`; optionally write `payload` and hold for `hold` seconds.
     @discardableResult
-    public static func connect(ip: String, port: UInt16, timeout: TimeInterval, payload: [UInt8]? = nil,
-                               hold: TimeInterval = 0, interfaceName: String? = nil) -> Bool {
+    public static func connect(
+        ip: String, port: UInt16, timeout: TimeInterval, payload: [UInt8]? = nil,
+        hold: TimeInterval = 0, interfaceName: String? = nil
+    ) -> Bool {
         let s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)
         guard s >= 0 else { return false }
         defer { Darwin.close(s) }

@@ -26,9 +26,9 @@ public struct StatusTracker: Sendable {
 
     private var displaySignature: String {
         let s = status
-        return "\(s.batteryPercent)|\(s.sdTotalMb / 1024)|\(s.sdFreeMb / 1024)|\(s.internalFreeMb / 1024)" +
-            "|\(s.storageFreeMb / 1024)|\(s.storageTotalMb / 1024)|\(s.docked)|\(s.charging)" +
-            "|\(s.recording)|\(s.recordingTransition)|\(s.recordingSeconds)|\(s.captureMode?.rawValue ?? 0xFF)"
+        return "\(s.batteryPercent)|\(s.sdTotalMb / 1024)|\(s.sdFreeMb / 1024)|\(s.internalFreeMb / 1024)"
+            + "|\(s.storageFreeMb / 1024)|\(s.storageTotalMb / 1024)|\(s.docked)|\(s.charging)"
+            + "|\(s.recording)|\(s.recordingTransition)|\(s.recordingSeconds)|\(s.captureMode?.rawValue ?? 0xFF)"
     }
 
     @discardableResult
@@ -67,8 +67,9 @@ public struct StatusTracker: Sendable {
             let sig = "\(p.count)|\(sdTotal)|\(sdFree)|\(inTotal)|\(inFree)"
             if sig != lastStorageSig {
                 lastStorageSig = sig
-                log("storage: 0x02/0xdc \(p.count)B stores=\(p[2]) first=\(sdTotal)/\(sdFree) MB" +
-                    (hasInternal ? " built-in=\(inTotal)/\(inFree) MB" : " (no built-in block)"))
+                log(
+                    "storage: 0x02/0xdc \(p.count)B stores=\(p[2]) first=\(sdTotal)/\(sdFree) MB"
+                        + (hasInternal ? " built-in=\(inTotal)/\(inFree) MB" : " (no built-in block)"))
             }
             // A Nano pushes a zeroed first block while playback is held; keep the last real figures.
             let blanked = sdTotal == 0 && status.sdTotalMb > 0

@@ -13,7 +13,8 @@ struct ConnectingView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopPlate {
-                LED(color: model.connectError == nil ? Theme.accent : Theme.danger,
+                LED(
+                    color: model.connectError == nil ? Theme.accent : Theme.danger,
                     state: model.connectError == nil ? .blink : .on,
                     label: model.connectError == nil ? "Connecting" : "Error")
             }
@@ -24,81 +25,85 @@ struct ConnectingView: View {
     }
 
     private var content: some View {
-            VStack(alignment: .leading, spacing: Theme.s4) {
-                // The display carries the one message that matters right now.
-                LCDGlass {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 11, weight: .medium,
-                                    color: Theme.lcdText.opacity(0.75))
-                            Spacer()
-                            LCDText(text: model.target?.name ?? "", size: 11, color: Theme.lcdText.opacity(0.75))
-                        }
-                        LCDText(text: lcdMessage, size: 16, weight: .medium)
-                        if model.stage == .datalink && model.connectError == nil {
-                            SegmentMeter(value: model.datalinkProgress, segments: 40).frame(height: 8)
-                        }
-                    }
-                    .padding(.horizontal, Theme.s4)
-                    .padding(.vertical, Theme.s3 + 2)
-                }
-
-                // Five channels, left to right, like the status LEDs on a device.
-                HStack(alignment: .top, spacing: 0) {
-                    ForEach(AppModel.Stage.allCases, id: \.self) { stage in
-                        StageChannel(stage: stage, state: state(of: stage))
-                            .frame(maxWidth: .infinity)
-                    }
-                }
-                .padding(.vertical, Theme.s3)
-                .padding(.horizontal, Theme.s2)
-                .raisedPanel(screws: true)
-
-                if model.needsApproval && model.connectError == nil {
-                    ApprovalCallout()
-                        .transition(.panelFromTop)
-                }
-
-                if let ssid = model.passwordPromptSSID, model.connectError == nil {
-                    passwordCard(ssid)
-                }
-
-                if let error = model.connectError {
-                    ErrorBanner(message: error)
-                    HStack(spacing: Theme.s2) {
-                        CassetteKeyBank {
-                            Button("Back") { model.backToCameras() }
-                                .buttonStyle(.secondaryKey)
-                            Button("Try Again") { model.retry() }
-                                .buttonStyle(.primaryKey)
-                                .keyboardShortcut(.defaultAction)
-                        }
+        VStack(alignment: .leading, spacing: Theme.s4) {
+            // The display carries the one message that matters right now.
+            LCDGlass {
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        LCDText(
+                            text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 11,
+                            weight: .medium,
+                            color: Theme.lcdText.opacity(0.75))
                         Spacer()
-                        OpenLogLink()
+                        LCDText(text: model.target?.name ?? "", size: 11, color: Theme.lcdText.opacity(0.75))
                     }
-                } else {
-                    HStack(alignment: .top, spacing: Theme.s3) {
-                        Text("While connected, your Mac uses the camera’s Wi-Fi and has no Internet over Wi-Fi; it goes back to your network when you disconnect. To stay online, plug the Mac into Ethernet or share an iPhone’s connection over USB.")
-                            .font(.system(size: 11.5))
-                            .foregroundStyle(Theme.muted)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Spacer(minLength: Theme.s4)
-                        CassetteKeyBank {
-                            Button("Cancel") { model.cancelConnect() }
-                                .buttonStyle(.secondaryKey)
-                                .keyboardShortcut(.cancelAction)
-                        }
+                    LCDText(text: lcdMessage, size: 16, weight: .medium)
+                    if model.stage == .datalink && model.connectError == nil {
+                        SegmentMeter(value: model.datalinkProgress, segments: 40).frame(height: 8)
+                    }
+                }
+                .padding(.horizontal, Theme.s4)
+                .padding(.vertical, Theme.s3 + 2)
+            }
+
+            // Five channels, left to right, like the status LEDs on a device.
+            HStack(alignment: .top, spacing: 0) {
+                ForEach(AppModel.Stage.allCases, id: \.self) { stage in
+                    StageChannel(stage: stage, state: state(of: stage))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.vertical, Theme.s3)
+            .padding(.horizontal, Theme.s2)
+            .raisedPanel(screws: true)
+
+            if model.needsApproval && model.connectError == nil {
+                ApprovalCallout()
+                    .transition(.panelFromTop)
+            }
+
+            if let ssid = model.passwordPromptSSID, model.connectError == nil {
+                passwordCard(ssid)
+            }
+
+            if let error = model.connectError {
+                ErrorBanner(message: error)
+                HStack(spacing: Theme.s2) {
+                    CassetteKeyBank {
+                        Button("Back") { model.backToCameras() }
+                            .buttonStyle(.secondaryKey)
+                        Button("Try Again") { model.retry() }
+                            .buttonStyle(.primaryKey)
+                            .keyboardShortcut(.defaultAction)
+                    }
+                    Spacer()
+                    OpenLogLink()
+                }
+            } else {
+                HStack(alignment: .top, spacing: Theme.s3) {
+                    Text(
+                        "While connected, your Mac uses the camera’s Wi-Fi and has no Internet over Wi-Fi; it goes back to your network when you disconnect. To stay online, plug the Mac into Ethernet or share an iPhone’s connection over USB."
+                    )
+                    .font(.system(size: 11.5))
+                    .foregroundStyle(Theme.muted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: Theme.s4)
+                    CassetteKeyBank {
+                        Button("Cancel") { model.cancelConnect() }
+                            .buttonStyle(.secondaryKey)
+                            .keyboardShortcut(.cancelAction)
                     }
                 }
             }
-            .frame(maxWidth: 580, alignment: .leading)
-            .padding(.horizontal, Theme.s5)
-            .padding(.top, Theme.s3)
-            .padding(.bottom, Theme.s6)
-            .frame(maxWidth: .infinity)
-            .motion(Motion.panel, value: model.stage)
-            .motion(Motion.panel, value: model.needsApproval)
-            .motion(Motion.panel, value: model.connectError)
+        }
+        .frame(maxWidth: 580, alignment: .leading)
+        .padding(.horizontal, Theme.s5)
+        .padding(.top, Theme.s3)
+        .padding(.bottom, Theme.s6)
+        .frame(maxWidth: .infinity)
+        .motion(Motion.panel, value: model.stage)
+        .motion(Motion.panel, value: model.needsApproval)
+        .motion(Motion.panel, value: model.connectError)
     }
 
     private var lcdMessage: String {
@@ -116,10 +121,12 @@ struct ConnectingView: View {
     private func passwordCard(_ ssid: String) -> some View {
         VStack(alignment: .leading, spacing: Theme.s2 + 2) {
             Silk("Camera Wi-Fi password", color: Theme.ink)
-            Text("The camera didn’t send it over Bluetooth. It’s on the camera’s screen: Settings › Wireless connection (network \(ssid)).")
-                .font(.callout)
-                .foregroundStyle(Theme.muted)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(
+                "The camera didn’t send it over Bluetooth. It’s on the camera’s screen: Settings › Wireless connection (network \(ssid))."
+            )
+            .font(.callout)
+            .foregroundStyle(Theme.muted)
+            .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Theme.s2) {
                 SecureField("Camera Wi-Fi password", text: $password, prompt: Text("password (8 or more characters)"))
                     .labelsHidden()
