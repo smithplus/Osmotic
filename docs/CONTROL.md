@@ -12,7 +12,7 @@ Implementado y probado contra `FakeCamera` (`ControlTests`), **sin probar todav�
 - Vista en vivo: ráfaga de Kaze (receptor `0x41`), a los 8 s sin video una vez la variante OpenPocketCine (`0x02/0x68 [08]` + `09/A8` a `0x08`); `LiveReassembler` → `LiveVideoRenderer` (`AVSampleBufferDisplayLayer`); el monitor toma la proporción del stream (vertical si la cámara filma vertical).
 - Estado `0x02/0x80`: grabando (bit 7 de @0), transición (bit 6), segundos @29, modo @57.
 
-Primera prueba con hardware — mirar en el log: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. Si falla la salida de playback o la imagen queda negra, ver §7 de la especificación (`docs/CONTROL_SPEC.md` no existe; los puntos abiertos están abajo).
+Primera prueba con hardware — mirar en el log: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. Si falla la salida de playback o la imagen queda negra, ver `docs/CONTROL_SPEC.md` (especificación completa con fuentes; §7 = puntos sin verificar).
 
 Pendiente: Timelapse/Hyperlapse (¿disparo por `02/01` o `02/02`?), truco de "primera imagen negra" (`02/18` ida y vuelta), re-registro de respaldo si las escrituras se pierden (`txLagSlots`), descargas en modo captura (hoy se bloquea entrar a Live con descargas en curso).
 

@@ -1,6 +1,8 @@
 MIT License
 
 Copyright (c) 2026 Konrad Iturbe (Osmosis for Android — protocol and decoder this port is derived from)
+Copyright (c) 2026 Brian Merchant (Kaze for DJI — capture-control transport, live-view reassembly and
+decode path adapted in DatalinkTransport, CameraSession, LiveReassembler and LiveVideoRenderer)
 Copyright (c) 2026 Osmotic contributors
 
 Permission is hereby granted, free of charge, to any person obtaining a copy

@@ -58,6 +58,6 @@ Para revisar la interfaz sin cámara: `scripts/snapshot.sh salida.png [library|c
 
 ## Créditos y licencia
 
-MIT. El protocolo es obra de [KonradIT/osmosis](https://github.com/KonradIT/osmosis) y de los proyectos en los que se apoya (dji-remote, osmo-download, DJI-Wifi-Connect, lib-osmo-ble, dji_protocol, reverse-engineering-dji, los DJI OGs). Las capturas de prueba en `Tests/OsmoticCoreTests/Fixtures` vienen de ese repositorio.
+MIT. El protocolo es obra de [KonradIT/osmosis](https://github.com/KonradIT/osmosis) y de los proyectos en los que se apoya (dji-remote, osmo-download, DJI-Wifi-Connect, lib-osmo-ble, dji_protocol, reverse-engineering-dji, los DJI OGs). Las capturas de prueba en `Tests/OsmoticCoreTests/Fixtures` vienen de ese repositorio. El control de la cámara y la vista en vivo (pestaña Live) siguen a [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) de Brian Merchant (MIT; partes adaptadas) y las notas de [OpenPocketCine](https://github.com/erik-sutton95/OpenPocketCine) (Apache-2.0; re-implementado a partir de su documentación, sin copiar código).
 
 Proyecto independiente, **sin afiliación con DJI**. "DJI" y "Osmo" son marcas de sus dueños.
