@@ -200,7 +200,7 @@ private struct ApprovalCallout: View {
                     RoundedRectangle(cornerRadius: 9, style: .continuous)
                         .fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom))
                 }
-                .shadow(color: .black.opacity(0.25), radius: 1.5, y: 1.5)
+                .shadow(Depth.contact)
             VStack(alignment: .leading, spacing: 3) {
                 Text("Approve the connection on the camera")
                     .font(.system(size: 14, weight: .bold))

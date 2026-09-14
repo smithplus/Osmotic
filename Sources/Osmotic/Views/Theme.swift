@@ -17,12 +17,13 @@ enum Theme {
     static let plateBottom = rgb(29, 29, 28)
     static let metalTop = rgb(47, 47, 46)
     static let metalBottom = rgb(40, 40, 39)
-    static let metalEdgeLight = Color.white.opacity(0.10)
-    static let metalEdgeDark = rgb(0, 0, 0, 0.5)
+    /// The lit top chamfer of a raised part.
+    static let edgeLight = Color.white.opacity(0.09)
     /// The lit lower lip of a cut-out, catching the light from above.
     static let lip = Color.white.opacity(0.06)
     // Recess (a milled pocket in the plate)
     static let recess = rgb(25, 25, 24)
+    static let slot = rgb(17, 17, 16)                // the dark channel keys sit in
     // Silkscreen ink
     static let ink = rgb(232, 229, 222)
     static let muted = rgb(138, 135, 129)
@@ -31,8 +32,6 @@ enum Theme {
     static let accent = rgb(238, 92, 36)            // orange key
     static let accentTop = rgb(247, 114, 60)
     static let accentBottom = rgb(214, 74, 22)
-    static let charcoalTop = rgb(30, 30, 29)
-    static let charcoalBottom = rgb(19, 19, 18)
     static let greyTop = rgb(66, 66, 65)            // graphite key
     static let greyBottom = rgb(53, 53, 52)
     // LCD
@@ -105,49 +104,93 @@ struct AluminumPlate: View {
     }
 }
 
+// MARK: - Depth
+
+/// One shadow, as a value. Every shadow in the app is one of the `Depth` tokens below — never an
+/// ad-hoc `.shadow(color:radius:)` — so depth reads the same everywhere.
+struct ShadowToken {
+    let color: Color
+    let radius: CGFloat
+    var y: CGFloat = 0
+}
+
+/// The light comes from above, and there are only three depths:
+/// - **raised** — modules, thumbnails: a soft contact shadow plus a wide, faint ambient one;
+/// - **inset** — pockets, key slots, displays: the shadow falls inside, from the top edge;
+/// - **glow** — lit things (LEDs, readouts, the latched key's stripe) light their surroundings.
+/// Edges carry the light: `Theme.edgeLight` along the top of raised parts, `Theme.lip` along the
+/// bottom of cut-outs.
+enum Depth {
+    static let contact = ShadowToken(color: .black.opacity(0.28), radius: 1.5, y: 1)
+    static let ambient = ShadowToken(color: .black.opacity(0.14), radius: 14, y: 6)
+    /// Small parts sitting on a picture (checkbox, play button).
+    static let onImage = ShadowToken(color: .black.opacity(0.35), radius: 2, y: 1)
+    static let inset = ShadowToken(color: .black.opacity(0.55), radius: 3, y: 1.5)
+    static let insetDeep = ShadowToken(color: .black.opacity(0.75), radius: 4, y: 2)
+    /// The lit lip under a small cut-out (screw head).
+    static let lipLight = ShadowToken(color: Theme.lip, radius: 0, y: 0.5)
+    static func glow(_ color: Color, _ strength: Double = 0.35) -> ShadowToken {
+        ShadowToken(color: color.opacity(strength), radius: 3)
+    }
+}
+
 extension View {
-    /// A raised module milled from the plate: lit top edge, contact shadow.
+    func shadow(_ t: ShadowToken) -> some View { shadow(color: t.color, radius: t.radius, y: t.y) }
+    /// Raised off the plate.
+    func raisedShadow() -> some View { shadow(Depth.contact).shadow(Depth.ambient) }
+}
+
+extension ShadowStyle {
+    static func inner(_ t: ShadowToken) -> ShadowStyle { .inner(color: t.color, radius: t.radius, y: t.y) }
+}
+
+/// A pocket cut into the plate, filled with `fill`: inner shadow from the top, a lit lip at the bottom.
+struct Pocket: ViewModifier {
+    var fill: Color = Theme.recess
+    var radius: CGFloat = Theme.radiusM
+    var deep = false
+
+    func body(content: Content) -> some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        content
+            .background { shape.fill(fill.shadow(.inner(deep ? Depth.insetDeep : Depth.inset))) }
+            .overlay {
+                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.3), .clear, Theme.lip],
+                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
+            }
+    }
+}
+
+extension View {
+    /// A raised module milled from the plate: a lit chamfer along the top, raised shadow below.
     func raisedPanel(radius: CGFloat = Theme.radiusL, screws: Bool = false) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return self
             .background {
-                shape.fill(LinearGradient(colors: [Theme.metalTop, Theme.metalBottom.opacity(0.96)],
-                                          startPoint: .top, endPoint: .bottom))
+                shape.fill(LinearGradient(colors: [Theme.metalTop, Theme.metalBottom], startPoint: .top, endPoint: .bottom))
                     .overlay { BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.08).blendMode(.softLight).clipShape(shape) }
             }
             .overlay {
-                // Machined edge: a bright chamfer on top, the darker side of the part at the bottom.
                 shape.strokeBorder(LinearGradient(stops: [
-                    .init(color: Theme.metalEdgeLight, location: 0),
-                    .init(color: .white.opacity(0.03), location: 0.3),
-                    .init(color: .black.opacity(0.15), location: 0.7),
-                    .init(color: Theme.metalEdgeDark, location: 1),
+                    .init(color: Theme.edgeLight, location: 0),
+                    .init(color: .clear, location: 0.4),
                 ], startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
             .overlay { if screws { CornerScrews(inset: min(radius * 0.55, 8) + 2) } }
-            .shadow(color: .black.opacity(0.45), radius: 0, y: 1)      // hard contact edge
-            .shadow(color: .black.opacity(0.28), radius: 9, y: 5)
+            .raisedShadow()
     }
 
-    /// A pocket milled into the plate: shadow inside at the top, a lit lip at the bottom.
+    /// A pocket milled into the plate.
     func recessed(radius: CGFloat = Theme.radiusM) -> some View {
-        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-        return self
-            .background {
-                shape.fill(Theme.recess.shadow(.inner(color: .black.opacity(0.7), radius: 4, y: 2)))
-            }
-            .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.4), Theme.lip],
-                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
-            }
+        modifier(Pocket(radius: radius))
     }
 
     /// Back-compat for views that still ask for a card.
     func card(padding: CGFloat = Theme.s3) -> some View { self.padding(padding).raisedPanel() }
 }
 
-/// Dark glass display set into the plate: charcoal bezel, recessed glass with a soft inner shadow and
-/// a faint glare. Kept quiet on purpose — the readout is the only thing that should glow.
+/// A display: a deep pocket of dark glass with a faint glare. Kept quiet on purpose — the readout is
+/// the only thing that should glow.
 struct LCDGlass<Content: View>: View {
     var radius: CGFloat = Theme.radiusM
     @ViewBuilder var content: Content
@@ -155,26 +198,13 @@ struct LCDGlass<Content: View>: View {
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         content
-            .background {
-                shape.fill(Theme.lcd.shadow(.inner(color: .black.opacity(0.85), radius: 4, y: 2)))
-            }
+            .modifier(Pocket(fill: Theme.lcd, radius: radius, deep: true))
             .overlay {
                 shape.fill(LinearGradient(stops: [
-                    .init(color: .white.opacity(0.06), location: 0),
+                    .init(color: .white.opacity(0.04), location: 0),
                     .init(color: .white.opacity(0.0), location: 0.35),
                 ], startPoint: .topLeading, endPoint: .bottomTrailing))
                 .allowsHitTesting(false)
-            }
-            .overlay { shape.strokeBorder(Color.black.opacity(0.6), lineWidth: 1) }
-            .padding(4)
-            .background {
-                RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
-                    .fill(LinearGradient(colors: [Theme.charcoalTop, Theme.charcoalBottom], startPoint: .top, endPoint: .bottom))
-            }
-            .overlay {
-                RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.6), Theme.lip],
-                                                 startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
     }
 }
@@ -193,7 +223,7 @@ struct LCDPair: View {
                 .foregroundStyle(Theme.lcdCaption)
             Text(verbatim: " " + value)
                 .foregroundStyle(color)
-                .shadow(color: color.opacity(0.35), radius: 2)
+                .shadow(Depth.glow(color))
         }
         .font(.system(size: size, weight: .regular, design: .monospaced))
         .tracking(1.4)
@@ -215,13 +245,7 @@ struct CassetteKeyBank<Content: View>: View {
         let shape = RoundedRectangle(cornerRadius: compact ? 6 : 8, style: .continuous)
         HStack(spacing: 2) { content }
             .padding(compact ? 2 : 3)
-            .background {
-                shape.fill(Color(white: 0.07).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
-            }
-            .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.5), Theme.lip],
-                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
-            }
+            .modifier(Pocket(fill: Theme.slot, radius: compact ? 6 : 8, deep: true))
             .fixedSize()
     }
 }
@@ -262,7 +286,7 @@ struct CassetteKeyStyle: ButtonStyle {
                 if latched {
                     Rectangle().fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom))
                         .frame(height: 4)
-                        .shadow(color: Theme.accent.opacity(0.6), radius: 2, y: 1)
+                        .shadow(Depth.glow(Theme.accent, 0.5))
                 } else if !down {
                     Rectangle().fill(.white.opacity(finish == .primary ? 0.3 : 0.12)).frame(height: 1)
                 }
@@ -305,7 +329,7 @@ struct LCDText: View {
             .font(.system(size: size, weight: weight, design: .monospaced))
             .tracking(size * 0.11)
             .foregroundStyle(color)
-            .shadow(color: color.opacity(0.35), radius: 2)
+            .shadow(Depth.glow(color))
             .lineLimit(1)
     }
 }
@@ -337,7 +361,7 @@ struct CornerScrews: View {
         Circle()
             .fill(Color.black.opacity(0.55))
             .frame(width: 3.5, height: 3.5)
-            .shadow(color: Theme.lip, radius: 0, y: 0.5)
+            .shadow(Depth.lipLight)
     }
 }
 
@@ -385,7 +409,7 @@ struct LED: View {
             // A blinking LED pulses its brightness; it never reads as switched off.
             let lit = state != .off
             ZStack {
-                Circle().fill(Color.black.opacity(0.7)).frame(width: size + 3, height: size + 3)   // bezel hole
+                Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)   // bezel hole
                 Circle()
                     .fill(RadialGradient(colors: lit ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
                                                      : [Color(white: 0.16), Color(white: 0.09)],
@@ -396,7 +420,7 @@ struct LED: View {
                     .frame(width: size * 0.28, height: size * 0.28)
                     .offset(x: -size * 0.16, y: -size * 0.18)
             }
-            .shadow(color: lit ? color.opacity(state == .blink && phase ? 0.2 : 0.7) : .clear, radius: 4)
+            .shadow(Depth.glow(lit ? color : .clear, state == .blink && phase ? 0.2 : 0.6))
             .animation(state == .blink ? .easeInOut(duration: 0.6).repeatForever() : .default, value: phase)
             .onAppear { if state == .blink { phase = true } }
             if let label { Silk(label, color: Theme.ink) }
@@ -465,7 +489,7 @@ struct SegmentMeter: View {
                     Rectangle()
                         .fill(on ? lit : unlit)
                         .frame(width: max(1, w))
-                        .shadow(color: on ? lit.opacity(0.5) : .clear, radius: 2)
+                        .shadow(Depth.glow(on ? lit : .clear))
                 }
             }
         }
@@ -483,7 +507,7 @@ struct Screw: View {
             Capsule().fill(.black.opacity(0.45)).frame(width: 6.5, height: 1.3).rotationEffect(.degrees(angle))
         }
         .frame(width: 9, height: 9)
-        .shadow(color: Theme.lip, radius: 0, y: 0.5)
+        .shadow(Depth.lipLight)
     }
 }
 

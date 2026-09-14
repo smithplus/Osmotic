@@ -49,7 +49,7 @@ struct MediaCell: View {
     private var thumbnail: some View {
         // A fixed 16:9 window: portrait stills are cropped to fill it instead of stretching the cell.
         Rectangle()
-            .fill(Theme.charcoalBottom.opacity(0.85))
+            .fill(Theme.lcd.opacity(0.85))
             .aspectRatio(16 / 9, contentMode: .fit)
             .overlay {
                 if let image {
@@ -101,7 +101,7 @@ struct MediaCell: View {
                         .frame(width: 40, height: 40)
                         .background(Circle().fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom)))
                         .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
-                        .shadow(color: .black.opacity(0.35), radius: 2, y: 2)
+                        .shadow(Depth.onImage)
                 }
                 .buttonStyle(.plain)
                 .help(file.isVideo ? Text("Play (space)") : Text("View (space)"))
@@ -125,7 +125,7 @@ struct MediaCell: View {
                         }
                     }
                     .frame(width: 18, height: 18)
-                    .shadow(color: .black.opacity(0.3), radius: 1.5, y: 1)
+                    .shadow(Depth.onImage)
                     .padding(Theme.s2)
                     .contentShape(Rectangle())
                 }
@@ -139,8 +139,7 @@ struct MediaCell: View {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
                 .strokeBorder(selected ? Theme.accent : Color.white.opacity(0.08), lineWidth: selected ? 2.5 : 1)
         )
-        .shadow(color: .black.opacity(0.5), radius: 1, y: 1)
-        .shadow(color: .black.opacity(0.25), radius: 6, y: 4)
+        .raisedShadow()
         .scaleEffect(hovering && !selected ? 1.015 : 1)
         .animation(.snappy(duration: 0.15), value: hovering)
         .animation(.snappy(duration: 0.15), value: selected)

@@ -118,7 +118,7 @@ private struct ScanBars: View {
                     Rectangle()
                         .fill(Theme.lcdText.opacity(active ? 0.9 : 0.25))
                         .frame(width: 3, height: h)
-                        .shadow(color: Theme.lcdText.opacity(0.5), radius: 2)
+                        .shadow(Depth.glow(Theme.lcdText))
                 }
             }
             .frame(height: 26, alignment: .bottom)

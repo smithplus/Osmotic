@@ -44,7 +44,7 @@ Desconectar: CameraSession.close (sale de playback) → BLE off → WiFiService.
 | `App/AppLog.swift` | `log()` thread-safe → archivo + `LogStore` visible |
 | `Services/BluetoothService.swift` | CoreBluetooth (central creado lazy, delegados `@preconcurrency` en main queue) |
 | `Services/WiFiService.swift` | join/restore, `pause` no cancelable, IPs, ruta, `LocationPermission`, `LocalNetworkPermission` |
-| `Views/*` | `RootView` → `CamerasView` / `ConnectingView` / `LibraryView` (+ `MediaCell`, `TransferBar`, `PreviewView`), `SettingsView`, `LogView`, `Theme` (materiales y piezas: `AluminumPlate`, `raisedPanel`, `LCDGlass`/`LCDPair`, `CassetteKeyBank`/`CassetteKeyStyle` (único botón: `.primaryKey` naranja = acción principal de la pantalla, `.secondaryKey` grafito, `.compactKey`; siempre dentro de un `CassetteKeyBank`), `LED`, `Silk`), `SnapshotView` (debug) |
+| `Views/*` | `RootView` → `CamerasView` / `ConnectingView` / `LibraryView` (+ `MediaCell`, `TransferBar`, `PreviewView`), `SettingsView`, `LogView`, `Theme` (tokens de color y de profundidad `Depth`/`Pocket`; materiales y piezas: `AluminumPlate`, `raisedPanel`, `LCDGlass`/`LCDPair`, `CassetteKeyBank`/`CassetteKeyStyle` (único botón: `.primaryKey` naranja = acción principal de la pantalla, `.secondaryKey` grafito, `.compactKey`; siempre dentro de un `CassetteKeyBank`), `LED`, `Silk`), `SnapshotView` (debug) |
 | `Resources/Localizable.xcstrings` | Catálogo de textos (inglés base + español); `scripts/sync_strings.sh` lo actualiza |
 
 ### Tests (`Tests/OsmoticCoreTests`)
