@@ -31,23 +31,31 @@ struct LibraryView: View {
     var body: some View {
         @Bindable var model = model
         VStack(spacing: 0) {
-            if model.linkLost { linkLostBanner }
-            if model.files.isEmpty {
-                ContentUnavailableView("La tarjeta está vacía", systemImage: "sdcard",
-                                       description: Text("No hay videos ni fotos en la cámara."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else if model.visibleFiles.isEmpty {
-                ContentUnavailableView("Nada en «\(model.filter.rawValue)»", systemImage: "line.3.horizontal.decrease.circle",
-                                       description: Text("Probá con otro filtro."))
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                grid
+            TopPlate {
+                LED(color: model.linkLost ? Theme.danger : Theme.success,
+                    state: model.linkLost ? .blink : .on,
+                    label: model.linkLost ? (model.reconnecting ? "Reconectando" : "Sin señal") : "Enlazada")
             }
+            ControlDeck(confirmDisconnect: $confirmDisconnect)
+                .padding(.horizontal, Theme.s3)
+                .padding(.bottom, Theme.s3)
+
+            Group {
+                if model.files.isEmpty {
+                    trayMessage("La tarjeta está vacía", "No hay videos ni fotos en la cámara.")
+                } else if model.visibleFiles.isEmpty {
+                    trayMessage("Nada en «\(model.filter.rawValue)»", "Probá con otro filtro.")
+                } else {
+                    grid
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .recessed(radius: Theme.radiusL)
+            .padding(.horizontal, Theme.s3)
+            .padding(.bottom, Theme.s3)
+
+            TransferBar()
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { TransferBar() }
-        .toolbar { toolbar }
-        .navigationTitle(model.target?.model.name ?? "Osmotic")
-        .navigationSubtitle(subtitle)
         // One sheet that stays up while ← / → change the file (sheet(item:) would re-present on each).
         .sheet(isPresented: Binding(get: { model.previewFile != nil },
                                     set: { if !$0 { model.previewFile = nil } })) {
@@ -60,12 +68,11 @@ struct LibraryView: View {
         }
     }
 
-    private var subtitle: String {
-        let n = model.files.count
-        let new = model.newFiles.count
-        var parts = ["\(n) archivo\(n == 1 ? "" : "s")\(model.moreAvailable ? "+" : "")"]
-        if new > 0 { parts.append("\(new) nuevo\(new == 1 ? "" : "s")") }
-        return parts.joined(separator: " · ")
+    private func trayMessage(_ title: String, _ detail: String) -> some View {
+        VStack(spacing: 6) {
+            Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(Theme.ink)
+            Text(detail).font(.callout).foregroundStyle(Theme.muted)
+        }
     }
 
     private var grid: some View {
@@ -82,18 +89,19 @@ struct LibraryView: View {
                     }
                 }
             }
-            .padding(.horizontal, Theme.s4)
-            .padding(.bottom, Theme.s4)
+            .padding(.horizontal, Theme.s3)
+            .padding(.bottom, Theme.s3)
             if model.moreAvailable || model.loadingMore {
                 HStack(spacing: Theme.s2) {
-                    ProgressView().controlSize(.small)
-                    Text("Cargando archivos más antiguos…").foregroundStyle(.secondary)
+                    LED(color: Theme.accent, state: .blink)
+                    Silk("Cargando archivos más antiguos")
                 }
-                .padding(.bottom, Theme.s5)
+                .padding(.bottom, Theme.s4)
                 .onAppear { model.loadMoreIfNeeded() }
             }
         }
-        .contentMargins(.top, Theme.s2, for: .scrollContent)
+        .scrollContentBackground(.hidden)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusL, style: .continuous))
         .focusable()
         .focusEffectDisabled()
         .onKeyPress(.escape) {
@@ -106,66 +114,101 @@ struct LibraryView: View {
             return .handled
         }
     }
+}
 
-    private var linkLostBanner: some View {
-        HStack(spacing: Theme.s3) {
-            LED(color: model.reconnecting ? Theme.warning : Theme.danger, state: .blink)
-            Text(model.reconnecting
-                 ? "Reconectando con la cámara… la descarga sigue sola cuando vuelva."
-                 : "La cámara dejó de responder (¿se apagó o se alejó?).")
-                .font(.callout)
-            Spacer()
-            Button("Desconectar") { Task { await model.disconnect() } }
+/// The deck above the tray: status display, filter keys, action keys.
+struct ControlDeck: View {
+    @Environment(AppModel.self) private var model
+    @Binding var confirmDisconnect: Bool
+
+    var body: some View {
+        HStack(alignment: .center, spacing: Theme.s4) {
+            StatusDisplay()
+                .frame(width: 300)
+            FilterKeys()
+            Spacer(minLength: 0)
+            actionKeys
         }
-        .padding(.horizontal, Theme.s4)
-        .padding(.vertical, Theme.s2)
-        .background(Theme.warning.opacity(0.14))
     }
 
-    @ToolbarContentBuilder
-    private var toolbar: some ToolbarContent {
-        ToolbarItem(placement: .navigation) {
-            CameraStatusPill()
-        }
-        ToolbarItem(placement: .principal) {
-            @Bindable var model = model
-            Picker("Filtro", selection: $model.filter) {
-                ForEach(AppModel.Filter.allCases) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .fixedSize()
-        }
-        ToolbarItemGroup(placement: .primaryAction) {
+    @ViewBuilder private var actionKeys: some View {
+        HStack(spacing: Theme.s2) {
             if !model.selection.isEmpty {
-                Button {
-                    model.downloadSelected()
-                } label: {
-                    Label("Descargar \(model.selection.count)", systemImage: "arrow.down.circle")
-                }
-                .help("Descargar los archivos seleccionados (⌘D)")
+                Button("Limpiar") { model.selection = [] }
+                    .buttonStyle(KeyButtonStyle(kind: .ghost))
+                Button("Bajar \(model.selection.count)") { model.downloadSelected() }
+                    .buttonStyle(.signalKey)
+                    .help("Descargar la selección (⌘D)")
+            } else {
+                Button(model.newFiles.isEmpty ? "Todo bajado" : "Bajar \(model.newFiles.count) nuevos") { model.downloadNew() }
+                    .buttonStyle(.signalKey)
+                    .disabled(model.newFiles.isEmpty)
+                    .help("Baja todo lo que todavía no está en tu carpeta (⇧⌘D)")
             }
-            Button {
-                model.downloadNew()
-            } label: {
-                Label(model.newFiles.isEmpty ? "Todo descargado" : "Descargar \(model.newFiles.count) nuevos",
-                      systemImage: model.newFiles.isEmpty ? "checkmark.circle" : "arrow.down.to.line")
-                    .labelStyle(.titleAndIcon)
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(model.newFiles.isEmpty)
-            .help("Baja todo lo que todavía no está en tu carpeta (⇧⌘D)")
-
             Button {
                 if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
             } label: {
-                Label("Desconectar", systemImage: "eject")
+                Image(systemName: "eject.fill").font(.system(size: 11, weight: .bold))
             }
-            .help("Libera la cámara y devuelve el Mac a tu Wi-Fi")
+            .buttonStyle(KeyButtonStyle(kind: .ink))
+            .help("Expulsar: libera la cámara y devuelve el Mac a tu Wi-Fi")
         }
     }
 }
 
-private struct SectionHeader: View {
+/// The deck's LCD: camera, library counts, battery and card.
+private struct StatusDisplay: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let s = model.status
+        LCDGlass {
+            VStack(alignment: .leading, spacing: 5) {
+                LCDText(text: (model.target?.model.name ?? "OSMO").uppercased(), size: 10, weight: .bold,
+                        color: Theme.lcdText.opacity(0.55))
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    LCDText(text: String(format: "%03d", model.files.count), size: 20, weight: .bold, ghost: 3)
+                    LCDText(text: "ARCH", size: 10, color: Theme.lcdText.opacity(0.55))
+                    LCDText(text: String(format: "%03d", model.newFiles.count), size: 20, weight: .bold, ghost: 3)
+                    LCDText(text: "NUEVOS", size: 10, color: Theme.lcdText.opacity(0.55))
+                }
+                HStack(spacing: 12) {
+                    LCDText(text: s.batteryPercent >= 0 ? "BAT \(s.batteryPercent)%" : "BAT --", size: 10.5,
+                            color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText.opacity(0.8))
+                    if let st = s.displayStorage {
+                        LCDText(text: "SD " + Format.compact(bytes: st.freeMb * 1_048_576) + " LIBRE", size: 10.5,
+                                color: Theme.lcdText.opacity(0.8))
+                    }
+                }
+            }
+            .padding(.horizontal, Theme.s3)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// Filter keys in a milled strip, with an LED over the active one — like a device's mode keys.
+private struct FilterKeys: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ForEach(AppModel.Filter.allCases) { f in
+                VStack(spacing: 6) {
+                    LED(color: Theme.accent, state: model.filter == f ? .on : .off, size: 6)
+                    Button(f.rawValue) { model.filter = f }
+                        .buttonStyle(KeyButtonStyle(kind: .ghost, compact: true))
+                }
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .recessed(radius: Theme.radiusM)
+    }
+}
+
+struct SectionHeader: View {
     @Environment(AppModel.self) private var model
     let title: String
     let files: [CameraFile]
@@ -173,14 +216,11 @@ private struct SectionHeader: View {
     var body: some View {
         let pending = files.filter { !model.isDownloaded($0) }
         HStack(alignment: .center, spacing: Theme.s2) {
-            Text(title.uppercased())
-                .font(.system(size: 15, weight: .heavy))
-                .tracking(0.4)
-                .foregroundStyle(Theme.ink)
+            Silk(title, color: Theme.ink, size: 10.5)
             Text(String(format: "%02d", files.count))
-                .font(Theme.readout(11, weight: .bold))
+                .font(Theme.readout(10, weight: .bold))
                 .foregroundStyle(Theme.accent)
-            Rectangle().fill(Theme.hairline).frame(height: 1)
+            EngravedRule()
             if !pending.isEmpty {
                 Button("Bajar día") { model.enqueue(pending) }
                     .buttonStyle(.ghostKey)
@@ -188,7 +228,7 @@ private struct SectionHeader: View {
         }
         .padding(.vertical, Theme.s2)
         .padding(.horizontal, Theme.s1)
-        .background(Theme.window.opacity(0.94))
+        .background(Theme.recess.opacity(0.96))
     }
 }
 

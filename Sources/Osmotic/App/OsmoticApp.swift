@@ -10,10 +10,14 @@ struct OsmoticApp: App {
         WindowGroup("Osmotic", id: "main") {
             RootView()
                 .environment(model)
-                .frame(minWidth: 760, minHeight: 540)
+                .frame(minWidth: 820, minHeight: 560)
                 .tint(Theme.accent)
+                // The faceplate is a physical material: it looks the same in light and dark mode.
+                .preferredColorScheme(.light)
                 .onAppear { appDelegate.model = model }
         }
+        .windowStyle(.hiddenTitleBar)
+        .windowBackgroundDragBehavior(.enabled)
         .defaultSize(width: 1120, height: 740)
         .commands {
             CommandGroup(replacing: .newItem) {}

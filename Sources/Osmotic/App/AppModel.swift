@@ -116,6 +116,13 @@ final class AppModel {
         status = st
         moreAvailable = false
         refreshDownloaded()
+        if let dir = ProcessInfo.processInfo.environment["OSMOTIC_DEMO_THUMBS"],
+           let names = try? FileManager.default.contentsOfDirectory(atPath: dir).filter({ $0.hasSuffix(".jpg") }).sorted(),
+           !names.isEmpty {
+            for (i, f) in files.enumerated() {
+                thumbCache[f.id] = NSImage(contentsOfFile: dir + "/" + names[i % names.count])
+            }
+        }
         switch demoScreen {
         case "connecting":
             screen = .connecting

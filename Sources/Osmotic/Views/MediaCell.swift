@@ -47,21 +47,23 @@ struct MediaCell: View {
     }
 
     private var thumbnail: some View {
-        ZStack {
-            Rectangle().fill(Theme.well)
-            if let image {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFill()
-                    .transition(.opacity)
-            } else {
-                Image(systemName: file.isVideo ? "video" : "photo")
-                    .font(.system(size: 20, weight: .light))
-                    .foregroundStyle(Theme.muted.opacity(0.6))
+        // A fixed 16:9 window: portrait stills are cropped to fill it instead of stretching the cell.
+        Rectangle()
+            .fill(Theme.charcoalBottom.opacity(0.85))
+            .aspectRatio(16 / 9, contentMode: .fit)
+            .overlay {
+                if let image {
+                    Image(nsImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .transition(.opacity)
+                } else {
+                    Image(systemName: file.isVideo ? "video" : "photo")
+                        .font(.system(size: 20, weight: .light))
+                        .foregroundStyle(.white.opacity(0.25))
+                }
             }
-        }
-        .aspectRatio(16 / 9, contentMode: .fit)
-        .clipped()
+            .clipped()
         .overlay(alignment: .bottomLeading) { kindBadge.padding(Theme.s2) }
         .overlay(alignment: .topTrailing) {
             if file.starred {
@@ -75,10 +77,13 @@ struct MediaCell: View {
         }
         .overlay(alignment: .bottomTrailing) {
             if downloaded {
-                LED(color: Theme.success, label: "En Mac")
-                    .padding(.horizontal, 7).padding(.vertical, 4)
-                    .background(Theme.lcd.opacity(0.8), in: Capsule())
-                    .padding(Theme.s2)
+                HStack(spacing: 5) {
+                    LED(color: Theme.success, size: 6)
+                    Text("EN MAC").font(.system(size: 8.5, weight: .bold)).tracking(0.6).foregroundStyle(.white.opacity(0.9))
+                }
+                .padding(.horizontal, 7).padding(.vertical, 4)
+                .background(.black.opacity(0.55), in: Capsule())
+                .padding(Theme.s2)
                     .help("Ya está en tu carpeta de descargas")
             } else if isCurrentTransfer {
                 ProgressView(value: currentFraction)
@@ -91,11 +96,12 @@ struct MediaCell: View {
             if hovering {
                 Button { model.previewFile = file } label: {
                     Image(systemName: file.isVideo ? "play.fill" : "eye.fill")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(.white)
                         .frame(width: 40, height: 40)
-                        .background(Theme.accent, in: Circle())
-                        .shadow(color: Theme.accent.opacity(0.5), radius: 8)
+                        .background(Circle().fill(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom)))
+                        .overlay(Circle().strokeBorder(.white.opacity(0.35), lineWidth: 1))
+                        .shadow(color: .black.opacity(0.35), radius: 2, y: 2)
                 }
                 .buttonStyle(.plain)
                 .help(file.isVideo ? "Reproducir (espacio)" : "Ver (espacio)")
@@ -108,16 +114,18 @@ struct MediaCell: View {
             if selected || hovering || !model.selection.isEmpty {
                 Button { model.toggleInSelection(file) } label: {
                     ZStack {
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .fill(selected ? Theme.accent : Theme.lcd.opacity(0.35))
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
-                            .strokeBorder(.white.opacity(selected ? 0 : 0.9), lineWidth: 1.5)
+                        RoundedRectangle(cornerRadius: 4.5, style: .continuous)
+                            .fill(selected
+                                  ? AnyShapeStyle(LinearGradient(colors: [Theme.accentTop, Theme.accentBottom], startPoint: .top, endPoint: .bottom))
+                                  : AnyShapeStyle(Color.black.opacity(0.3)))
+                        RoundedRectangle(cornerRadius: 4.5, style: .continuous)
+                            .strokeBorder(.white.opacity(selected ? 0.35 : 0.85), lineWidth: 1.2)
                         if selected {
-                            Image(systemName: "checkmark").font(.system(size: 10, weight: .heavy)).foregroundStyle(.white)
+                            Image(systemName: "checkmark").font(.system(size: 9.5, weight: .heavy)).foregroundStyle(.white)
                         }
                     }
                     .frame(width: 18, height: 18)
-                    .shadow(color: .black.opacity(0.25), radius: 2)
+                    .shadow(color: .black.opacity(0.3), radius: 1.5, y: 1)
                     .padding(Theme.s2)
                     .contentShape(Rectangle())
                 }
@@ -125,11 +133,14 @@ struct MediaCell: View {
                 .help(selected ? "Quitar de la selección" : "Agregar a la selección")
             }
         }
-        .clipShape(RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous))
+        // A print on the tray: thin dark mount, a little lift; selected = orange rim.
+        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: Theme.radiusM, style: .continuous)
-                .strokeBorder(selected ? Theme.accent : Theme.hairline, lineWidth: selected ? 3 : 1)
+            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                .strokeBorder(selected ? Theme.accent : Color.black.opacity(0.35), lineWidth: selected ? 2.5 : 1)
         )
+        .shadow(color: .black.opacity(0.22), radius: 1, y: 1)
+        .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
         .scaleEffect(hovering && !selected ? 1.015 : 1)
         .animation(.snappy(duration: 0.15), value: hovering)
         .animation(.snappy(duration: 0.15), value: selected)
@@ -156,11 +167,11 @@ struct MediaCell: View {
     private var meta: some View {
         HStack(spacing: Theme.s2) {
             Text(file.captureDate.map { Format.time.string(from: $0) } ?? file.name)
-                .font(Theme.readout(12.5, weight: .bold))
+                .font(Theme.readout(12, weight: .bold))
                 .foregroundStyle(Theme.ink)
             Text(details.uppercased())
-                .font(Theme.label(9.5))
-                .tracking(0.8)
+                .font(.system(size: 9.5, weight: .semibold))
+                .tracking(0.5)
                 .foregroundStyle(Theme.muted)
                 .lineLimit(1)
             Spacer(minLength: 0)
@@ -191,6 +202,6 @@ private struct BadgeLabelStyle: LabelStyle {
         .foregroundStyle(.white)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)
-        .background(Theme.lcd.opacity(0.8), in: Capsule())
+        .background(.black.opacity(0.55), in: Capsule())
     }
 }
