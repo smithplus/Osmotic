@@ -1,19 +1,6 @@
 {
   "sourceLanguage": "en",
   "strings": {
-    "": {
-      "shouldTranslate": false
-    },
-    "%@ couldn’t be downloaded — try again to resume": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ no se pudieron descargar — reintentá para reanudar"
-          }
-        }
-      }
-    },
     "%@ free of %@": {
       "localizations": {
         "es": {
@@ -40,6 +27,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld descargados, %lld no — abrí Osmotic para reintentar"
+          }
+        }
+      }
+    },
+    "%lld cameras found": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld camera found"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cameras found"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cámara encontrada"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld cámaras encontradas"
+                }
+              }
+            }
           }
         }
       }
@@ -84,6 +111,56 @@
         }
       }
     },
+    "%lld files couldn’t be downloaded — try again to resume": {
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld file couldn’t be downloaded — try again to resume"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld files couldn’t be downloaded — try again to resume"
+                }
+              }
+            }
+          }
+        },
+        "es": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld archivo no se pudo descargar — reintentá para reanudar"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld archivos no se pudieron descargar — reintentá para reanudar"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "%lld of 4": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld de 4"
+          }
+        }
+      }
+    },
     "A pairing request shows up on its screen: tap the check mark. Only needed the first time.": {
       "localizations": {
         "es": {
@@ -120,6 +197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Todo descargado"
+          }
+        }
+      }
+    },
+    "All queued": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todo en cola"
           }
         }
       }
@@ -194,6 +281,16 @@
         }
       }
     },
+    "Blinking": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parpadeando"
+          }
+        }
+      }
+    },
     "Bluetooth": {
       "shouldTranslate": false
     },
@@ -203,6 +300,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "El Bluetooth está apagado. Encendelo para encontrar tu cámara."
+          }
+        }
+      }
+    },
+    "Bluetooth off": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bluetooth apagado"
           }
         }
       }
@@ -273,16 +380,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se encuentra la cámara. Encendela y acercala al Mac."
-          }
-        }
-      }
-    },
-    "Card": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tarj"
           }
         }
       }
@@ -467,6 +564,16 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        }
+      }
+    },
     "Done: %@ in %@": {
       "localizations": {
         "es": {
@@ -489,20 +596,80 @@
     },
     "Download %lld new": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Download %lld new"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Download %lld new"
+                }
+              }
+            }
+          }
+        },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descargar %lld nuevos"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Descargar %lld nuevo"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Descargar %lld nuevos"
+                }
+              }
+            }
           }
         }
       }
     },
     "Download %lld selected": {
       "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Download %lld selected"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Download %lld selected"
+                }
+              }
+            }
+          }
+        },
         "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descargar %lld elegidos"
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Descargar %lld elegido"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Descargar %lld elegidos"
+                }
+              }
+            }
           }
         }
       }
@@ -630,6 +797,16 @@
     "Error": {
       "shouldTranslate": false
     },
+    "Failed": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falló"
+          }
+        }
+      }
+    },
     "File": {
       "localizations": {
         "es": {
@@ -700,6 +877,16 @@
         }
       }
     },
+    "Free": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Libre"
+          }
+        }
+      }
+    },
     "Go back to my Wi-Fi when disconnecting": {
       "localizations": {
         "es": {
@@ -716,6 +903,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volviendo a tu Wi-Fi…"
+          }
+        }
+      }
+    },
+    "In progress": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En curso"
           }
         }
       }
@@ -810,6 +1007,16 @@
         }
       }
     },
+    "Lost contact with the camera. Check that it’s on and nearby, then reconnect.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se perdió el contacto con la cámara. Fijate que esté encendida y cerca, y reconectá."
+          }
+        }
+      }
+    },
     "Maintenance": {
       "localizations": {
         "es": {
@@ -840,6 +1047,16 @@
         }
       }
     },
+    "Next": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Siguiente"
+          }
+        }
+      }
+    },
     "Next (→)": {
       "localizations": {
         "es": {
@@ -856,6 +1073,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "La próxima vez vas a tener que buscarlas de nuevo. El historial de descargas se mantiene."
+          }
+        }
+      }
+    },
+    "No Bluetooth LE": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin Bluetooth LE"
+          }
+        }
+      }
+    },
+    "No Bluetooth access": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin acceso a Bluetooth"
           }
         }
       }
@@ -900,6 +1137,26 @@
         }
       }
     },
+    "Off": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apagado"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encendido"
+          }
+        }
+      }
+    },
     "On Mac": {
       "localizations": {
         "es": {
@@ -926,6 +1183,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir carpeta"
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Ajustes"
           }
         }
       }
@@ -963,9 +1230,6 @@
         }
       }
     },
-    "PANO": {
-      "shouldTranslate": false
-    },
     "Pair": {
       "localizations": {
         "es": {
@@ -996,12 +1260,32 @@
         }
       }
     },
+    "Pano": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pano"
+          }
+        }
+      }
+    },
     "Paused": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "En pausa"
+          }
+        }
+      }
+    },
+    "Photo": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Foto"
           }
         }
       }
@@ -1059,6 +1343,16 @@
         }
       }
     },
+    "Previous": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anterior"
+          }
+        }
+      }
+    },
     "Previous (←)": {
       "localizations": {
         "es": {
@@ -1069,12 +1363,32 @@
         }
       }
     },
+    "Queued": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En cola"
+          }
+        }
+      }
+    },
     "Reading the camera’s card…": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Leyendo la tarjeta de la cámara…"
+          }
+        }
+      }
+    },
+    "Reconnect": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reconectar"
           }
         }
       }
@@ -1209,6 +1523,16 @@
         }
       }
     },
+    "Signal": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Señal"
+          }
+        }
+      }
+    },
     "Signal %lld dBm": {
       "localizations": {
         "es": {
@@ -1245,6 +1569,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Favoritos"
+          }
+        }
+      }
+    },
+    "Starting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciando"
+          }
+        }
+      }
+    },
+    "Step %lld of %lld": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paso %lld de %lld"
           }
         }
       }
@@ -1419,6 +1763,26 @@
         }
       }
     },
+    "Unavailable": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No disponible"
+          }
+        }
+      }
+    },
+    "Video": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Video"
+          }
+        }
+      }
+    },
     "Videos": {
       "localizations": {
         "es": {
@@ -1439,6 +1803,16 @@
         }
       }
     },
+    "Waiting": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando"
+          }
+        }
+      }
+    },
     "Waiting for the %@ network…": {
       "localizations": {
         "es": {
@@ -1455,6 +1829,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esperando que la cámara encienda su Wi-Fi…"
+          }
+        }
+      }
+    },
+    "Waiting for the camera…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esperando a la cámara…"
           }
         }
       }
@@ -1545,12 +1929,12 @@
     "osmotic": {
       "shouldTranslate": false
     },
-    "password": {
+    "password (8 or more characters)": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "contraseña"
+            "value": "contraseña (8 caracteres o más)"
           }
         }
       }
@@ -1561,16 +1945,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "señal"
-          }
-        }
-      }
-    },
-    "under 1 min": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "menos de 1 min"
           }
         }
       }

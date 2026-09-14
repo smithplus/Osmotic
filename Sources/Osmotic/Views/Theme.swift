@@ -26,12 +26,12 @@ enum Theme {
     static let slot = rgb(17, 17, 16)                // the dark channel keys sit in
     // Silkscreen ink
     static let ink = rgb(232, 229, 222)
-    static let muted = rgb(138, 135, 129)
+    static let muted = rgb(160, 157, 150)            // ≥ 4.5:1 on every graphite surface
     static let hairline = rgb(255, 255, 255, 0.08)
     // Plastics
     static let accent = rgb(238, 92, 36)            // orange key
-    static let accentTop = rgb(247, 114, 60)
-    static let accentBottom = rgb(214, 74, 22)
+    static let accentTop = rgb(230, 84, 28)          // key face: dark enough for white text
+    static let accentBottom = rgb(196, 64, 16)
     static let greyTop = rgb(66, 66, 65)            // graphite key
     static let greyBottom = rgb(53, 53, 52)
     // LCD
@@ -44,10 +44,6 @@ enum Theme {
     static let warning = rgb(255, 176, 32)
     static let danger = rgb(232, 56, 42)
 
-    // Legacy names still used by a few views
-    static var window: Color { metalBottom }
-    static var surface: Color { metalTop }
-    static var well: Color { recess }
 
     static let s1: CGFloat = 4
     static let s2: CGFloat = 8
@@ -184,9 +180,6 @@ extension View {
     func recessed(radius: CGFloat = Theme.radiusM) -> some View {
         modifier(Pocket(radius: radius))
     }
-
-    /// Back-compat for views that still ask for a card.
-    func card(padding: CGFloat = Theme.s3) -> some View { self.padding(padding).raisedPanel() }
 }
 
 /// A display: a deep pocket of dark glass with a faint glare. Kept quiet on purpose — the readout is
@@ -274,7 +267,7 @@ struct CassetteKeyStyle: ButtonStyle {
             .tracking(0.9)
             .textCase(.uppercase)
             .foregroundStyle(text.opacity(down && finish == .secondary ? 0.8 : 1))
-            .padding(.horizontal, width == nil ? (compact ? 10 : 14) : 0)
+            .padding(.horizontal, width == nil ? (compact ? 10 : 14) : 8)
             .frame(minWidth: width ?? 44)             // grows for longer translations
             .frame(height: height)
             .background {
@@ -402,29 +395,45 @@ struct LED: View {
     var state: State = .on
     var label: LocalizedStringKey? = nil
     var size: CGFloat = 8
-    @SwiftUI.State private var phase = false
+    /// What VoiceOver says about the light; defaults to on / off / blinking.
+    var spokenState: LocalizedStringKey? = nil
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         HStack(spacing: 7) {
-            // A blinking LED pulses its brightness; it never reads as switched off.
-            let lit = state != .off
-            ZStack {
-                Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)   // bezel hole
-                Circle()
-                    .fill(RadialGradient(colors: lit ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
-                                                     : [Color(white: 0.16), Color(white: 0.09)],
-                                         center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7))
-                    .frame(width: size, height: size)
-                    .opacity(state == .blink && phase ? 0.45 : 1)
-                Circle().fill(.white.opacity(lit ? 0.85 : 0.12))
-                    .frame(width: size * 0.28, height: size * 0.28)
-                    .offset(x: -size * 0.16, y: -size * 0.18)
+            // A blinking LED pulses its brightness (never reads as switched off). Driven by the clock,
+            // so it starts and stops with `state` and nothing keeps animating afterwards.
+            if state == .blink && !reduceMotion {
+                TimelineView(.animation(minimumInterval: 1 / 30)) { t in
+                    let wave = (sin(t.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.2) + 1) / 2
+                    lens(dim: wave * 0.55)
+                }
+            } else {
+                lens(dim: 0)
             }
-            .shadow(Depth.glow(lit ? color : .clear, state == .blink && phase ? 0.2 : 0.6))
-            .animation(state == .blink ? .easeInOut(duration: 0.6).repeatForever() : .default, value: phase)
-            .onAppear { if state == .blink { phase = true } }
             if let label { Silk(label, color: Theme.ink) }
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityValue(spokenState.map { Text($0) }
+                            ?? (state == .off ? Text("Off") : state == .blink ? Text("Blinking") : Text("On")))
+    }
+
+    private func lens(dim: Double) -> some View {
+        let lit = state != .off
+        return ZStack {
+            Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)   // bezel hole
+            Circle()
+                .fill(RadialGradient(colors: lit ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
+                                                 : [Color(white: 0.16), Color(white: 0.09)],
+                                     center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7))
+                .frame(width: size, height: size)
+                .opacity(1 - dim)
+            Circle().fill(.white.opacity(lit ? 0.85 : 0.12))
+                .frame(width: size * 0.28, height: size * 0.28)
+                .offset(x: -size * 0.16, y: -size * 0.18)
+        }
+        .shadow(Depth.glow(lit ? color : .clear, 0.6 * (1 - dim)))
+        .accessibilityHidden(true)
     }
 }
 
@@ -496,21 +505,6 @@ struct SegmentMeter: View {
     }
 }
 
-/// A countersunk screw head — used sparingly, at the corners of the main plate.
-struct Screw: View {
-    var angle: Double = 20
-    var body: some View {
-        ZStack {
-            Circle().fill(RadialGradient(colors: [Color(white: 0.86), Color(white: 0.62)],
-                                         center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: 6))
-            Circle().strokeBorder(.black.opacity(0.25), lineWidth: 0.5)
-            Capsule().fill(.black.opacity(0.45)).frame(width: 6.5, height: 1.3).rotationEffect(.degrees(angle))
-        }
-        .frame(width: 9, height: 9)
-        .shadow(Depth.lipLight)
-    }
-}
-
 enum Format {
     static func bytes(_ n: Int) -> String {
         ByteCountFormatter.string(fromByteCount: Int64(n), countStyle: .file)
@@ -520,12 +514,12 @@ enum Format {
         ByteCountFormatter.string(fromByteCount: Int64(mb) * 1_048_576, countStyle: .file)
     }
 
-    /// Compact LCD-style size: `71.4G`, `734M`.
+    /// Compact LCD-style size: `71.4G`, `734M` (decimal separator follows the user's locale).
     static func compact(bytes n: Int) -> String {
         let g = Double(n) / 1_000_000_000
-        if g >= 10 { return String(format: "%.0fG", g) }
-        if g >= 1 { return String(format: "%.1fG", g) }
-        return String(format: "%.0fM", Double(n) / 1_000_000)
+        if g >= 10 { return g.formatted(.number.precision(.fractionLength(0))) + "G" }
+        if g >= 1 { return g.formatted(.number.precision(.fractionLength(1))) + "G" }
+        return (Double(n) / 1_000_000).formatted(.number.precision(.fractionLength(0))) + "M"
     }
 
     static func duration(_ seconds: Int) -> String {
@@ -537,14 +531,6 @@ enum Format {
         let s = max(0, Int(seconds.rounded()))
         return s >= 3600 ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
             : String(format: "%02d:%02d", s / 60, s % 60)
-    }
-
-    static func eta(_ seconds: TimeInterval) -> String {
-        if seconds < 60 { return String(localized: "under 1 min") }
-        let f = DateComponentsFormatter()
-        f.allowedUnits = seconds >= 3600 ? [.hour, .minute] : [.minute]
-        f.unitsStyle = .abbreviated
-        return f.string(from: seconds) ?? ""
     }
 
     static let dayHeader: DateFormatter = {
@@ -561,7 +547,7 @@ enum Format {
 
     static let time: DateFormatter = {
         let f = DateFormatter()
-        f.setLocalizedDateFormatFromTemplate("HH:mm")
+        f.setLocalizedDateFormatFromTemplate("jmm")   // 12- or 24-hour, as the user has it
         return f
     }()
 

@@ -5,6 +5,7 @@ import SwiftUI
 struct ConnectingView: View {
     @Environment(AppModel.self) private var model
     @State private var password = ""
+    @FocusState private var passwordFocused: Bool
 
     /// False only for debug snapshots — `ImageRenderer` cannot draw scroll-view content.
     var scrolls = true
@@ -29,9 +30,9 @@ struct ConnectingView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack {
                             LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 11, weight: .medium,
-                                    color: Theme.lcdText.opacity(0.6))
+                                    color: Theme.lcdText.opacity(0.75))
                             Spacer()
-                            LCDText(text: model.target?.name.uppercased() ?? "", size: 11, color: Theme.lcdText.opacity(0.6))
+                            LCDText(text: model.target?.name ?? "", size: 11, color: Theme.lcdText.opacity(0.75))
                         }
                         LCDText(text: lcdMessage, size: 16, weight: .medium)
                         if model.stage == .datalink && model.connectError == nil {
@@ -119,7 +120,10 @@ struct ConnectingView: View {
                 .foregroundStyle(Theme.muted)
                 .fixedSize(horizontal: false, vertical: true)
             HStack(spacing: Theme.s2) {
-                SecureField("", text: $password, prompt: Text("password"))
+                SecureField("Camera Wi-Fi password", text: $password, prompt: Text("password (8 or more characters)"))
+                    .labelsHidden()
+                    .focused($passwordFocused)
+                    .onAppear { passwordFocused = true }
                     .textFieldStyle(.plain)
                     .font(Theme.readout(13))
                     .padding(.horizontal, 10)
@@ -152,12 +156,34 @@ private struct StageChannel: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            LED(color: color, state: ledState, size: 11)
+            ZStack {
+                LED(color: color, state: ledState, size: 11)
+                // A shape as well as a colour: a tick when done, a cross when it failed.
+                if state == .done || state == .failed {
+                    Image(systemName: state == .done ? "checkmark" : "xmark")
+                        .font(.system(size: 6.5, weight: .heavy))
+                        .foregroundStyle(.black.opacity(0.7))
+                }
+            }
             Silk(shortTitle, color: state == .pending ? Theme.muted : Theme.ink, size: 9)
                 .multilineTextAlignment(.center)
-            Text(String(format: "%02d", stage.rawValue + 1))
+            Text(String(format: "%02ld", stage.rawValue + 1))
                 .font(Theme.readout(9, weight: .bold))
-                .foregroundStyle(Theme.muted.opacity(0.8))
+                .foregroundStyle(Theme.muted)
+        }
+        // One element per stage: "Pair, step 2 of 5, in progress" — not just a colour.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(shortTitle))
+        .accessibilityValue(Text(spokenState))
+        .accessibilityHint(Text("Step \(stage.rawValue + 1) of \(AppModel.Stage.allCases.count)"))
+    }
+
+    private var spokenState: LocalizedStringKey {
+        switch state {
+        case .pending: "Waiting"
+        case .active: "In progress"
+        case .done: "Done"
+        case .failed: "Failed"
         }
     }
 

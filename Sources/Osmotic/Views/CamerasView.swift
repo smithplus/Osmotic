@@ -17,8 +17,11 @@ struct CamerasView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopPlate {
-                LED(color: model.ble.power == .poweredOn ? Theme.success : Theme.danger,
-                    state: model.ble.power == .poweredOn ? .on : .blink, label: "Bluetooth")
+                switch model.ble.power {
+                case .poweredOn: LED(color: Theme.success, state: .on, label: "Bluetooth")
+                case .unknown: LED(state: .off, label: "Bluetooth", spokenState: "Starting")
+                default: LED(color: Theme.danger, state: .blink, label: "Bluetooth", spokenState: "Unavailable")
+                }
             }
             Group {
                 if scrolls { ScrollView { content } } else { content }
@@ -38,16 +41,21 @@ struct CamerasView: View {
             display
             if let error = model.connectError { ErrorBanner(message: error) }
             if model.restoringWifi { Notice(text: "Going back to your Wi-Fi…") }
+            // The automatic disconnect after downloads lands here: say how it went.
+            if let summary = model.lastTransferSummary, !model.restoringWifi {
+                Notice(verbatim: summary.text, color: summary.ok ? Theme.success : Theme.warning)
+            }
             bluetoothNotice
 
             VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                 SectionIndex(number: 1, title: "Nearby")
                 if nearby.isEmpty {
-                    EmptyNearby()
+                    if bluetoothReady { EmptyNearby() }
                 } else {
                     ForEach(nearby) { cam in
                         CameraModule(title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
-                                     saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true) {
+                                     saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true,
+                                     enabled: bluetoothReady) {
                             model.connect(cam)
                         }
                     }
@@ -58,7 +66,8 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                     SectionIndex(number: 2, title: "Connected before")
                     ForEach(savedOutOfRange) { cam in
-                        CameraModule(title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false) {
+                        CameraModule(title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false,
+                                     enabled: bluetoothReady) {
                             model.connect(saved: cam)
                         }
                     }
@@ -81,7 +90,7 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     LCDText(text: headline, size: 16, weight: .medium)
                     LCDText(text: String(localized: "Osmo › Mac  ·  No cables  ·  No app").uppercased(), size: 10.5,
-                            weight: .medium, color: Theme.lcdText.opacity(0.55))
+                            weight: .medium, color: Theme.lcdText.opacity(0.75))
                 }
                 Spacer()
                 ScanBars(active: model.ble.isScanning)
@@ -91,15 +100,35 @@ struct CamerasView: View {
         }
     }
 
+    private var bluetoothReady: Bool { model.ble.power == .poweredOn || model.ble.power == .unknown }
+
     private var headline: String {
-        if !nearby.isEmpty { return String(format: "%02ld ", nearby.count) + String(localized: "Nearby").uppercased() }
-        return (model.ble.isScanning ? String(localized: "Searching…") : String(localized: "Paused")).uppercased()
+        let text: String = switch model.ble.power {
+        case .poweredOff: String(localized: "Bluetooth off")
+        case .unauthorized: String(localized: "No Bluetooth access")
+        case .unsupported: String(localized: "No Bluetooth LE")
+        default:
+            nearby.isEmpty ? (model.ble.isScanning ? String(localized: "Searching…") : String(localized: "Paused"))
+                           : String(localized: "\(nearby.count) cameras found")
+        }
+        return text.uppercased()
     }
 
     @ViewBuilder private var bluetoothNotice: some View {
         switch model.ble.power {
         case .poweredOff: Notice(text: "Bluetooth is off. Turn it on to find your camera.")
-        case .unauthorized: Notice(text: "Osmotic needs Bluetooth permission: System Settings › Privacy & Security › Bluetooth.")
+        case .unauthorized:
+            HStack(spacing: Theme.s3) {
+                Notice(text: "Osmotic needs Bluetooth permission: System Settings › Privacy & Security › Bluetooth.")
+                CassetteKeyBank {
+                    Button("Open Settings") {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Bluetooth") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }
+                    .buttonStyle(.primaryKey)
+                }
+            }
         case .unsupported: Notice(text: "This Mac doesn’t have Bluetooth LE.")
         default: EmptyView()
         }
@@ -133,6 +162,7 @@ private struct CameraModule: View {
     let rssi: Int?
     let saved: Bool
     let inRange: Bool
+    var enabled = true
     let connect: () -> Void
 
     var body: some View {
@@ -156,10 +186,14 @@ private struct CameraModule: View {
             Spacer()
             if let rssi {
                 SignalLEDs(level: Self.level(rssi)).help("Signal \(rssi) dBm")
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("Signal")
+                    .accessibilityValue(Text("\(Self.level(rssi)) of 4"))
             }
             CassetteKeyBank {
                 Button("Connect", action: connect)
                     .buttonStyle(CassetteKeyStyle(finish: inRange ? .primary : .secondary))
+                    .disabled(!enabled)
             }
         }
         .padding(.vertical, Theme.s3 - 2)
@@ -208,11 +242,23 @@ private struct EmptyNearby: View {
 
 /// A printed notice with an amber LED.
 struct Notice: View {
-    let text: LocalizedStringKey
+    let text: Text
+    var color: Color = Theme.warning
+
+    init(text: LocalizedStringKey, color: Color = Theme.warning) {
+        self.text = Text(text)
+        self.color = color
+    }
+
+    init(verbatim: String, color: Color = Theme.warning) {
+        self.text = Text(verbatim: verbatim)
+        self.color = color
+    }
+
     var body: some View {
         HStack(spacing: Theme.s2 + 2) {
-            LED(color: Theme.warning, state: .on)
-            Text(text).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
+            LED(color: color, state: .on).accessibilityHidden(true)
+            text.font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(Theme.s3 - 4)
@@ -224,7 +270,7 @@ struct ErrorBanner: View {
     let message: String
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: Theme.s2 + 2) {
-            LED(color: Theme.danger, state: .on)
+            LED(color: Theme.danger, state: .on).accessibilityHidden(true)
             Text(message).font(.callout).foregroundStyle(Theme.ink).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
@@ -257,5 +303,10 @@ private struct DownloadFolderFooter: View {
         }
         .padding(.top, Theme.s2)
         .onAppear { folder = Preferences.downloadFolder }
+        // "Change…" happens in the Settings window: follow it.
+        .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)) { _ in
+            let now = Preferences.downloadFolder
+            if now != folder { folder = now }
+        }
     }
 }

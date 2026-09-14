@@ -31,6 +31,12 @@ struct MediaCell: View {
             }
         })
         .onHover { hovering = $0 }
+        // VoiceOver: one element per file, with what it is and the two things you can do with it.
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(spokenLabel))
+        .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction { model.toggleInSelection(file) }
+        .accessibilityAction(named: Text("Preview")) { model.previewFile = file }
         .contextMenu {
             Button("Preview") { model.previewFile = file }
             if model.isOnDisk(file) {
@@ -85,6 +91,12 @@ struct MediaCell: View {
                 .background(.black.opacity(0.55), in: Capsule())
                 .padding(Theme.s2)
                     .help("Already in your downloads folder")
+            } else if model.queuedIds.contains(file.id) && !isCurrentTransfer {
+                Text("Queued").font(.system(size: 8.5, weight: .bold)).tracking(0.6).textCase(.uppercase)
+                    .foregroundStyle(.white.opacity(0.9))
+                    .padding(.horizontal, 7).padding(.vertical, 4)
+                    .background(.black.opacity(0.55), in: Capsule())
+                    .padding(Theme.s2)
             } else if isCurrentTransfer {
                 ProgressView(value: currentFraction)
                     .progressViewStyle(.circular)
@@ -145,6 +157,18 @@ struct MediaCell: View {
         .animation(.snappy(duration: 0.15), value: selected)
     }
 
+    private var spokenLabel: String {
+        var parts: [String] = []
+        parts.append(file.isVideo ? String(localized: "Video") : String(localized: "Photo"))
+        if let d = file.captureDate { parts.append(Format.time.string(from: d)) }
+        if file.isVideo && file.durationSec > 0 { parts.append(Format.duration(file.durationSec)) }
+        if file.sizeBytes > 0 { parts.append(Format.bytes(file.sizeBytes)) }
+        if file.starred { parts.append(String(localized: "Starred")) }
+        if downloaded { parts.append(String(localized: "On Mac")) }
+        if model.queuedIds.contains(file.id) { parts.append(String(localized: "Queued")) }
+        return parts.joined(separator: ", ")
+    }
+
     private var currentFraction: Double {
         guard let t = model.transfer, t.currentSize > 0 else { return 0 }
         return min(1, Double(t.currentBytes) / Double(t.currentSize))
@@ -152,10 +176,10 @@ struct MediaCell: View {
 
     @ViewBuilder private var kindBadge: some View {
         if file.isVideo {
-            Label(file.durationSec > 0 ? Format.duration(file.durationSec) : "VIDEO", systemImage: "play.fill")
+            Label { file.durationSec > 0 ? Text(verbatim: Format.duration(file.durationSec)) : Text("Video") } icon: { Image(systemName: "play.fill") }
                 .labelStyle(BadgeLabelStyle())
         } else if file.isPanorama {
-            Label("PANO", systemImage: "pano")
+            Label("Pano", systemImage: "pano")
                 .labelStyle(BadgeLabelStyle())
         } else if file.isBurst {
             Label("Burst", systemImage: "square.stack")
@@ -167,6 +191,8 @@ struct MediaCell: View {
         HStack(spacing: Theme.s2) {
             Text(file.captureDate.map { Format.time.string(from: $0) } ?? file.name)
                 .font(Theme.readout(12, weight: .bold))
+                .lineLimit(1)
+                .truncationMode(.middle)
                 .foregroundStyle(Theme.ink)
             Text(details.uppercased())
                 .font(.system(size: 9.5, weight: .semibold))
@@ -198,6 +224,7 @@ private struct BadgeLabelStyle: LabelStyle {
             configuration.title
         }
         .font(Theme.readout(10, weight: .bold))
+        .textCase(.uppercase)
         .foregroundStyle(.white)
         .padding(.horizontal, 7)
         .padding(.vertical, 3)

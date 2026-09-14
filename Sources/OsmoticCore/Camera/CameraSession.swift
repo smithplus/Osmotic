@@ -104,7 +104,7 @@ public final class CameraSession: @unchecked Sendable {
     /// Release playback, close the socket and stop the session thread. A job already running aborts
     /// at its next receive; jobs queued behind it return empty.
     public func close() async {
-        markClosed()
+        guard markClosed() else { return }   // already closed (or closing): never tear down twice
         await submit { [self] in
             teardown()
         }
@@ -120,11 +120,14 @@ public final class CameraSession: @unchecked Sendable {
         return closed
     }
 
-    private func markClosed() {
+    /// True if this call closed the session, false if it already was.
+    private func markClosed() -> Bool {
         cond.lock()
+        defer { cond.unlock() }
+        guard !closed else { return false }
         closed = true
         cond.signal()
-        cond.unlock()
+        return true
     }
 
     private func requestStop() {
@@ -159,6 +162,9 @@ public final class CameraSession: @unchecked Sendable {
             cond.lock()
             while jobs.isEmpty && !stopRequested && !keepAliveOn { cond.wait() }
             if stopRequested && jobs.isEmpty {
+                // Close the socket before anyone can see the worker gone, so a late `submit` running
+                // inline can never close the same descriptor from another thread.
+                tx.close()
                 workerExited = true
                 cond.unlock()
                 break
@@ -168,7 +174,6 @@ public final class CameraSession: @unchecked Sendable {
             if let job { job(); continue }
             if keepAliveOn && !stopRequested { keepAliveTick() }
         }
-        tx.close()
     }
 
     /// Sleep up to `seconds`, returning early when a job arrives.

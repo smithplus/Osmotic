@@ -25,8 +25,14 @@ struct TransferBar: View {
                             .truncationMode(.middle)
                         Spacer(minLength: Theme.s2)
                         LCDPair(label: "File", value: "\(min(t.done + 1, t.total))/\(t.total)")
-                        if t.speed > 0 { LCDPair(label: "Speed", value: Format.bytes(Int(t.speed)).uppercased() + "/S") }
-                        if let eta = t.eta { LCDPair(label: "Left", value: Format.clock(eta)) }
+                        if model.linkLost {
+                            // Speed and time left would be stale numbers over a stalled meter.
+                            LCDText(text: String(localized: "Waiting for the camera…").uppercased(), size: 12,
+                                    color: Theme.warning)
+                        } else {
+                            if t.speed > 0 { LCDPair(label: "Speed", value: Format.bytes(Int(t.speed)).uppercased() + "/S") }
+                            if let eta = t.eta { LCDPair(label: "Left", value: Format.clock(eta)) }
+                        }
                         LCDText(text: "\(Int((t.fraction * 100).rounded()))%", size: 12, weight: .medium)
                             .frame(width: 44, alignment: .trailing)
                     }
@@ -58,7 +64,7 @@ struct TransferBar: View {
             }
             CassetteKeyBank {
                 Button("Show in Finder") { model.openDownloadFolder() }
-                    .buttonStyle(.primaryKey)
+                    .buttonStyle(.secondaryKey)
             }
             .fixedSize()
         }

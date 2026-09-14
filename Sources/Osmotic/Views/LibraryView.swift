@@ -4,7 +4,6 @@ import SwiftUI
 /// The camera's card, newest first, grouped by day.
 struct LibraryView: View {
     @Environment(AppModel.self) private var model
-    @State private var confirmDisconnect = false
 
     private struct DaySection: Identifiable {
         let id: String
@@ -37,9 +36,7 @@ struct LibraryView: View {
                         state: model.linkLost ? .blink : .on,
                         label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
                     CassetteKeyBank(compact: true) {
-                        Button {
-                            if model.transfer != nil { confirmDisconnect = true } else { Task { await model.disconnect() } }
-                        } label: {
+                        Button { model.requestDisconnect() } label: {
                             Label("Disconnect", systemImage: "eject.fill")
                         }
                         .buttonStyle(.compactKey)
@@ -50,6 +47,20 @@ struct LibraryView: View {
             ControlDeck()
                 .padding(.horizontal, Theme.s3)
                 .padding(.bottom, Theme.s3)
+
+            if model.linkGaveUp {
+                HStack(spacing: Theme.s3) {
+                    ErrorBanner(message: String(localized: "Lost contact with the camera. Check that it’s on and nearby, then reconnect."))
+                    CassetteKeyBank {
+                        Button("Reconnect") { model.reconnectLink() }
+                            .buttonStyle(.primaryKey)
+                        Button("Disconnect") { model.requestDisconnect() }
+                            .buttonStyle(.secondaryKey)
+                    }
+                }
+                .padding(.horizontal, Theme.s3)
+                .padding(.bottom, Theme.s3)
+            }
 
             Group {
                 if model.files.isEmpty {
@@ -72,7 +83,7 @@ struct LibraryView: View {
                                     set: { if !$0 { model.previewFile = nil } })) {
             if let f = model.previewFile { PreviewView(file: f).environment(model) }
         }
-        .confirmationDialog("Disconnect while files are downloading?", isPresented: $confirmDisconnect) {
+        .confirmationDialog("Disconnect while files are downloading?", isPresented: $model.confirmingDisconnect) {
             Button("Disconnect and Cancel the Download", role: .destructive) { Task { await model.disconnect() } }
         } message: {
             Text("What already arrived stays saved; the rest resumes next time.")
@@ -153,13 +164,21 @@ struct ControlDeck: View {
                         .help("Deselect all (esc)")
                     Button("Download \(model.selection.count) selected") { model.downloadSelected() }
                         .buttonStyle(.primaryKey)
+                        .disabled(model.linkLost)
                         .help("Download the selection (⌘D)")
                 } else {
+                    let pending = model.newNotQueued.count
                     Button { model.downloadNew() } label: {
-                        model.newFiles.isEmpty ? Text("All downloaded") : Text("Download \(model.newFiles.count) new")
+                        if pending > 0 {
+                            Text("Download \(pending) new")
+                        } else if model.transfer != nil {
+                            Text("All queued")
+                        } else {
+                            Text("All downloaded")
+                        }
                     }
                     .buttonStyle(.primaryKey)
-                    .disabled(model.newFiles.isEmpty)
+                    .disabled(pending == 0)
                     .help("Download everything that isn't in your folder yet (⇧⌘D)")
                 }
             }
@@ -176,7 +195,7 @@ private struct StatusDisplay: View {
         let s = model.status
         LCDGlass {
             HStack(spacing: Theme.s4) {
-                LCDText(text: (model.target?.model.name ?? "Osmo").uppercased(), size: 12.5, weight: .medium)
+                LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 12.5, weight: .medium)
                 LCDPair(label: "Files", value: "\(model.files.count)")
                 LCDPair(label: "New", value: "\(model.newFiles.count)")
                 if !model.selection.isEmpty {
@@ -186,7 +205,7 @@ private struct StatusDisplay: View {
                 LCDPair(label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
                         color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
                 if let st = s.displayStorage {
-                    LCDPair(label: "Card", value: Format.compact(bytes: st.freeMb * 1_048_576))
+                    LCDPair(label: "Free", value: Format.compact(bytes: st.freeMb * 1_048_576))
                         .help(String(localized: "\(Format.megabytes(st.freeMb)) free of \(Format.megabytes(st.totalMb))"))
                 }
             }
@@ -208,6 +227,7 @@ private struct FilterKeys: View {
                 ForEach(AppModel.Filter.allCases) { f in
                     Button(f.title) { model.filter = f }
                         .buttonStyle(CassetteKeyStyle(latched: model.filter == f, width: 66))
+                        .accessibilityAddTraits(model.filter == f ? .isSelected : [])
                 }
             }
         }
@@ -221,7 +241,8 @@ struct SectionHeader: View {
     let files: [CameraFile]
 
     var body: some View {
-        let pending = files.filter { !model.isDownloaded($0) }
+        let queued = model.queuedIds
+        let pending = files.filter { !model.isDownloaded($0) && !queued.contains($0.id) }
         HStack(alignment: .center, spacing: Theme.s2) {
             Silk(verbatim: title, color: Theme.ink, size: 10.5)
             Text(String(format: "%02d", files.count))

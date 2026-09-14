@@ -199,6 +199,7 @@ final class AppModel {
         passwordPromptSSID = nil
         linkLost = false
         linkGaveUp = false
+        lastTransferSummary = nil
         recoverTask?.cancel()
         stage = .bluetooth
         stageDetail = String(localized: "Looking for \(t.name)…")
@@ -431,7 +432,9 @@ final class AppModel {
     /// Returning the Wi-Fi is in progress (shown on the cameras screen).
     private(set) var restoringWifi = false
 
-    func disconnect() async {
+    /// `keepSummary`: leave the "Done: …" line up (the automatic disconnect after downloads shows it
+    /// on the cameras screen).
+    func disconnect(keepSummary: Bool = false) async {
         log("=== disconnect ===")
         transferGeneration += 1
         transferTask?.cancel()
@@ -444,7 +447,7 @@ final class AppModel {
         files = []
         selection = []
         previewFile = nil
-        lastTransferSummary = nil
+        if !keepSummary { lastTransferSummary = nil }
         retryCounts = [:]
         thumbCache = [:]
         moreAvailable = false
@@ -630,6 +633,19 @@ final class AppModel {
 
     var newFiles: [CameraFile] { files.filter { !downloaded.contains($0.id) } }
 
+    /// Files waiting in the transfer queue or downloading now (read through `transfer`, which changes
+    /// whenever the queue does, so views follow it).
+    var queuedIds: Set<String> {
+        guard let t = transfer else { return [] }
+        return Set(queue.map(\.id)).union(t.current.map { [$0.id] } ?? [])
+    }
+
+    /// New files not already on their way.
+    var newNotQueued: [CameraFile] {
+        let q = queuedIds
+        return newFiles.filter { !q.contains($0.id) }
+    }
+
     func isDownloaded(_ f: CameraFile) -> Bool { downloaded.contains(f.id) }
 
     func isOnDisk(_ f: CameraFile) -> Bool { FileManager.default.fileExists(atPath: DownloadPaths.destination(for: f).path) }
@@ -776,7 +792,14 @@ final class AppModel {
         }
     }
 
-    func downloadNew() { enqueue(newFiles) }
+    func downloadNew() { enqueue(newNotQueued) }
+
+    /// Shows the "cancel the download?" confirmation first when files are still coming in.
+    var confirmingDisconnect = false
+
+    func requestDisconnect() {
+        if transfer != nil && screen == .library { confirmingDisconnect = true } else { Task { await disconnect() } }
+    }
 
     func downloadSelected() { enqueue(selectedFiles) }
 
@@ -878,12 +901,12 @@ final class AppModel {
             ? TransferSummary(ok: false, text: String(localized: "Download cancelled"))
             : failed.isEmpty
             ? TransferSummary(ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
-            : TransferSummary(ok: false, text: String(localized: "\(String(localized: "\(failed.count) files")) couldn’t be downloaded — try again to resume"))
+            : TransferSummary(ok: false, text: String(localized: "\(failed.count) files couldn’t be downloaded — try again to resume"))
         log("transfer: finished — \(lastTransferSummary?.text ?? "")")
         if !cancelled { TransferNotifier.finished(saved: saved, failed: failed.count, folder: Preferences.downloadFolder) }
         if !cancelled && failed.isEmpty && Preferences.disconnectWhenDone && screen == .library {
             // Not awaited: disconnect() cancels this very task.
-            Task { @MainActor in await self.disconnect() }
+            Task { @MainActor in await self.disconnect(keepSummary: true) }
         }
     }
 

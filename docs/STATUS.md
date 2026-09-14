@@ -18,6 +18,18 @@ Todo el flujo funcionó a la primera: BLE armado (MTU 512), ya emparejada (`0x01
 
 Detalle: al restaurar, `networksetup -setairportnetwork` devolvió `-3900 tmpErr` pero macOS ya estaba volviendo solo; el chequeo por IP lo detectó en 4 s.
 
+## Revisión de seguridad e implementación (2026-09-14)
+
+Corregido (con tests en `PathSafetyTests` y `DownloaderTests`):
+- **Nombres de archivo de la cámara** (entrada no confiable): `CameraFile.localName` solo deja nombres planos; un archivo `..` podía hacer que el downloader borrara la carpeta padre (p. ej. `~/Downloads`). El downloader rechaza nombres inseguros y nunca borra en el destino.
+- **Wi-Fi**: solo se olvida la red de la cámara si la agregó la app (un SSID falso igual al de casa ya no la borra); nunca se une a una red abierta con el nombre de la cámara.
+- **Contraseña Wi-Fi de la cámara**: en el Llavero, guardada solo si el usuario la escribe, leída solo si la cámara no la manda por BLE; se migran las copias viejas de UserDefaults.
+- **Descargas**: completas solo si los bytes coinciden con Content-Length/Content-Range (el tamaño del manifiesto es una pista); 416 con `.part` completo termina; se rechazan HTML y redirecciones; miniaturas se cachean solo si son imágenes.
+- **Flujo**: "Try Again" volvía a no hacer nada; una conexión nueva espera la restauración de Wi-Fi anterior, la recuperación de arranque y la de enlace; la recuperación se cancela al desconectar y, si se rinde, la biblioteca ofrece Reconectar/Desconectar; `CameraSession.close()` idempotente y sin doble `close(fd)`.
+- **UI/accesibilidad**: VoiceOver en celdas (acciones seleccionar/vista previa), filtros (`isSelected`), LEDs y etapas (valor + ✓/✕ además del color); LEDs respetan Reducir movimiento; contraste ≥ 4.5:1; plurales en español; confirmación al desconectar desde el menú; estados de Bluetooth apagado/sin permiso con acceso a Ajustes.
+
+Pendiente (bajo): socket UDP sin `connect()` (acepta paquetes de cualquier host de la red de la cámara), tope de tamaño del manifiesto, `NSAllowsArbitraryLoads` (verificar que `NSAllowsLocalNetworking` alcanza), hardened runtime/firma Developer ID, SSIDs en el log, navegación por flechas en la grilla y foco visible, colisión de nombres entre carpetas/tarjetas.
+
 ## Todavía sin probar con hardware
 
 1. Primer emparejamiento (aprobación en pantalla, `0x07/0x46`): la cámara ya estaba emparejada.

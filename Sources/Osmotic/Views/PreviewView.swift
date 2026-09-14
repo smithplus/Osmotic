@@ -37,11 +37,11 @@ struct PreviewView: View {
 
             HStack(spacing: Theme.s3) {
                 CassetteKeyBank {
-                    Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left") }
+                    Button { model.stepPreview(by: -1) } label: { Image(systemName: "chevron.left").accessibilityLabel("Previous") }
                         .buttonStyle(.secondaryKey)
                         .keyboardShortcut(.leftArrow, modifiers: [])
                         .help("Previous (←)")
-                    Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right") }
+                    Button { model.stepPreview(by: 1) } label: { Image(systemName: "chevron.right").accessibilityLabel("Next") }
                         .buttonStyle(.secondaryKey)
                         .keyboardShortcut(.rightArrow, modifiers: [])
                         .help("Next (→)")

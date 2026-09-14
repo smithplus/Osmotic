@@ -24,10 +24,10 @@ struct OsmoticApp: App {
             CommandMenu("Camera") {
                 Button("Download New") { model.downloadNew() }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
-                    .disabled(!model.isConnected || model.newFiles.isEmpty)
+                    .disabled(!model.isConnected || model.linkLost || model.newNotQueued.isEmpty)
                 Button("Download Selection") { model.downloadSelected() }
                     .keyboardShortcut("d", modifiers: .command)
-                    .disabled(!model.isConnected || model.selection.isEmpty)
+                    .disabled(!model.isConnected || model.linkLost || model.selection.isEmpty)
                 Button("Select All") { model.selectAllVisible() }
                     .disabled(!model.isConnected)
                 Button("Select New") { model.selectNew() }
@@ -38,7 +38,7 @@ struct OsmoticApp: App {
                 Button("Open Downloads Folder") { model.openDownloadFolder() }
                     .keyboardShortcut("o", modifiers: [.command, .shift])
                 Divider()
-                Button("Disconnect") { Task { await model.disconnect() } }
+                Button("Disconnect") { model.requestDisconnect() }
                     .disabled(!model.isConnected)
             }
             CommandGroup(after: .windowList) {
@@ -55,6 +55,7 @@ struct OsmoticApp: App {
 
         Window("Log", id: "log") {
             LogView()
+                .preferredColorScheme(.dark)
                 .tint(Theme.accent)
         }
         .defaultSize(width: 820, height: 520)
