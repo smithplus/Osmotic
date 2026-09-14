@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>es</string>
+	<key>CFBundleExecutable</key>
+	<string>Osmotic</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>io.github.smithplus.osmotic</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Osmotic</string>
+	<key>CFBundleDisplayName</key>
+	<string>Osmotic</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>0.1.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>15.0</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.photography</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>MIT. Protocolo por KonradIT/osmosis y colaboradores. No afiliado a DJI.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Osmotic usa Bluetooth para encontrar tu cámara DJI y pedirle que encienda su Wi-Fi.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Osmotic se comunica con tu cámara en su propia red Wi-Fi (192.168.2.1) para listar y descargar tus archivos.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_osmotic._udp</string>
+	</array>
+	<key>NSLocationUsageDescription</key>
+	<string>macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
+</dict>
+</plist>
