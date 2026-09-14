@@ -13,7 +13,7 @@ struct OsmoticApp: App {
                 .frame(minWidth: 820, minHeight: 560)
                 .tint(Theme.accent)
                 // The faceplate is a physical material: it looks the same in light and dark mode.
-                .preferredColorScheme(.light)
+                .preferredColorScheme(.dark)
                 .onAppear { appDelegate.model = model }
         }
         .windowStyle(.hiddenTitleBar)
@@ -49,6 +49,7 @@ struct OsmoticApp: App {
         Settings {
             SettingsView()
                 .environment(model)
+                .preferredColorScheme(.dark)
                 .tint(Theme.accent)
         }
 
@@ -81,7 +82,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(Double(ProcessInfo.processInfo.environment["OSMOTIC_SNAPSHOT_DELAY"] ?? "") ?? 3))
             guard let model = self.model else { return }
-            let renderer = ImageRenderer(content: SnapshotView().environment(model).tint(Theme.accent))
+            let renderer = ImageRenderer(content: SnapshotView().environment(model).tint(Theme.accent).environment(\.colorScheme, .dark))
             renderer.scale = 2
             guard let cg = renderer.cgImage else { return }
             let rep = NSBitmapImageRep(cgImage: cg)

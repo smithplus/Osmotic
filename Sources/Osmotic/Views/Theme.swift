@@ -3,36 +3,40 @@ import CoreImage
 import CoreImage.CIFilterBuiltins
 import SwiftUI
 
-/// Design tokens for Osmotic as a physical object: an anodised aluminium faceplate, injection-moulded
-/// plastic keys, a black glass LCD and lens LEDs. One light source, from above: every raised part has
-/// a lit top edge and a contact shadow below; every recessed part has its shadow inside, at the top.
-/// Type is silkscreen — small, printed, dark grey on metal — and amber on the LCD.
+/// Design tokens for Osmotic as a physical object: a graphite anodised faceplate, moulded keys, dark
+/// glass readouts and lens LEDs. One light source, from above: every raised part has a faint lit top
+/// edge and a contact shadow below; every recessed part has its shadow inside, at the top. Type is
+/// silkscreen — small, printed, warm white on graphite — and amber on the displays.
 enum Theme {
     private static func rgb(_ r: Int, _ g: Int, _ b: Int, _ a: CGFloat = 1) -> Color {
         Color(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue: Double(b) / 255, opacity: a)
     }
 
-    // Aluminium
-    static let metalTop = rgb(222, 221, 217)
-    static let metalBottom = rgb(203, 202, 197)
-    static let metalEdgeLight = Color.white.opacity(0.75)
-    static let metalEdgeDark = rgb(0, 0, 0, 0.16)
+    // Faceplate (graphite anodised aluminium) and the modules milled from it
+    static let plateTop = rgb(36, 36, 35)
+    static let plateBottom = rgb(29, 29, 28)
+    static let metalTop = rgb(47, 47, 46)
+    static let metalBottom = rgb(40, 40, 39)
+    static let metalEdgeLight = Color.white.opacity(0.10)
+    static let metalEdgeDark = rgb(0, 0, 0, 0.5)
+    /// The lit lower lip of a cut-out, catching the light from above.
+    static let lip = Color.white.opacity(0.06)
     // Recess (a milled pocket in the plate)
-    static let recess = rgb(193, 192, 187)
+    static let recess = rgb(25, 25, 24)
     // Silkscreen ink
-    static let ink = rgb(44, 43, 41)
-    static let muted = rgb(104, 102, 97)
-    static let hairline = rgb(0, 0, 0, 0.12)
+    static let ink = rgb(232, 229, 222)
+    static let muted = rgb(138, 135, 129)
+    static let hairline = rgb(255, 255, 255, 0.08)
     // Plastics
     static let accent = rgb(238, 92, 36)            // orange key
     static let accentTop = rgb(247, 114, 60)
     static let accentBottom = rgb(214, 74, 22)
-    static let charcoalTop = rgb(62, 61, 59)
-    static let charcoalBottom = rgb(34, 34, 33)
-    static let greyTop = rgb(240, 239, 235)
-    static let greyBottom = rgb(214, 212, 207)
+    static let charcoalTop = rgb(30, 30, 29)
+    static let charcoalBottom = rgb(19, 19, 18)
+    static let greyTop = rgb(66, 66, 65)            // graphite key
+    static let greyBottom = rgb(53, 53, 52)
     // LCD
-    static let lcd = rgb(19, 20, 18)
+    static let lcd = rgb(16, 16, 15)
     static let lcdText = rgb(255, 146, 52)
     static let lcdDim = rgb(255, 146, 52, 0.10)
     static let lcdCaption = rgb(236, 228, 214, 0.55)          // warm white legends on the glass
@@ -88,15 +92,15 @@ enum BrushedMetal {
     }()
 }
 
-/// The faceplate: warm silver gradient + brushed grain.
+/// The faceplate: graphite gradient + a trace of brushed grain.
 struct AluminumPlate: View {
     var body: some View {
         ZStack {
-            LinearGradient(colors: [Theme.metalTop, Theme.metalBottom], startPoint: .top, endPoint: .bottom)
+            LinearGradient(colors: [Theme.plateTop, Theme.plateBottom], startPoint: .top, endPoint: .bottom)
             BrushedMetal.grain
                 .resizable(resizingMode: .tile)
-                .opacity(0.24)
-                .blendMode(.overlay)
+                .opacity(0.10)
+                .blendMode(.softLight)
         }
     }
 }
@@ -109,20 +113,20 @@ extension View {
             .background {
                 shape.fill(LinearGradient(colors: [Theme.metalTop, Theme.metalBottom.opacity(0.96)],
                                           startPoint: .top, endPoint: .bottom))
-                    .overlay { BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.14).blendMode(.overlay).clipShape(shape) }
+                    .overlay { BrushedMetal.grain.resizable(resizingMode: .tile).opacity(0.08).blendMode(.softLight).clipShape(shape) }
             }
             .overlay {
                 // Machined edge: a bright chamfer on top, the darker side of the part at the bottom.
                 shape.strokeBorder(LinearGradient(stops: [
                     .init(color: Theme.metalEdgeLight, location: 0),
-                    .init(color: .white.opacity(0.25), location: 0.25),
-                    .init(color: .black.opacity(0.06), location: 0.7),
-                    .init(color: .black.opacity(0.22), location: 1),
+                    .init(color: .white.opacity(0.03), location: 0.3),
+                    .init(color: .black.opacity(0.15), location: 0.7),
+                    .init(color: Theme.metalEdgeDark, location: 1),
                 ], startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
             .overlay { if screws { CornerScrews(inset: min(radius * 0.55, 8) + 2) } }
-            .shadow(color: .black.opacity(0.18), radius: 0, y: 1)      // hard contact edge
-            .shadow(color: .black.opacity(0.08), radius: 8, y: 5)
+            .shadow(color: .black.opacity(0.45), radius: 0, y: 1)      // hard contact edge
+            .shadow(color: .black.opacity(0.28), radius: 9, y: 5)
     }
 
     /// A pocket milled into the plate: shadow inside at the top, a lit lip at the bottom.
@@ -130,10 +134,10 @@ extension View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
         return self
             .background {
-                shape.fill(Theme.recess.shadow(.inner(color: .black.opacity(0.28), radius: 3, y: 2)))
+                shape.fill(Theme.recess.shadow(.inner(color: .black.opacity(0.7), radius: 4, y: 2)))
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.14), .white.opacity(0.55)],
+                shape.strokeBorder(LinearGradient(colors: [.black.opacity(0.4), Theme.lip],
                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
     }
@@ -169,11 +173,9 @@ struct LCDGlass<Content: View>: View {
             }
             .overlay {
                 RoundedRectangle(cornerRadius: radius + 4, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.2), .black.opacity(0.45)],
+                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.6), Theme.lip],
                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
-            .shadow(color: .white.opacity(0.6), radius: 0, y: 1)      // lit lip of the cut-out below
-            .shadow(color: .black.opacity(0.2), radius: 1.5, y: 1)
     }
 }
 
@@ -211,11 +213,11 @@ struct CassetteKeyBank<Content: View>: View {
             .padding(3)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color(white: 0.12).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
+                    .fill(Color(white: 0.07).shadow(.inner(color: .black.opacity(0.9), radius: 3, y: 2)))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.35), .white.opacity(0.6)],
+                    .strokeBorder(LinearGradient(colors: [.black.opacity(0.5), Theme.lip],
                                                  startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
     }
@@ -235,9 +237,9 @@ struct CassetteKeyStyle: ButtonStyle {
         let travel: CGFloat = 6                               // front edge visible when the key is up
         let sink: CGFloat = down ? travel - 1.5 : 0           // how far the face drops into the slot
         let (top, bottom, skirt, text): (Color, Color, Color, Color) = switch finish {
-        case .light: (Theme.greyTop, Theme.greyBottom, Color(white: 0.60), Theme.ink)
+        case .light: (Theme.greyTop, Theme.greyBottom, Color(white: 0.14), Theme.ink)
         case .orange: (Theme.accentTop, Theme.accentBottom, Color(red: 0.52, green: 0.2, blue: 0.05), .white)
-        case .charcoal: (Theme.charcoalTop, Theme.charcoalBottom, Color(white: 0.05), Color(white: 0.9))
+        case .charcoal: (Theme.charcoalTop, Theme.charcoalBottom, Color(white: 0.02), Color(white: 0.85))
         }
         let face = configuration.label
             .font(.system(size: 9.5, weight: .semibold))
@@ -258,7 +260,7 @@ struct CassetteKeyStyle: ButtonStyle {
                         .frame(height: 4)
                         .shadow(color: Theme.accent.opacity(0.6), radius: 2, y: 1)
                 } else if !down {
-                    Rectangle().fill(.white.opacity(finish == .light ? 0.95 : 0.3)).frame(height: 1)
+                    Rectangle().fill(.white.opacity(finish == .orange ? 0.3 : 0.12)).frame(height: 1)
                 }
             }
             .overlay {
@@ -268,8 +270,8 @@ struct CassetteKeyStyle: ButtonStyle {
                 }
             }
             // Side bevels keep neighbouring keys distinct.
-            .overlay(alignment: .leading) { Rectangle().fill(.white.opacity(finish == .light ? 0.6 : 0.15)).frame(width: 1) }
-            .overlay(alignment: .trailing) { Rectangle().fill(.black.opacity(0.18)).frame(width: 1) }
+            .overlay(alignment: .leading) { Rectangle().fill(.white.opacity(0.07)).frame(width: 1) }
+            .overlay(alignment: .trailing) { Rectangle().fill(.black.opacity(0.3)).frame(width: 1) }
 
         return face
             .offset(y: sink)
@@ -310,7 +312,7 @@ struct BankLegend: View {
     var body: some View {
         HStack(spacing: 6) {
             Silk(text, color: Theme.ink, size: 8.5)
-            Rectangle().fill(Theme.ink.opacity(0.3)).frame(height: 1)
+            Rectangle().fill(Theme.ink.opacity(0.18)).frame(height: 1)
         }
     }
 }
@@ -329,9 +331,9 @@ struct CornerScrews: View {
     }
     private var dot: some View {
         Circle()
-            .fill(Color.black.opacity(0.3))
+            .fill(Color.black.opacity(0.55))
             .frame(width: 3.5, height: 3.5)
-            .shadow(color: .white.opacity(0.7), radius: 0, y: 0.5)
+            .shadow(color: Theme.lip, radius: 0, y: 0.5)
     }
 }
 
@@ -379,14 +381,14 @@ struct LED: View {
             // A blinking LED pulses its brightness; it never reads as switched off.
             let lit = state != .off
             ZStack {
-                Circle().fill(Color.black.opacity(0.45)).frame(width: size + 3, height: size + 3)   // bezel hole
+                Circle().fill(Color.black.opacity(0.7)).frame(width: size + 3, height: size + 3)   // bezel hole
                 Circle()
                     .fill(RadialGradient(colors: lit ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
-                                                     : [Color(white: 0.30), Color(white: 0.18)],
+                                                     : [Color(white: 0.16), Color(white: 0.09)],
                                          center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7))
                     .frame(width: size, height: size)
                     .opacity(state == .blink && phase ? 0.45 : 1)
-                Circle().fill(.white.opacity(lit ? 0.85 : 0.35))
+                Circle().fill(.white.opacity(lit ? 0.85 : 0.12))
                     .frame(width: size * 0.28, height: size * 0.28)
                     .offset(x: -size * 0.16, y: -size * 0.18)
             }
@@ -420,8 +422,8 @@ struct SectionIndex: View {
 struct EngravedRule: View {
     var body: some View {
         VStack(spacing: 0) {
-            Rectangle().fill(.black.opacity(0.13)).frame(height: 1)
-            Rectangle().fill(.white.opacity(0.55)).frame(height: 1)
+            Rectangle().fill(.black.opacity(0.5)).frame(height: 1)
+            Rectangle().fill(Theme.lip).frame(height: 1)
         }
     }
 }
@@ -451,11 +453,11 @@ struct KeyButtonStyle: ButtonStyle {
                 shape.fill(LinearGradient(colors: pressed ? [bottom, top] : [top, bottom], startPoint: .top, endPoint: .bottom))
             }
             .overlay {
-                shape.strokeBorder(LinearGradient(colors: [.white.opacity(kind == .ghost ? 0.9 : 0.35), .black.opacity(0.25)],
+                shape.strokeBorder(LinearGradient(colors: [.white.opacity(kind == .signal ? 0.35 : 0.12), .black.opacity(0.4)],
                                                   startPoint: .top, endPoint: .bottom), lineWidth: 1)
             }
-            .shadow(color: .black.opacity(pressed ? 0.25 : 0.32), radius: pressed ? 0.5 : 1.2, y: pressed ? 0.5 : 1.6)
-            .shadow(color: .black.opacity(pressed ? 0.05 : 0.12), radius: pressed ? 2 : 6, y: pressed ? 1 : 4)
+            .shadow(color: .black.opacity(pressed ? 0.5 : 0.6), radius: pressed ? 0.5 : 1.2, y: pressed ? 0.5 : 1.6)
+            .shadow(color: .black.opacity(pressed ? 0.15 : 0.3), radius: pressed ? 2 : 6, y: pressed ? 1 : 4)
             .offset(y: pressed ? 1 : 0)
             .animation(.snappy(duration: 0.08), value: pressed)
     }
@@ -502,7 +504,7 @@ struct Screw: View {
             Capsule().fill(.black.opacity(0.45)).frame(width: 6.5, height: 1.3).rotationEffect(.degrees(angle))
         }
         .frame(width: 9, height: 9)
-        .shadow(color: .white.opacity(0.6), radius: 0, y: 0.5)
+        .shadow(color: Theme.lip, radius: 0, y: 0.5)
     }
 }
 

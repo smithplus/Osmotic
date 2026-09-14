@@ -137,10 +137,10 @@ struct MediaCell: View {
         .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .strokeBorder(selected ? Theme.accent : Color.black.opacity(0.35), lineWidth: selected ? 2.5 : 1)
+                .strokeBorder(selected ? Theme.accent : Color.white.opacity(0.08), lineWidth: selected ? 2.5 : 1)
         )
-        .shadow(color: .black.opacity(0.22), radius: 1, y: 1)
-        .shadow(color: .black.opacity(0.10), radius: 6, y: 4)
+        .shadow(color: .black.opacity(0.5), radius: 1, y: 1)
+        .shadow(color: .black.opacity(0.25), radius: 6, y: 4)
         .scaleEffect(hovering && !selected ? 1.015 : 1)
         .animation(.snappy(duration: 0.15), value: hovering)
         .animation(.snappy(duration: 0.15), value: selected)
