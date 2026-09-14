@@ -61,9 +61,11 @@ struct MediaCell: View {
             .aspectRatio(16 / 9, contentMode: .fit)
             .overlay {
                 if let image {
+                    // Landscape fills the frame; a vertical clip or photo is shown whole, not cropped to a sliver.
+                    let portrait = image.size.height > image.size.width
                     Image(nsImage: image)
                         .resizable()
-                        .scaledToFill()
+                        .aspectRatio(contentMode: portrait ? .fit : .fill)
                         .transition(.opacity)   // the print develops in, rather than popping
                 } else {
                     Image(systemName: file.isVideo ? "video" : "photo")

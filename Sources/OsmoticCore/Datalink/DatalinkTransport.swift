@@ -13,11 +13,19 @@ public enum DatalinkHeaders {
         return b
     }
 
-    /// `[ack = seq-8 : u16][seq : u16] 00 00 00 00 [counter] 01 [00|60] 00` — both fields in OUR own
-    /// command-seq space. Getting the ack wrong silently drops every write.
-    public static func routingHeader(seq: Int, cmdCounter: Int, drone: Bool) -> [UInt8] {
-        let ack = (seq - 8) & 0xFFFF
+    /// `[ack : u16][seq : u16] 00 00 00 00 [counter] 01 [00|60] 00`. `ack` is the camera's
+    /// acknowledgement of our last packet when known (`peerAck`, the official app's model), else
+    /// `seq - 8` (the model media listing was proven with). Getting it wrong silently drops writes.
+    public static func routingHeader(seq: Int, peerAck: Int? = nil, cmdCounter: Int, drone: Bool) -> [UInt8] {
+        let ack = (peerAck ?? (seq - 8)) & 0xFFFF
         return LE.u16(ack) + LE.u16(seq) + [0, 0, 0, 0, UInt8(cmdCounter & 0xFF), 0x01, drone ? 0x60 : 0x00, 0x00]
+    }
+
+    /// The official app's pktType-0x04 window ACK: latest video seq, latest command-reply seq, then the
+    /// camera's ack of our TX and our last TX seq. Adapted from Kaze for DJI (MIT), `DumlFraming`.
+    public static func windowAck(rxVideo: Int, rxReply: Int, peerAckedTx: Int, lastTx: Int) -> [UInt8] {
+        func pair(_ a: Int, _ b: Int) -> [UInt8] { LE.u16(a) + LE.u16(b) + [0, 0, 0, 0] }
+        return pair(rxVideo, rxVideo) + pair(rxReply, rxReply) + pair(peerAckedTx, lastTx) + [0, 0]
     }
 
     /// The pktType-0x00 SYN: our proposed base sequence, then the window/MTU parameters the official
@@ -45,6 +53,27 @@ public final class DatalinkTransport {
     public private(set) var baseSeq = 0
     private var peerCursor = 0
     private var peerDownloadCursor = 0
+
+    /// How our packets acknowledge the camera's windows. `.legacy`: routing ack `seq-8`, ACK groups from
+    /// the camera's status packet (media listing and downloads were proven with it). `.mimo`: what the
+    /// official app does — needed for capture commands and live view, where replies ride pktType 0x03
+    /// and must be echoed or they stop. See `docs/CONTROL.md`.
+    public enum WindowModel: Sendable { case legacy, mimo }
+    public var windowModel: WindowModel = .legacy
+
+    // Window cursors, learned from every datagram (port of Kaze's `observeTransportState`, MIT).
+    public private(set) var rxVideoSeq = 0
+    public private(set) var rxReplySeq = 0
+    public private(set) var peerAckedTxSeq = 0
+    public private(set) var lastTxSeq = 0
+    private var seenVideo = false
+    private var seenReply = false
+
+    /// pktType-0x02 (live-view) datagrams go here instead of being returned by `recvAll`, so video
+    /// bytes can never be mistaken for status frames. Runs on the receiving (session) thread.
+    public var onVideo: (([UInt8]) -> Void)?
+    /// With no `onVideo`, still drop pktType 0x02 (after live view, stray fragments keep arriving).
+    public var dropVideo = false
 
     private var fd: Int32 = -1
     /// Checked inside the blocking loops so a closing session doesn't wait out a handshake or a receive.
@@ -83,6 +112,8 @@ public final class DatalinkTransport {
         sessionId = Int.random(in: 0x1000..<0xFFFE)
         baseSeq = Int.random(in: 0x1000..<0xF000) & 0xFFF8
         cameraChannel = baseSeq
+        rxVideoSeq = baseSeq; rxReplySeq = baseSeq; peerAckedTxSeq = baseSeq; lastTxSeq = baseSeq
+        seenVideo = false; seenReply = false
         udpSeq = 0
         cmdCounter = 0
         dumlSeq = 0xA000
@@ -117,7 +148,14 @@ public final class DatalinkTransport {
     }
 
     /// Start our send sequence at the peer's channel + 8.
-    public func syncSeqToPeerChannel() { udpSeq = (cameraChannel + 8) & 0xFFFF }
+    public func syncSeqToPeerChannel() {
+        udpSeq = (cameraChannel + 8) & 0xFFFF
+        lastTxSeq = cameraChannel
+        peerAckedTxSeq = cameraChannel
+    }
+
+    /// Our packets the camera hasn't acknowledged yet (a growing number means writes are being lost).
+    public var txLagSlots: Int { ((lastTxSeq - peerAckedTxSeq) & 0xFFFF) / 8 }
 
     // ---- send -----------------------------------------------------------------------------------
 
@@ -137,14 +175,19 @@ public final class DatalinkTransport {
 
     public func sendRaw(pktType: Int, payload: [UInt8]) {
         let pkt = DatalinkHeaders.udpHeader(pktType: pktType, payloadLen: payload.count, sessionId: sessionId, seq: udpSeq) + payload
-        if sendPacket(pkt) { advance() }
+        if sendPacket(pkt) {
+            if pktType != 0x00 { lastTxSeq = udpSeq }
+            advance()
+        }
     }
 
     /// The pktType-0x04 window acknowledgement: video, download and control windows. Echoing the
     /// peer's download cursor is what keeps a long manifest streaming to its end.
     public func sendAck() {
         func group(_ v: Int) -> [UInt8] { LE.u16(v) + LE.u16(v) + [0, 0, 0, 0] }
-        let payload = group(peerCursor) + group(peerDownloadCursor) + group(baseSeq) + [0, 0]
+        let payload = windowModel == .mimo
+            ? DatalinkHeaders.windowAck(rxVideo: rxVideoSeq, rxReply: rxReplySeq, peerAckedTx: peerAckedTxSeq, lastTx: lastTxSeq)
+            : group(peerCursor) + group(peerDownloadCursor) + group(baseSeq) + [0, 0]
         let hdr = DatalinkHeaders.udpHeader(pktType: 0x04, payloadLen: payload.count, sessionId: sessionId, seq: 0)
         sendPacket(hdr + payload)
     }
@@ -152,13 +195,17 @@ public final class DatalinkTransport {
     /// A command frame: receiver byte `(receiverId << 5) | receiverType`, sender App(0x02).
     public func sendDuml(set: Int, cmd: Int, payload: [UInt8], receiverType: Int, receiverId: Int, cmdType: Int = 2) {
         cmdCounter += 1
-        let rt = DatalinkHeaders.routingHeader(seq: udpSeq, cmdCounter: cmdCounter, drone: false)
+        let rt = DatalinkHeaders.routingHeader(seq: udpSeq, peerAck: windowModel == .mimo ? peerAckedTxSeq : nil,
+                                               cmdCounter: cmdCounter, drone: false)
         let target = 0x02 | (((receiverId << 5) | receiverType) << 8)
         let type = (cmdType << 5) | (set << 8) | (cmd << 16)
         let duml = DjiMessage(target: target, id: dumlSeq, type: type, payload: payload).encode()
         dumlSeq = (dumlSeq + 1) & 0xFFFF
         let pkt = DatalinkHeaders.udpHeader(pktType: 0x05, payloadLen: rt.count + duml.count, sessionId: sessionId, seq: udpSeq) + rt + duml
-        if sendPacket(pkt) { advance() }
+        if sendPacket(pkt) {
+            lastTxSeq = udpSeq
+            advance()
+        }
     }
 
     private func advance() { udpSeq = (udpSeq + 8) & 0xFFFF }
@@ -166,7 +213,7 @@ public final class DatalinkTransport {
     // ---- receive --------------------------------------------------------------------------------
 
     /// Every datagram that arrives within `ms`. Learns the peer's channel and window cursors as it goes.
-    public func recvAll(ms: Int) -> [[UInt8]] {
+    public func recvAll(ms: Int, precise: Bool = false) -> [[UInt8]] {
         guard fd >= 0 else {
             if !shouldAbort() { Thread.sleep(forTimeInterval: Double(ms) / 1000) }
             return []
@@ -176,6 +223,14 @@ public final class DatalinkTransport {
         var buf = [UInt8](repeating: 0, count: 65536)
         while DispatchTime.now().uptimeNanoseconds < deadline {
             if shouldAbort() { break }
+            // `precise` (the control pump's 12 ms bursts) waits only as long as the call has left. The
+            // media flows rely on the socket's coarse 200 ms timeout for their pacing (a short receive
+            // there doubles as a gap between sends, tuned on hardware), so they keep it.
+            if precise {
+                let left = Int((deadline - min(deadline, DispatchTime.now().uptimeNanoseconds)) / 1_000_000)
+                var pfd = pollfd(fd: fd, events: Int16(POLLIN), revents: 0)
+                if poll(&pfd, 1, Int32(max(1, left))) <= 0 { continue }
+            }
             var from = sockaddr_in()
             var fromLen = socklen_t(MemoryLayout<sockaddr_in>.size)
             let n = buf.withUnsafeMutableBytes { b in
@@ -192,17 +247,39 @@ public final class DatalinkTransport {
             // Only the camera speaks on this socket: anyone else on its network is ignored.
             guard from.sin_addr.s_addr == peer.sin_addr.s_addr else { continue }
             let data = Array(buf[0..<n])
+            observe(data)
+            if data.count >= 8 && data[6] == 0x02 {
+                if let onVideo { onVideo(data); continue }
+                if dropVideo { continue }
+            }
             out.append(data)
-            if data.count >= 10 {
-                let ch = data.u16le(8)
-                if ch != 0 { cameraChannel = ch }
-            }
-            if data.count == 34 && data[6] == 0x01 {
-                peerCursor = data.u16le(10)
-                peerDownloadCursor = data.u16le(18)
-            }
         }
         return out
+    }
+
+    /// Learn the peer's channel and window cursors from one datagram. Video (0x02) and reply (0x03)
+    /// seqs come from those packets themselves once seen; the 34-byte status packet only seeds them
+    /// and never rewinds them. Adapted from Kaze for DJI (MIT), `DumlTransport.observeTransportState`.
+    private func observe(_ d: [UInt8]) {
+        guard d.count >= 8 else { return }
+        let type = d[6]
+        let seq = d.u16le(4)
+        // Video fragments reuse bytes 8-9 for their own header: never learn the channel from them.
+        if d.count >= 10, type != 0x02 {
+            let ch = d.u16le(8)
+            if ch != 0 { cameraChannel = ch }
+        }
+        if seq != 0 {
+            if type == 0x02 { rxVideoSeq = seq; seenVideo = true }
+            if type == 0x03 { rxReplySeq = seq; seenReply = true }
+        }
+        if type == 0x01 && d.count == 34 {
+            peerCursor = d.u16le(10)
+            peerDownloadCursor = d.u16le(18)
+            if !seenVideo, d.u16le(10) != 0 { rxVideoSeq = d.u16le(10) }
+            if !seenReply, d.u16le(18) != 0 { rxReplySeq = d.u16le(18) }
+            if d.u16le(24) != 0 { peerAckedTxSeq = d.u16le(24) }
+        }
     }
 }
 
@@ -255,4 +332,5 @@ public enum TCPProbe {
         if hold > 0 { Thread.sleep(forTimeInterval: hold) }
         return true
     }
+
 }

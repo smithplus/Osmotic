@@ -9,15 +9,13 @@ struct SnapshotView: View {
         VStack(spacing: 0) {
             switch model.screen {
             case .library:
-                TopPlate {
-                    HStack(spacing: Theme.s3) {
-                        LED(color: Theme.success, state: .on, label: "Linked")
-                        CassetteKeyBank(compact: true) {
-                            Button {} label: { Label("Disconnect", systemImage: "eject.fill") }
-                                .buttonStyle(.compactKey)
-                        }
-                    }
-                }
+                LibraryTopPlate()
+                if model.workspace == .camera {
+                    CameraControlView(snapshotStill: model.visibleFiles.first.flatMap { model.cachedThumbnail(for: $0) })
+                        .padding(.horizontal, Theme.s3)
+                        .padding(.bottom, Theme.s3)
+                        .frame(maxHeight: .infinity, alignment: .top)
+                } else {
                 ControlDeck()
                     .padding(.horizontal, Theme.s3)
                     .padding(.bottom, Theme.s3)
@@ -26,6 +24,7 @@ struct SnapshotView: View {
                     .recessed(radius: Theme.radiusL)
                     .padding(.horizontal, Theme.s3)
                     .padding(.bottom, Theme.s3)
+                }
                 TransferBar()
             case .connecting:
                 ConnectingView(scrolls: false)

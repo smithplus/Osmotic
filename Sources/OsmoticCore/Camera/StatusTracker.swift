@@ -27,7 +27,8 @@ public struct StatusTracker: Sendable {
     private var displaySignature: String {
         let s = status
         return "\(s.batteryPercent)|\(s.sdTotalMb / 1024)|\(s.sdFreeMb / 1024)|\(s.internalFreeMb / 1024)" +
-            "|\(s.storageFreeMb / 1024)|\(s.storageTotalMb / 1024)|\(s.docked)|\(s.charging)"
+            "|\(s.storageFreeMb / 1024)|\(s.storageTotalMb / 1024)|\(s.docked)|\(s.charging)" +
+            "|\(s.recording)|\(s.recordingTransition)|\(s.recordingSeconds)|\(s.captureMode?.rawValue ?? 0xFF)"
     }
 
     @discardableResult
@@ -43,6 +44,20 @@ public struct StatusTracker: Sendable {
             let total = p.u32le(5), free = p.u32le(9)
             if (1...50_000_000).contains(total) { status.storageTotalMb = total }
             if sane(free) { status.storageFreeMb = free }
+            // Capture state (Kaze for DJI, MIT, Pocket3CameraDomain; Osmosis MEDIA_PROTOCOL): byte 0
+            // bit 7 = recording, bit 6 = between states (01 → 41 → 81 on start, 81 → C1 → 01 on stop).
+            let wasRecording = status.recording
+            status.recording = p[0] & 0x80 != 0
+            status.recordingTransition = p[0] & 0x40 != 0
+            if p.count >= 58 {
+                let clipMode = p[4] == 1
+                status.recordingSeconds = clipMode && status.recording ? p.u16le(29) : 0
+                if let mode = CaptureMode(rawValue: p[57]), mode != status.captureMode {
+                    status.captureMode = mode
+                    log("camera mode: \(mode)")
+                }
+            }
+            if wasRecording != status.recording { log("camera recording: \(status.recording ? "YES" : "no")") }
             return true
         case (0x02, 0xDC) where p.count >= 22:
             let sdTotal = p.u32le(6), sdFree = p.u32le(10)

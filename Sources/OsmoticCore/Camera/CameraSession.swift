@@ -39,6 +39,19 @@ public final class CameraSession: @unchecked Sendable {
     private var silentTicks = 0
     private var linkLostFired = false
 
+    /// `.media`: playback held, listing and downloads (the proven path). `.capture`: out of playback,
+    /// taking capture commands. `.live`: capture plus the live-view stream.
+    private enum Mode { case media, capture, live }
+    private var mode = Mode.media
+    private var reassembler = LiveReassembler()
+    private var videoSink: (@Sendable ([UInt8]) -> Void)?
+    private var liveRequestedAt: Date?
+    private var liveFallbackTried = false
+    private var lastVideoAt: Date?
+    private var lastAckAt = Date.distantPast
+    private var lastBeatAt = Date.distantPast
+    private var lastRxAt = Date()
+
     // ---- job queue ------------------------------------------------------------------------------
     private let cond = NSCondition()
     private var jobs: [@Sendable () -> Void] = []
@@ -95,10 +108,49 @@ public final class CameraSession: @unchecked Sendable {
     /// The next older page (only newly seen files), or empty when the library is exhausted.
     public func nextPage() async -> (files: [CameraFile], moreAvailable: Bool) {
         await submit { [self] in
-            guard !isClosed else { return ([], false) }
+            guard !isClosed, mode == .media else { return ([], false) }
             let fresh = fetchNextPage()
             return (fresh, pagination.moreAvailable)
         }
+    }
+
+    // ---- camera control (see docs/CONTROL.md) ----------------------------------------------------
+
+    /// Leave playback so the camera takes capture commands and can stream its live view.
+    public func enterControl() async -> Bool {
+        await submit { [self] in
+            guard !isClosed else { return false }
+            return controlEnter()
+        }
+    }
+
+    /// Back to playback, then the newest page again (new clips may have been recorded meanwhile).
+    public func leaveControl() async -> (files: [CameraFile], moreAvailable: Bool)? {
+        await submit { [self] in
+            guard !isClosed else { return nil }
+            return controlLeave()
+        }
+    }
+
+    public func setRecording(_ on: Bool) async -> Bool {
+        await submit { [self] in !isClosed && controlRecord(on) }
+    }
+
+    public func takePhoto() async -> Bool {
+        await submit { [self] in !isClosed && controlPhoto() }
+    }
+
+    public func setMode(_ mode: CaptureMode) async -> Bool {
+        await submit { [self] in !isClosed && controlMode(mode) }
+    }
+
+    /// Start the H.264 live view; `onVideo` receives Annex-B access units on the worker thread.
+    public func startLiveView(onVideo: @escaping @Sendable ([UInt8]) -> Void) async -> Bool {
+        await submit { [self] in !isClosed && liveStart(onVideo) }
+    }
+
+    public func stopLiveView() async {
+        await submit { [self] in liveStop() }
     }
 
     /// Release playback, close the socket and stop the session thread. A job already running aborts
@@ -479,13 +531,21 @@ public final class CameraSession: @unchecked Sendable {
     /// listing its card, and the rest is dropped (the decoder rescans the blob every tick).
     static let maxManifestBytes = 8 << 20
 
+    /// Keep only the manifest frames (`0x00/0x27`), each found by walking its own datagram. Joining
+    /// whole datagrams let a stray `0x55` + lucky CRC in a status packet or a header read as a frame
+    /// that swallowed the real chunks after it — a card listed short. The decoder itself is untouched.
     private func collect(into blob: inout [UInt8], _ datagrams: [[UInt8]]) {
         for d in datagrams {
-            guard blob.count + d.count <= Self.maxManifestBytes else {
+            var frames: [UInt8] = []
+            DumlScanner.walk(d) { f in
+                if f.cmdSet == 0x00 && f.cmdId == 0x27 { frames += d[f.start..<(f.start + f.length)] }
+            }
+            guard !frames.isEmpty else { continue }
+            guard blob.count + frames.count <= Self.maxManifestBytes else {
                 log("datalink: manifest over \(Self.maxManifestBytes >> 20) MB — ignoring the rest")
                 return
             }
-            blob += d
+            blob += frames
         }
     }
 
@@ -532,6 +592,7 @@ public final class CameraSession: @unchecked Sendable {
     /// One ~0.5 s tick: drain + decode status, ACK the peer's windows, beat at ~1 Hz, re-assert
     /// playback every ~15 s. Polls the camera for nothing — status arrives unprompted.
     private func keepAliveTick() {
+        if mode != .media { controlTick(); return }
         let dg = recv(200)
         if dg.isEmpty {
             silentTicks += 1
@@ -556,7 +617,9 @@ public final class CameraSession: @unchecked Sendable {
     }
 
     private func teardown() {
-        if keepAliveOn && playbackHeld && tx.isOpen {
+        videoSink = nil
+        tx.onVideo = nil
+        if keepAliveOn && playbackHeld && mode == .media && tx.isOpen {
             send(0x02, 0x0C, Self.playbackLeave, rType: 0x01, rId: 0)
             Thread.sleep(forTimeInterval: 0.15)   // let the leave land before the socket goes
             log("datalink: playback mode released")
@@ -565,4 +628,221 @@ public final class CameraSession: @unchecked Sendable {
         playbackHeld = false
         tx.close()
     }
+
+    // ---- control implementation ------------------------------------------------------------------
+    //
+    // From Kaze for DJI (MIT, tested on a Pocket 3), OpenPocketCine (Apache-2.0, re-implemented from its
+    // notes) and Osmosis' MEDIA_PROTOCOL; see docs/CONTROL.md. Everything below runs on the session
+    // thread. Several steps are unverified on hardware and log what the camera answered.
+
+    private static let liveStart = [UInt8](hex: "0100000000040000000501")   // 0x01/0x01, no reply
+    private static let liveIdle = [UInt8](hex: "0000000000040000000401")
+    private static let liveRequest = [UInt8](hex: "00040200000000000000")   // 0x09/0xA8 = keyframe + stream
+
+    /// Receive a short burst, keep the windows acknowledged (≥ 40 Hz while anything flows) and the
+    /// presence beat going. The pump every wait in capture mode goes through.
+    private func pump() -> [[UInt8]] {
+        let dg = tx.recvAll(ms: 12, precise: true)
+        ingest(dg)
+        let now = Date()
+        if !dg.isEmpty { lastRxAt = now }
+        if !dg.isEmpty || now.timeIntervalSince(lastAckAt) >= 0.025 {
+            tx.sendAck()
+            lastAckAt = now
+        }
+        if now.timeIntervalSince(lastBeatAt) >= 1 {
+            beat()
+            lastBeatAt = now
+        }
+        return dg
+    }
+
+    /// Pump until `done()` or `timeout`; true if `done()` became true.
+    private func pumpUntil(_ timeout: TimeInterval, _ done: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if isClosed { return false }
+            _ = pump()
+            if done() { return true }
+        }
+        return done()
+    }
+
+    /// Take in whatever is already waiting, so an earlier answer to the same command (the media
+    /// keep-alive's refused playback re-asserts, say) can't be mistaken for the reply to the next one.
+    private func drainStale() {
+        _ = pumpUntil(0.06) { false }
+    }
+
+    /// Pump until the camera answers `set/cmd` (a non-empty reply; the empty transport ACK is skipped).
+    /// Call `drainStale()` before sending the command.
+    private func awaitReply(set: Int, cmd: Int, timeout: TimeInterval) -> [UInt8]? {
+        var reply: [UInt8]?
+        let deadline = Date().addingTimeInterval(timeout)
+        while reply == nil && Date() < deadline && !isClosed {
+            reply = DumlScanner.findReply(pump(), set: set, cmd: cmd)
+        }
+        return reply
+    }
+
+    /// The capture-mode keep-alive: a tight pump (jobs still start within ~12 ms), link watch by time,
+    /// and the live-view fallback if no picture arrives.
+    private func controlTick() {
+        _ = pump()
+        let now = Date()
+        if now.timeIntervalSince(lastRxAt) > 8 {
+            if !linkLostFired {
+                linkLostFired = true
+                log("datalink: camera silent for ~8 s in capture mode — link lost")
+                onLinkLost?()
+            }
+        } else if linkLostFired {
+            linkLostFired = false
+            log("datalink: camera answering again — link restored")
+            onLinkRestored?()
+        }
+        if mode == .live, lastVideoAt == nil, !liveFallbackTried,
+           let asked = liveRequestedAt, now.timeIntervalSince(asked) > 8 {
+            // No picture from the Kaze request: try OpenPocketCine's once (0x02/0x68 [08], then 0x09/0xA8
+            // to receiver 0x08). Never loop the request — each one resets the encoder's GOP.
+            liveFallbackTried = true
+            liveRequestedAt = now
+            log("live: no video 8 s after the request — trying the alternate request (receiver 0x08)")
+            send(0x02, 0x68, [0x08], rType: 0x01, rId: 0)
+            send(0x09, 0xA8, Self.liveRequest, rType: 0x08, rId: 0)
+        }
+    }
+
+    /// Kaze's live-view START burst: START/A8 interleaved, START ×5, IDLE ×4, 1-2 ms apart. Without
+    /// `request` only the START/IDLE frames go out — enough to leave playback without starting a
+    /// stream nobody is listening to yet (its one keyframe would be lost, and none follows).
+    private func sendLiveStartBurst(request withRequest: Bool = true) {
+        func start() { send(0x01, 0x01, Self.liveStart, rType: 0x01, rId: 0, cmdType: 0) }
+        func request() { if withRequest { send(0x09, 0xA8, Self.liveRequest, rType: 0x01, rId: 2) } }
+        start(); Thread.sleep(forTimeInterval: 0.001)
+        request(); Thread.sleep(forTimeInterval: 0.001)
+        start(); Thread.sleep(forTimeInterval: 0.001)
+        request(); Thread.sleep(forTimeInterval: 0.001)
+        for _ in 0..<5 { start(); Thread.sleep(forTimeInterval: 0.002) }
+        for _ in 0..<4 { send(0x01, 0x01, Self.liveIdle, rType: 0x01, rId: 0, cmdType: 0); Thread.sleep(forTimeInterval: 0.002) }
+    }
+
+    private func controlEnter() -> Bool {
+        if mode != .media { return true }
+        log("control: leaving playback (txLag=\(tx.txLagSlots))")
+        // Correct windows first: capture commands are answered on pktType 0x03, and those replies stop
+        // unless we echo them. Stray video must never reach the status parser.
+        tx.windowModel = .mimo
+        tx.dropVideo = true
+        playbackHeld = false          // stops the periodic playback re-assert
+        lastRxAt = Date()
+        mode = .capture
+        let out = { self.tracker.playbackReported == false }
+        if out() { log("control: camera already out of playback"); return true }
+        // 1. The documented leave (OpenPocketCine), twice.
+        for attempt in 1...2 {
+            drainStale()
+            send(0x02, 0x0C, Self.playbackLeave, rType: 0x01, rId: 0)
+            if let reply = awaitReply(set: 0x02, cmd: 0x0C, timeout: 0.45) {
+                log(String(format: "control: 0x02/0x0c leave → 0x%02x", reply[0]))
+                if reply[0] == 0xE0 { break }
+            }
+            if pumpUntil(0.3, out) { log("control: out of playback (0x02/0x0c, attempt \(attempt))"); return true }
+        }
+        // 2. The Pocket 3's own route: its live-view START burst is the same 0x01/0x01 family that put it
+        //    into playback.
+        sendLiveStartBurst(request: false)
+        if pumpUntil(1.5, out) { log("control: out of playback (0x01/0x01 START)"); return true }
+        log("control: camera still reports playback — capture mode not reached")
+        mode = .media
+        tx.windowModel = .legacy
+        return false
+    }
+
+    private func controlLeave() -> (files: [CameraFile], moreAvailable: Bool)? {
+        if mode == .media { return nil }
+        liveStop()
+        log("control: back to playback for the card")
+        mode = .media
+        tx.windowModel = .legacy
+        tx.sendAck()
+        guard enterPlaybackConfirmed() else { return nil }
+        let files = queryNewestPage()
+        pagination.seed(with: files, slices: lastSlices)
+        tick = 0
+        return (files, pagination.moreAvailable)
+    }
+
+    /// Record start/stop (`0x02/0x02 [01|00]` — not a toggle). Confirmed by the recording bit of the
+    /// `0x02/0x80` push; the Pocket 3 passes through a transition state (01→41→81, 81→C1→01).
+    private func controlRecord(_ on: Bool) -> Bool {
+        guard mode != .media else { return false }
+        if tracker.status.recording == on && !tracker.status.recordingTransition { return true }
+        drainStale()
+        send(0x02, 0x02, [on ? 0x01 : 0x00], rType: 0x01, rId: 0)
+        let reply = awaitReply(set: 0x02, cmd: 0x02, timeout: 1.0)
+        if let reply { log(String(format: "control: record %@ → 0x%02x", on ? "start" : "stop", reply[0])) }
+        if let reply, reply[0] != 0x00 { return false }
+        let reached = pumpUntil(2.0) { self.tracker.status.recording == on && !self.tracker.status.recordingTransition }
+        if !reached { log("control: recording state didn't reach \(on ? "on" : "off") within 2 s (txLag=\(tx.txLagSlots))") }
+        return reached
+    }
+
+    /// One picture (`0x02/0x01 [01]`) — photo mode only (`D9` otherwise). Sent once, never repeated.
+    private func controlPhoto() -> Bool {
+        guard mode != .media else { return false }
+        drainStale()
+        send(0x02, 0x01, [0x01], rType: 0x01, rId: 0)
+        guard let reply = awaitReply(set: 0x02, cmd: 0x01, timeout: 2.0) else {
+            log("control: photo — no answer (txLag=\(tx.txLagSlots))")
+            return false
+        }
+        log(String(format: "control: photo → 0x%02x", reply[0]))
+        return reply[0] == 0x00
+    }
+
+    /// Capture mode (`0x02/0xE1 [code]`), only from the known table — never enumerate codes.
+    private func controlMode(_ m: CaptureMode) -> Bool {
+        guard mode != .media, !tracker.status.recording else { return false }
+        drainStale()
+        send(0x02, 0xE1, [m.rawValue], rType: 0x01, rId: 0)
+        let reply = awaitReply(set: 0x02, cmd: 0xE1, timeout: 1.0)
+        if let reply { log(String(format: "control: mode %@ → 0x%02x", String(describing: m), reply[0])) }
+        if let reply, reply[0] != 0x00 { return false }
+        return pumpUntil(1.5) { self.tracker.status.captureMode == m }
+    }
+
+    private func liveStart(_ onVideo: @escaping @Sendable ([UInt8]) -> Void) -> Bool {
+        guard mode != .media || controlEnter() else { return false }
+        videoSink = onVideo
+        reassembler = LiveReassembler()
+        lastVideoAt = nil
+        liveFallbackTried = false
+        tx.onVideo = { [unowned self] d in self.handleVideo(d) }
+        sendLiveStartBurst()
+        liveRequestedAt = Date()
+        mode = .live
+        log("live: requested (Kaze burst, receiver 0x41)")
+        return true
+    }
+
+    private func handleVideo(_ d: [UInt8]) {
+        guard let message = reassembler.feed(d, now: Date().timeIntervalSinceReferenceDate) else { return }
+        if lastVideoAt == nil, let asked = liveRequestedAt {
+            log("live: first picture data \(Int(Date().timeIntervalSince(asked) * 1000)) ms after the request")
+        }
+        lastVideoAt = Date()
+        videoSink?(message)
+    }
+
+    /// There is no stop command: stop decoding and keep acknowledging whatever still arrives.
+    private func liveStop() {
+        guard mode == .live else { return }
+        videoSink = nil
+        tx.onVideo = nil
+        tx.dropVideo = true
+        mode = .capture
+        log("live: stopped (dropped \(reassembler.dropped), invalid \(reassembler.invalid))")
+    }
+
 }

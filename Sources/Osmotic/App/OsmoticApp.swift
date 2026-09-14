@@ -24,10 +24,10 @@ struct OsmoticApp: App {
             CommandMenu("Camera") {
                 Button("Download New") { model.downloadNew() }
                     .keyboardShortcut("d", modifiers: [.command, .shift])
-                    .disabled(!model.isConnected || model.linkLost || model.newNotQueued.isEmpty)
+                    .disabled(!model.isConnected || model.linkLost || model.workspace != .files || model.newNotQueued.isEmpty)
                 Button("Download Selection") { model.downloadSelected() }
                     .keyboardShortcut("d", modifiers: .command)
-                    .disabled(!model.isConnected || model.linkLost || model.selection.isEmpty)
+                    .disabled(!model.isConnected || model.linkLost || model.workspace != .files || model.selection.isEmpty)
                 Button("Select All") { model.selectAllVisible() }
                     .disabled(!model.isConnected)
                 Button("Select New") { model.selectNew() }

@@ -167,6 +167,12 @@ public struct CameraStatus: Sendable, Equatable {
     public var batteryMilliAmps = 0
     public var docked = false
     public var charging = false
+    /// Capture state, from the `0x02/0x80` push while the camera is out of playback.
+    public var recording = false
+    /// Between states: the camera is starting or stopping a recording.
+    public var recordingTransition = false
+    public var recordingSeconds = 0
+    public var captureMode: CaptureMode?
 
     public init() {}
 

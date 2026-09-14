@@ -104,6 +104,21 @@ final class AppModel {
     private(set) var reconnecting = false
     /// Link recovery ran out of attempts: the library offers "Reconnect" / "Disconnect".
     private(set) var linkGaveUp = false
+
+    // ---- camera control -----------------------------------------------------------------------
+    /// What the library screen shows: the card's files, or the camera itself (live view + controls).
+    enum Workspace: Hashable { case files, camera }
+    private(set) var workspace: Workspace = .files
+    /// Leaving or re-entering playback takes a moment; the switch is locked meanwhile.
+    private(set) var switchingWorkspace = false
+    enum LiveView: Equatable { case off, starting, live, unavailable }
+    private(set) var liveView: LiveView = .off
+    /// Width / height of the live picture (portrait when the camera films vertically).
+    private(set) var liveAspect: CGFloat = 16 / 9
+    /// A control command in flight (the shutter key waits for the camera's answer).
+    private(set) var controlBusy = false
+    private(set) var controlError: String?
+    let liveRenderer = LiveVideoRenderer()
     /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
     /// still be restoring the user's network), the launch-time crash recovery, and link recovery.
     @ObservationIgnored private var teardownTask: Task<Void, Never>?
@@ -153,6 +168,15 @@ final class AppModel {
             stage = .pairing
             needsApproval = true
             stageDetail = String(localized: "Approve the connection on the camera’s screen")
+        case "camera":
+            screen = .library
+            workspace = .camera
+            liveView = .live
+            var st = status
+            st.captureMode = .video
+            st.recording = true
+            st.recordingSeconds = 754
+            status = st
         case "cameras":
             screen = .cameras
             ble.injectDemo(DiscoveredCamera(id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
@@ -447,6 +471,10 @@ final class AppModel {
         files = []
         selection = []
         cursor = nil
+        workspace = .files
+        liveView = .off
+        liveRenderer.reset()
+        controlError = nil
         previewFile = nil
         if !keepSummary { lastTransferSummary = nil }
         retryCounts = [:]
@@ -959,5 +987,101 @@ final class AppModel {
     private func stampDates(_ url: URL, _ f: CameraFile) {
         guard let date = f.captureDate else { return }
         try? FileManager.default.setAttributes([.creationDate: date, .modificationDate: date], ofItemAtPath: url.path)
+    }
+}
+
+// =========================================================================================
+// MARK: Camera control
+// =========================================================================================
+
+extension AppModel {
+    func setWorkspace(_ w: Workspace) {
+        guard w != workspace, !switchingWorkspace, screen == .library, !linkLost, let s = session else { return }
+        if w == .camera && transfer != nil {
+            controlError = String(localized: "Finish or cancel the downloads before using the camera.")
+            return
+        }
+        controlError = nil
+        selection = []
+        switchingWorkspace = true
+        let gen = connectGeneration
+        Task {
+            defer { switchingWorkspace = false }
+            if w == .camera {
+                log("control: entering camera mode")
+                guard await s.enterControl() else {
+                    if gen == connectGeneration { controlError = String(localized: "The camera didn’t switch to capture mode.") }
+                    return
+                }
+                guard gen == connectGeneration, session === s else { return }
+                workspace = .camera
+                await startLiveView(s)
+            } else {
+                log("control: back to the card")
+                await s.stopLiveView()
+                liveRenderer.reset()
+                liveView = .off
+                workspace = .files
+                if let page = await s.leaveControl(), gen == connectGeneration, session === s {
+                    let resolved = await http.resolveStorage(page.files, singleSdStorage: s.model.singleSdStorage)
+                    guard gen == connectGeneration, session === s else { return }
+                    let known = Set(files.map(\.id))
+                    let fresh = resolved.filter { !known.contains($0.id) }
+                    if !fresh.isEmpty {
+                        files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
+                        refreshDownloaded()
+                    }
+                    log("control: card relisted, \(fresh.count) new file(s)")
+                }
+            }
+        }
+    }
+
+    private func startLiveView(_ s: CameraSession) async {
+        liveView = .starting
+        liveRenderer.reset()
+        let renderer = liveRenderer
+        renderer.onFirstFrame = { Task { @MainActor [weak self] in if self?.liveView == .starting { self?.liveView = .live } } }
+        renderer.onDimensions = { size in
+            guard size.width > 0, size.height > 0 else { return }
+            Task { @MainActor [weak self] in self?.liveAspect = size.width / size.height }
+        }
+        let ok = await s.startLiveView { renderer.enqueue(annexB: $0) }
+        if !ok, liveView == .starting { liveView = .unavailable; return }
+        // The request and one fallback take up to ~16 s; past that, say so instead of waiting forever.
+        let gen = connectGeneration
+        Task {
+            try? await Task.sleep(for: .seconds(18))
+            guard gen == connectGeneration, liveView == .starting, workspace == .camera else { return }
+            liveView = .unavailable
+            log("live: no picture after 18 s")
+        }
+    }
+
+    /// The shutter key: start/stop recording in clip modes, one picture in photo modes.
+    func pressShutter() {
+        guard workspace == .camera, !controlBusy, let s = session else { return }
+        let recording = status.recording
+        let clip = status.captureMode?.records ?? true
+        controlBusy = true
+        controlError = nil
+        Task {
+            defer { controlBusy = false }
+            let ok = clip ? await s.setRecording(!recording) : await s.takePhoto()
+            log("control: shutter (\(clip ? (recording ? "stop" : "record") : "photo")) → \(ok ? "ok" : "refused")")
+            if !ok { controlError = String(localized: "The camera didn’t accept the command.") }
+        }
+    }
+
+    func setMode(_ mode: CaptureMode) {
+        guard workspace == .camera, !controlBusy, !status.recording, status.captureMode != mode, let s = session else { return }
+        controlBusy = true
+        controlError = nil
+        Task {
+            defer { controlBusy = false }
+            let ok = await s.setMode(mode)
+            log("control: mode \(mode) → \(ok ? "ok" : "refused")")
+            if !ok { controlError = String(localized: "The camera didn’t change mode.") }
+        }
     }
 }

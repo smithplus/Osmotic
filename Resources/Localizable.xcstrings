@@ -837,6 +837,16 @@
         }
       }
     },
+    "Finish or cancel the downloads before using the camera.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminá o cancelá las descargas antes de usar la cámara."
+          }
+        }
+      }
+    },
     "Folder": {
       "localizations": {
         "es": {
@@ -903,6 +913,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Volviendo a tu Wi-Fi…"
+          }
+        }
+      }
+    },
+    "Hyperlapse": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hyperlapse"
           }
         }
       }
@@ -977,6 +997,36 @@
         }
       }
     },
+    "Live": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En vivo"
+          }
+        }
+      }
+    },
+    "Live view": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista en vivo"
+          }
+        }
+      }
+    },
+    "Live view off": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vista en vivo apagada"
+          }
+        }
+      }
+    },
     "Loading older files": {
       "localizations": {
         "es": {
@@ -1017,12 +1067,42 @@
         }
       }
     },
+    "Low light": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Poca luz"
+          }
+        }
+      }
+    },
     "Maintenance": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Mantenimiento"
+          }
+        }
+      }
+    },
+    "Mode": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modo"
+          }
+        }
+      }
+    },
+    "Motionlapse": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Motionlapse"
           }
         }
       }
@@ -1103,6 +1183,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sin fecha"
+          }
+        }
+      }
+    },
+    "No live view from this camera": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta cámara no envía imagen en vivo"
           }
         }
       }
@@ -1383,6 +1473,16 @@
         }
       }
     },
+    "Rec": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rec"
+          }
+        }
+      }
+    },
     "Reconnect": {
       "localizations": {
         "es": {
@@ -1399,6 +1499,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Reconectando"
+          }
+        }
+      }
+    },
+    "Record": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabar"
+          }
+        }
+      }
+    },
+    "Record, take photos and see what the camera sees": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabá, sacá fotos y mirá lo que ve la cámara"
+          }
+        }
+      }
+    },
+    "Recording": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grabando"
           }
         }
       }
@@ -1523,6 +1653,16 @@
         }
       }
     },
+    "Shutter": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disparo"
+          }
+        }
+      }
+    },
     "Signal": {
       "localizations": {
         "es": {
@@ -1539,6 +1679,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Señal %lld dBm"
+          }
+        }
+      }
+    },
+    "Slow-mo": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cámara lenta"
           }
         }
       }
@@ -1573,6 +1723,16 @@
         }
       }
     },
+    "Start recording (↩)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Empezar a grabar (↩)"
+          }
+        }
+      }
+    },
     "Starting": {
       "localizations": {
         "es": {
@@ -1583,12 +1743,62 @@
         }
       }
     },
+    "Starting live view…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Iniciando vista en vivo…"
+          }
+        }
+      }
+    },
     "Step %lld of %lld": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Paso %lld de %lld"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detener"
+          }
+        }
+      }
+    },
+    "Stop recording (↩)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejar de grabar (↩)"
+          }
+        }
+      }
+    },
+    "Take a photo (↩)": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sacar una foto (↩)"
+          }
+        }
+      }
+    },
+    "Take photo": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sacar foto"
           }
         }
       }
@@ -1633,12 +1843,32 @@
         }
       }
     },
+    "The camera didn’t accept the command.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no aceptó el comando."
+          }
+        }
+      }
+    },
     "The camera didn’t answer on the data link. If macOS asked about local network access, allow it and try again.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "La cámara no respondió en el enlace de datos. Si macOS preguntó por acceso a la red local, permitilo y reintentá."
+          }
+        }
+      }
+    },
+    "The camera didn’t change mode.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no cambió de modo."
           }
         }
       }
@@ -1659,6 +1889,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "La cámara no la envió por Bluetooth. Está en su pantalla: Ajustes › Conexión inalámbrica (red %@)."
+          }
+        }
+      }
+    },
+    "The camera didn’t switch to capture mode.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara no pasó a modo captura."
           }
         }
       }
@@ -1709,6 +1949,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Esta cámara nunca fue activada, así que no enciende su Wi-Fi. Activala una vez con DJI Mimo."
+          }
+        }
+      }
+    },
+    "Timelapse": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Timelapse"
           }
         }
       }

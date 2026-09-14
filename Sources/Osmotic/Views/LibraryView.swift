@@ -32,20 +32,13 @@ struct LibraryView: View {
     var body: some View {
         @Bindable var model = model
         VStack(spacing: 0) {
-            TopPlate {
-                HStack(spacing: Theme.s3) {
-                    LED(color: model.linkLost ? Theme.danger : Theme.success,
-                        state: model.linkLost ? .blink : .on,
-                        label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
-                    CassetteKeyBank(compact: true) {
-                        Button { model.requestDisconnect() } label: {
-                            Label("Disconnect", systemImage: "eject.fill")
-                        }
-                        .buttonStyle(.compactKey)
-                        .help("Release the camera and put the Mac back on your Wi-Fi")
-                    }
-                }
-            }
+            LibraryTopPlate()
+            if model.workspace == .camera {
+                CameraControlView()
+                    .padding(.horizontal, Theme.s3)
+                    .padding(.bottom, Theme.s3)
+                    .frame(maxHeight: .infinity, alignment: .top)
+            } else {
             ControlDeck()
                 .padding(.horizontal, Theme.s3)
                 .padding(.bottom, Theme.s3)
@@ -78,6 +71,7 @@ struct LibraryView: View {
             .recessed(radius: Theme.radiusL)
             .padding(.horizontal, Theme.s3)
             .padding(.bottom, Theme.s3)
+            }
 
             TransferBar()
         }
@@ -183,6 +177,39 @@ struct LibraryView: View {
             model.previewSelection()
             return .handled
         }
+        }
+    }
+}
+
+/// The library's top strip: the Files / Camera switch in the middle, link LED and Disconnect on the right.
+struct LibraryTopPlate: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        TopPlate {
+            CassetteKeyBank(compact: true) {
+                Button("Files") { model.setWorkspace(.files) }
+                    .buttonStyle(CassetteKeyStyle(compact: true, latched: model.workspace == .files, width: 76))
+                    .accessibilityAddTraits(model.workspace == .files ? .isSelected : [])
+                Button("Live") { model.setWorkspace(.camera) }
+                    .buttonStyle(CassetteKeyStyle(compact: true, latched: model.workspace == .camera, width: 76))
+                    .accessibilityAddTraits(model.workspace == .camera ? .isSelected : [])
+                    .help("Record, take photos and see what the camera sees")
+            }
+            .disabled(model.switchingWorkspace || model.linkLost)
+        } trailing: {
+            HStack(spacing: Theme.s3) {
+                LED(color: model.linkLost ? Theme.danger : Theme.success,
+                    state: model.linkLost || model.switchingWorkspace ? .blink : .on,
+                    label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
+                CassetteKeyBank(compact: true) {
+                    Button { model.requestDisconnect() } label: {
+                        Label("Disconnect", systemImage: "eject.fill")
+                    }
+                    .buttonStyle(.compactKey)
+                    .help("Release the camera and put the Mac back on your Wi-Fi")
+                }
+            }
         }
     }
 }

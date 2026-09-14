@@ -57,3 +57,16 @@ Desconectar: CameraSession.close (sale de playback) → BLE off → WiFiService.
 - **Callbacks de sesión** (`onStatus`, `onLinkLost`…) llegan en el hilo de la sesión → saltar a `@MainActor`. `AppModel` ignora callbacks de sesiones reemplazadas (`session === s`).
 - **FileDownloader**: delegate URLSession en cola serial, handlers por `taskIdentifier`, `completedEarly` para la carrera cancel/start.
 - **Conexión**: cada intento tiene `connectGeneration`; `live()` después de cada `await`; un intento nuevo espera (`await previous.value`) a que el anterior limpie.
+
+## Control y vista en vivo
+
+| Archivo | Qué hace |
+|---|---|
+| `OsmoticCore/Camera/CaptureMode.swift` | códigos de modo (`0x02/0xE1`, byte 57 de `0x02/0x80`) |
+| `OsmoticCore/Video/LiveReassembler.swift` | fragmentos pktType 0x02 → mensajes Annex-B |
+| `OsmoticCore/Video/H264AnnexB.swift` | NALs, AVCC |
+| `Osmotic/Services/LiveVideoRenderer.swift` | SPS/PPS → `CMVideoFormatDescription` → `AVSampleBufferDisplayLayer` |
+| `Osmotic/Views/CameraControlView.swift` | pestaña Live: monitor, lectura, modos, disparo |
+
+Detalle y puntos sin verificar: `docs/CONTROL.md`.
+
