@@ -95,10 +95,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let model, model.screen != .cameras else { return .terminateNow }
+        guard let model, model.screen != .cameras || model.restoringWifi else { return .terminateNow }
         Task { @MainActor in
             if model.screen == .connecting { model.cancelConnect() }
-            await model.disconnect()
+            if model.screen == .cameras { await model.finishWifiWork() } else { await model.disconnect() }
             sender.reply(toApplicationShouldTerminate: true)
         }
         return .terminateLater

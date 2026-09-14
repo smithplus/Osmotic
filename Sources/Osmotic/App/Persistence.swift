@@ -1,4 +1,5 @@
 import Foundation
+import Security
 import OsmoticCore
 
 /// A camera the user has connected to at least once.
@@ -86,17 +87,63 @@ enum SavedCameraStore {
     static func remove(_ id: UUID) {
         let list = all().filter { $0.id != id }
         if let data = try? JSONEncoder().encode(list) { UserDefaults.standard.set(data, forKey: key) }
-        UserDefaults.standard.removeObject(forKey: "wifiPassword.\(id.uuidString)")
+        Keychain.delete(account: id.uuidString)
     }
 
     /// The camera's own AP passphrase — the one its settings screen shows. The camera normally hands it
-    /// over BLE on every connect; this copy is only the fallback for when it doesn't.
+    /// over BLE on every connect; this copy (in the Keychain) is only the fallback for when it doesn't.
     static func password(for id: UUID) -> String? {
-        UserDefaults.standard.string(forKey: "wifiPassword.\(id.uuidString)")
+        Keychain.read(account: id.uuidString)
     }
 
     static func setPassword(_ password: String, for id: UUID) {
-        UserDefaults.standard.set(password, forKey: "wifiPassword.\(id.uuidString)")
+        Keychain.write(password, account: id.uuidString)
+    }
+
+    /// Earlier builds kept the passphrase in UserDefaults, in plain text: move it to the Keychain.
+    static func migratePasswordsToKeychain() {
+        let d = UserDefaults.standard
+        for key in d.dictionaryRepresentation().keys where key.hasPrefix("wifiPassword.") {
+            if let value = d.string(forKey: key) {
+                Keychain.write(value, account: String(key.dropFirst("wifiPassword.".count)))
+            }
+            d.removeObject(forKey: key)
+        }
+    }
+}
+
+/// Generic-password items under one service name, one account per saved camera.
+enum Keychain {
+    private static let service = "io.github.smithplus.osmotic.camera-wifi"
+
+    private static func query(_ account: String) -> [String: Any] {
+        [kSecClass as String: kSecClassGenericPassword,
+         kSecAttrService as String: service,
+         kSecAttrAccount as String: account]
+    }
+
+    static func read(account: String) -> String? {
+        var q = query(account)
+        q[kSecReturnData as String] = true
+        q[kSecMatchLimit as String] = kSecMatchLimitOne
+        var out: CFTypeRef?
+        guard SecItemCopyMatching(q as CFDictionary, &out) == errSecSuccess, let data = out as? Data else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+
+    static func write(_ value: String, account: String) {
+        let data = Data(value.utf8)
+        let status = SecItemUpdate(query(account) as CFDictionary, [kSecValueData as String: data] as CFDictionary)
+        if status == errSecItemNotFound {
+            var q = query(account)
+            q[kSecValueData as String] = data
+            q[kSecAttrAccessible as String] = kSecAttrAccessibleWhenUnlocked
+            SecItemAdd(q as CFDictionary, nil)
+        }
+    }
+
+    static func delete(account: String) {
+        SecItemDelete(query(account) as CFDictionary)
     }
 }
 

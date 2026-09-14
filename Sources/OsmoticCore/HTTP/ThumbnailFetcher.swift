@@ -47,8 +47,13 @@ public actor ThumbnailFetcher {
                 data = Data(jpeg)
             }
         }
-        if let data { try? data.write(to: cacheURL(for: file), options: .atomic) }
+        // Cache only real images: anything else (an error page from some other device) would stick.
+        if let data, Self.looksLikeImage(data) { try? data.write(to: cacheURL(for: file), options: .atomic) }
         return data
+    }
+
+    static func looksLikeImage(_ data: Data) -> Bool {
+        data.starts(with: [0xFF, 0xD8]) || data.starts(with: [0x89, 0x50, 0x4E, 0x47])
     }
 
     private func acquire() async {

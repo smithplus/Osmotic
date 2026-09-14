@@ -1,5 +1,11 @@
 import Foundation
 
+/// The camera never redirects; following one could send requests to any host.
+private final class RefuseRedirects: NSObject, URLSessionTaskDelegate, Sendable {
+    func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                    newRequest request: URLRequest) async -> URLRequest? { nil }
+}
+
 /// Thin async client for the camera's lighttpd `/v2` file API at `http://192.168.2.1`.
 public final class CameraHTTP: Sendable {
     public let baseURL: URL
@@ -15,7 +21,7 @@ public final class CameraHTTP: Sendable {
         config.urlCache = nil
         config.waitsForConnectivity = false
         config.connectionProxyDictionary = [:]
-        session = URLSession(configuration: config)
+        session = URLSession(configuration: config, delegate: RefuseRedirects(), delegateQueue: nil)
     }
 
     public func url(_ urlPath: String) -> URL {

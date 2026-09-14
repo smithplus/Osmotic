@@ -29,7 +29,8 @@ public final class PairingFlow {
     public var schedule: (TimeInterval, @escaping () -> Void) -> Void = { _, f in f() }
 
     public private(set) var ssid: String
-    private let savedPassword: String?
+    /// Read only if the camera doesn't hand its password over BLE (it lives in the Keychain).
+    private let savedPassword: () -> String?
     private let identifier: String
     private var generation = 0
     private var pairReplyStatus: Int?
@@ -40,7 +41,8 @@ public final class PairingFlow {
     private var ssidKnown = false
     private var activationState = -1
 
-    public init(bleName: String, savedPassword: String?, identifier: String = OsmoCommands.defaultIdentifier) {
+    public init(bleName: String, savedPassword: @autoclosure @escaping () -> String?,
+                identifier: String = OsmoCommands.defaultIdentifier) {
         self.ssid = bleName
         self.savedPassword = savedPassword
         self.identifier = identifier
@@ -164,9 +166,9 @@ public final class PairingFlow {
             guard !delivered else { return }
             if saysNotActivated {
                 emit(.notActivated)
-            } else if let savedPassword, !savedPassword.isEmpty {
+            } else if let saved = savedPassword(), !saved.isEmpty {
                 log("BLE: no credentials over BLE — using the saved password")
-                deliver(savedPassword)
+                deliver(saved)
             } else {
                 emit(.needsPassword(ssid: ssid))
             }

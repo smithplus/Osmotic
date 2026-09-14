@@ -7,7 +7,7 @@ import Testing
 /// lighttpd does on long reads: it cuts transfers mid-stream, answers transient 404/500, and can
 /// ignore `Range`.
 final class FakeHTTPServer: @unchecked Sendable {
-    enum Behavior { case serve, cutAfter(Int), status(Int), ignoreRange }
+    enum Behavior { case serve, cutAfter(Int), status(Int), ignoreRange, html, redirect }
 
     let port: UInt16
     private let body: [UInt8]
@@ -65,7 +65,17 @@ final class FakeHTTPServer: @unchecked Sendable {
             return b
         }
         let isHead = req.hasPrefix("HEAD")
+        if start >= body.count, start > 0 {
+            write(c, "HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */\(body.count)\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
+            return
+        }
         switch behavior {
+        case .html:
+            let page = Array("<html>router login</html>".utf8)
+            write(c, "HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: \(page.count)\r\nConnection: close\r\n\r\n")
+            if !isHead { send(c, page) }
+        case .redirect:
+            write(c, "HTTP/1.1 302 Found\r\nLocation: http://127.0.0.1:9/elsewhere\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
         case .status(let code):
             write(c, "HTTP/1.1 \(code) Busy\r\nContent-Length: 0\r\nConnection: close\r\n\r\n")
         case .ignoreRange:
@@ -144,6 +154,39 @@ final class FakeHTTPServer: @unchecked Sendable {
         let (r, _, server) = try await run(Array(repeating: .status(404), count: 10))
         #expect(r == .paused(bytes: 0))
         #expect(server.requestCount == 5)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `a manifest size smaller than the real file never truncates it`() async throws {
+        let (r, got, _) = try await run([.cutAfter(1_500_000), .serve], expected: 1_000_000)
+        guard case .saved = r else { Issue.record("\(r)"); return }
+        #expect(got == body)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `an HTML page from another device is never saved as the file`() async throws {
+        let (r, got, _) = try await run(Array(repeating: .html, count: 10))
+        #expect(r == .paused(bytes: 0))
+        #expect(got.isEmpty)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `redirects are not followed`() async throws {
+        let (r, got, server) = try await run(Array(repeating: .redirect, count: 10))
+        #expect(r == .paused(bytes: 0))
+        #expect(got.isEmpty)
+        #expect(server.requestCount == 5)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `a part that already holds every byte finishes on 416`() async throws {
+        let server = try FakeHTTPServer(body: body, script: [])
+        let dl = FileDownloader(http: CameraHTTP(ip: "127.0.0.1", port: Int(server.port)), log: { _ in })
+        let dir = FileManager.default.temporaryDirectory.appendingPathComponent("osmotic-dl-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let dest = dir.appendingPathComponent("b.MP4")
+        try Data(body).write(to: dest.appendingPathExtension("part"))
+        let r = await dl.download(urlPath: "/x", to: dest, expectedSize: 0) { _ in }
+        #expect(r == .saved(dest))
+        #expect((try? Data(contentsOf: dest)).map { [UInt8]($0) } == body)
+        server.stop()
+        try? FileManager.default.removeItem(at: dir)
     }
 
     @Test(.timeLimit(.minutes(1))) func `an existing file is skipped`() async throws {

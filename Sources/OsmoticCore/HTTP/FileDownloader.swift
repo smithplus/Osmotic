@@ -15,7 +15,9 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         case failed(String)
     }
 
-    private enum Attempt { case done, interrupted, rangeIgnored, failed(Int) }
+    /// `total` is the file's full size as the server stated it (Content-Length of a 200, the
+    /// `/TOTAL` of a 206 or 416 Content-Range), when it said.
+    private enum Attempt { case done(total: Int?), alreadyComplete, interrupted(total: Int?), rangeIgnored, failed(Int) }
 
     /// Total attempts per file, productive or not — a runaway guard.
     static let maxAttempts = 20
@@ -36,6 +38,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         let rangeStart: Int
         var written: Int
         var outcome: Attempt?
+        var total: Int?
         let progress: (Int) -> Void
         let done: (Attempt) -> Void
         var lastReport = Date.distantPast
@@ -104,7 +107,6 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             }
         }
 
-        if expectedSize > 0 && partSize() >= expectedSize { return finish() }
         if partSize() > 0 { log("resuming \(destination.lastPathComponent) at \(partSize() / 1_000_000) MB") }
 
         var attempt = 0
@@ -120,9 +122,22 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
                 after = 0
                 log("camera ignored the resume range — restarting \(destination.lastPathComponent) from 0")
             }
-            // URLSession fails a body shorter than its Content-Length, so a clean finish is complete.
-            if case .done = outcome { return finish() }
-            if expectedSize > 0 && after >= expectedSize { return finish() }
+            // Complete only when the bytes on disk match the size the server itself stated; the
+            // manifest's size is a hint (it can be off, and wraps above 4 GiB), never proof.
+            switch outcome {
+            case .alreadyComplete:
+                return finish()
+            case .done(let total):
+                if let total, after != total {
+                    log("\(destination.lastPathComponent): have \(after) of \(total) bytes after a clean finish — resuming")
+                } else {
+                    return finish()
+                }
+            case .interrupted(let total?) where after == total:
+                return finish()
+            default:
+                break
+            }
 
             barren = after > offset ? 0 : barren + 1
             if barren >= Self.maxBarren || attempt >= Self.maxAttempts {
@@ -164,7 +179,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
                     handlers[task.taskIdentifier] = state
                     return false
                 }
-                if early { state.done(.interrupted) } else { task.resume() }
+                if early { state.done(.interrupted(total: nil)) } else { task.resume() }
             }
         } onCancel: {
             task.cancel()
@@ -181,8 +196,21 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
                            completionHandler: @escaping (URLSession.ResponseDisposition) -> Void) {
         guard let st = state(dataTask) else { completionHandler(.cancel); return }
         let code = (response as? HTTPURLResponse)?.statusCode ?? -1
+        let http = response as? HTTPURLResponse
+        // A resume past the last byte: the server answers 416 with `bytes */TOTAL`.
+        if code == 416, st.rangeStart > 0, Self.contentRangeTotal(http) == st.rangeStart {
+            st.outcome = .alreadyComplete
+            completionHandler(.cancel)
+            return
+        }
         if !(200...299).contains(code) {
             st.outcome = .failed(code)
+            completionHandler(.cancel)
+            return
+        }
+        // The camera serves files, never web pages: an HTML answer is some other device at this address.
+        if let type = http?.value(forHTTPHeaderField: "Content-Type"), type.lowercased().contains("text/html") {
+            st.outcome = .failed(-3)
             completionHandler(.cancel)
             return
         }
@@ -191,7 +219,23 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             completionHandler(.cancel)
             return
         }
+        st.total = code == 206 ? Self.contentRangeTotal(http)
+                               : (response.expectedContentLength > 0 ? Int(response.expectedContentLength) : nil)
         completionHandler(.allow)
+    }
+
+    /// `Content-Range: bytes 100-199/1000` or `bytes */1000` → 1000.
+    static func contentRangeTotal(_ response: HTTPURLResponse?) -> Int? {
+        guard let value = response?.value(forHTTPHeaderField: "Content-Range"),
+              let slash = value.lastIndex(of: "/") else { return nil }
+        return Int(value[value.index(after: slash)...].trimmingCharacters(in: .whitespaces))
+    }
+
+    /// Never follow a redirect: the camera doesn't send them, and following one could fetch from any
+    /// host. The 3xx then arrives as the response and counts as a refusal.
+    public func urlSession(_ session: URLSession, task: URLSessionTask, willPerformHTTPRedirection response: HTTPURLResponse,
+                           newRequest request: URLRequest, completionHandler: @escaping (URLRequest?) -> Void) {
+        completionHandler(nil)
     }
 
     public func urlSession(_ session: URLSession, dataTask: URLSessionDataTask, didReceive data: Data) {
@@ -221,9 +265,9 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             st.done(outcome)
         } else if let error {
             log("download error: \(error.localizedDescription)")
-            st.done(.interrupted)
+            st.done(.interrupted(total: st.total))
         } else {
-            st.done(.done)
+            st.done(.done(total: st.total))
         }
     }
 }

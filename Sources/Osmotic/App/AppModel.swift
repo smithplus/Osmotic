@@ -102,6 +102,13 @@ final class AppModel {
     @ObservationIgnored private var cameraSideIP: String?
     @ObservationIgnored private var transferGeneration = 0
     private(set) var reconnecting = false
+    /// Link recovery ran out of attempts: the library offers "Reconnect" / "Disconnect".
+    private(set) var linkGaveUp = false
+    /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
+    /// still be restoring the user's network), the launch-time crash recovery, and link recovery.
+    @ObservationIgnored private var teardownTask: Task<Void, Never>?
+    @ObservationIgnored private var startupRecovery: Task<Void, Never>?
+    @ObservationIgnored private var recoverTask: Task<Void, Never>?
 
     static var thumbnailCacheDir: URL {
         FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -114,8 +121,9 @@ final class AppModel {
             loadDemo(manifestPath: demo, screen: ProcessInfo.processInfo.environment["OSMOTIC_DEMO_SCREEN"])
             return
         }
+        SavedCameraStore.migratePasswordsToKeychain()
         ble.startScan()
-        Task { await self.recoverInterruptedSession() }
+        startupRecovery = Task { await self.recoverInterruptedSession() }
     }
 
     /// UI demo without hardware: a captured manifest on screen, or the connection stepper mid-way.
@@ -190,6 +198,8 @@ final class AppModel {
         needsApproval = false
         passwordPromptSSID = nil
         linkLost = false
+        linkGaveUp = false
+        recoverTask?.cancel()
         stage = .bluetooth
         stageDetail = String(localized: "Looking for \(t.name)…")
         datalinkProgress = 0
@@ -200,9 +210,12 @@ final class AppModel {
         connectGeneration += 1
         let gen = connectGeneration
         let previous = connectTask
+        let pendingWifiWork = [teardownTask, startupRecovery, recoverTask]
         connectTask = Task { [weak self] in
-            // A cancelled attempt cleans up after itself; never overlap it with the next one.
+            // A cancelled attempt cleans up after itself; never overlap it with the next one, nor with
+            // a Wi-Fi restore still in flight.
             await previous?.value
+            for work in pendingWifiWork { await work?.value }
             guard let self, self.connectGeneration == gen else { return }
             await self.runConnect(t, generation: gen)
         }
@@ -235,7 +248,6 @@ final class AppModel {
             // 1. Bluetooth + pairing → the camera's own Wi-Fi credentials.
             let (ssid, password) = try await pairAndGetCredentials(t)
             try live()
-            SavedCameraStore.setPassword(password, for: t.id)
             cameraPassword = password
             // Already sitting on the camera's AP (a previous run)? Then that is not "home".
             if previousSSID == ssid { previousSSID = nil }
@@ -387,6 +399,8 @@ final class AppModel {
 
     func providePassword(_ password: String) {
         passwordPromptSSID = nil
+        // This camera doesn't send its passphrase over BLE, so keep the one the user typed for next time.
+        if let t = target { SavedCameraStore.setPassword(password, for: t.id) }
         flow?.providePassword(password)
     }
 
@@ -422,13 +436,21 @@ final class AppModel {
         transferGeneration += 1
         transferTask?.cancel()
         transferTask = nil
+        recoverTask?.cancel()
+        recoverTask = nil
         queue.removeAll()
         transfer = nil
         connectGeneration += 1
         files = []
         selection = []
+        previewFile = nil
+        lastTransferSummary = nil
+        retryCounts = [:]
+        thumbCache = [:]
+        moreAvailable = false
         status = CameraStatus()
         linkLost = false
+        linkGaveUp = false
         screen = .cameras
         await cleanup(restoreWifi: Preferences.restoreWifi)
         ble.startScan()
@@ -437,7 +459,9 @@ final class AppModel {
     /// Teardown in a task of its own, so a cancelled caller (a cancelled connect, the transfer queue
     /// that asked for "disconnect when done") can't cut the Wi-Fi restore short.
     private func cleanup(restoreWifi: Bool) async {
-        await Task { @MainActor in await self.teardown(restoreWifi: restoreWifi) }.value
+        let task = Task { @MainActor in await self.teardown(restoreWifi: restoreWifi) }
+        teardownTask = task
+        await task.value
     }
 
     private func teardown(restoreWifi: Bool) async {
@@ -467,6 +491,11 @@ final class AppModel {
         Preferences.pendingCameraSSID = nil
     }
 
+    /// Wait for any Wi-Fi restore still running (quitting from the cameras screen).
+    func finishWifiWork() async {
+        for work in [teardownTask, startupRecovery] { await work?.value }
+    }
+
     func backToCameras() {
         connectError = nil
         screen = .cameras
@@ -475,15 +504,21 @@ final class AppModel {
 
     func retry() {
         guard let t = target else { return }
-        connectError = nil
-        start(t)
+        start(t)   // clears the error itself; `start` only runs while one is showing
     }
 
     private func handleLinkLost(from s: CameraSession) {
         guard screen == .library, session === s else { return }   // ignore a replaced session's last words
         linkLost = true
         log("library: camera link lost — trying to recover")
-        Task { await recoverLink() }
+        recoverTask = Task { await recoverLink() }
+    }
+
+    /// "Reconnect" after link recovery gave up.
+    func reconnectLink() {
+        guard screen == .library, linkLost, !recovering else { return }
+        linkGaveUp = false
+        recoverTask = Task { await recoverLink() }
     }
 
     private func handleLinkRestored(from s: CameraSession) {
@@ -500,7 +535,7 @@ final class AppModel {
         reconnecting = true
         defer { recovering = false; reconnecting = false }
         let gen = connectGeneration
-        func stillWanted() -> Bool { screen == .library && gen == connectGeneration && linkLost }
+        func stillWanted() -> Bool { !Task.isCancelled && screen == .library && gen == connectGeneration && linkLost }
         for attempt in 1...3 {
             try? await Task.sleep(for: .seconds(4))
             guard stillWanted() else { return }
@@ -521,6 +556,7 @@ final class AppModel {
             try? await Task.sleep(for: .seconds(3))
             guard stillWanted() else { return }
             if let old = session { session = nil; await old.close() }
+            guard stillWanted() else { return }
             let s = makeSession(model: t.model, interface: iface)
             session = s
             let result = await s.connect()
@@ -534,6 +570,7 @@ final class AppModel {
                 let known = Set(files.map(\.id))
                 let fresh = await http.resolveStorage(result.files, singleSdStorage: result.model.singleSdStorage)
                     .filter { !known.contains($0.id) }
+                guard gen == connectGeneration, session === s else { return }
                 if !fresh.isEmpty {
                     files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
                     refreshDownloaded()
@@ -546,6 +583,7 @@ final class AppModel {
             await s.close()
         }
         log("recover: gave up after 3 attempts")
+        if stillWanted() { linkGaveUp = true }
     }
 
     /// Wait (bounded) for the link to come back — used by the transfer loop before retrying a file.
@@ -617,6 +655,7 @@ final class AppModel {
         let page = await s.nextPage()
         guard session === s else { return 0 }
         let resolved = await http.resolveStorage(page.files, singleSdStorage: s.model.singleSdStorage)
+        guard session === s else { return 0 }   // disconnected (or replaced) while resolving
         let known = Set(files.map(\.id))
         let added = resolved.filter { !known.contains($0.id) }
         files += added
@@ -787,7 +826,7 @@ final class AppModel {
             transfer?.currentSize = f.sizeBytes
             let dest = DownloadPaths.destination(for: f)
             log("transfer: \(f.name) → \(dest.path)")
-            speedSample = (Date(), 0)
+            speedSample = (Date(), -1)   // seeded by the first report, which includes any resumed bytes
             let result = await downloader.download(urlPath: f.originalURLPath, to: dest, expectedSize: f.sizeBytes) { bytes in
                 Task { @MainActor [weak self] in self?.transferProgress(fileId: f.id, bytes: bytes) }
             }
@@ -854,6 +893,7 @@ final class AppModel {
     private func transferProgress(fileId: String, bytes: Int) {
         guard var t = transfer, t.current?.id == fileId else { return }
         let now = Date()
+        if speedSample.bytes < 0 { speedSample = (now, bytes) }
         let dt = now.timeIntervalSince(speedSample.time)
         if dt > 0.4 {
             let inst = Double(max(0, bytes - speedSample.bytes)) / dt
