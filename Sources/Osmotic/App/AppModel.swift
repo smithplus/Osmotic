@@ -550,6 +550,8 @@ final class AppModel {
 
     func isDownloaded(_ f: CameraFile) -> Bool { downloaded.contains(f.id) }
 
+    func isOnDisk(_ f: CameraFile) -> Bool { FileManager.default.fileExists(atPath: DownloadPaths.destination(for: f).path) }
+
     private func refreshDownloaded() {
         let fm = FileManager.default
         downloaded = Set(files.filter { f in

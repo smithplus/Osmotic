@@ -28,9 +28,11 @@ struct MediaCell: View {
         .onHover { hovering = $0 }
         .contextMenu {
             Button("Vista previa") { model.previewFile = file }
-            Button(downloaded ? "Descargar de nuevo" : "Descargar") { model.enqueue([file]) }
-            if downloaded {
+            if model.isOnDisk(file) {
                 Button("Mostrar en Finder") { model.revealInFinder(file) }
+            } else {
+                // Also offered for files the history remembers but that were moved or deleted.
+                Button("Descargar") { model.enqueue([file]) }
             }
         }
         .task(id: file.id) {

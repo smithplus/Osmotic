@@ -38,7 +38,7 @@ struct PreviewView: View {
                     Text(info).font(.callout).foregroundStyle(.secondary)
                 }
                 Spacer()
-                if model.isDownloaded(file) {
+                if model.isOnDisk(file) {
                     Button("Mostrar en Finder") { model.revealInFinder(file) }
                 } else {
                     Button("Descargar") { model.enqueue([file]); dismiss() }
