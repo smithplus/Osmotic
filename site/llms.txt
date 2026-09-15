@@ -1,0 +1,28 @@
+# Osmotic
+
+> Osmotic is a free, open-source (MIT) native macOS app for DJI Osmo cameras. It downloads photos and videos from the camera to the Mac over the camera's own Wi-Fi (paired over Bluetooth; no cable, no card reader, no phone app, no account), controls the camera and shows its picture live, and uses it as a USB webcam. Tested on an Osmo Pocket 3. Not affiliated with DJI.
+
+Key facts:
+
+- Requirements: macOS 15 or later, Apple silicon or Intel, Bluetooth and Wi-Fi.
+- Price: free. License: MIT. No analytics, no account; the only network traffic besides the camera is an update check with GitHub.
+- Cameras: Osmo Pocket 3 (tested on hardware). Pocket 4 / 4 Pro, Action 4 / 5 Pro / 6 and Nano use the same protocol and work in Osmosis, but aren't tested with Osmotic yet.
+- Downloads land in ~/Downloads/DJI, one folder per day, dated when shot; they resume after a dropped link and never overwrite files. Measured at about 33 MB/s with a Pocket 3.
+- While connected, the Mac is on the camera's Wi-Fi and has no Internet over Wi-Fi; it rejoins the user's network on disconnect.
+- It is a macOS port of Osmosis (Android) by Konrad Iturbe; camera control and live view follow Kaze for DJI by Brian Merchant.
+
+## Docs
+
+- [README](https://github.com/smithplus/Osmotic/blob/main/README.md): features, install, permissions, cameras, FAQ
+- [Security and privacy](https://github.com/smithplus/Osmotic/blob/main/SECURITY.md): what the app does with the Mac and the user's data
+- [Changelog](https://github.com/smithplus/Osmotic/blob/main/CHANGELOG.md): what changed in each version
+- [Protocol notes](https://github.com/smithplus/Osmotic/blob/main/docs/PROTOCOL.md): Bluetooth pairing, the UDP datalink and HTTP downloads
+
+## Download
+
+- [Latest release](https://github.com/smithplus/Osmotic/releases/latest): a .dmg to drag into Applications. The build isn't notarized yet: the first launch needs System Settings › Privacy & Security › Open Anyway.
+
+## Optional
+
+- [Source code](https://github.com/smithplus/Osmotic)
+- [Osmosis, the Android app it's based on](https://github.com/KonradIT/osmosis)

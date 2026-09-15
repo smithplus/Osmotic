@@ -34,3 +34,9 @@ jobs:
           path: build/site
       - id: deployment
         uses: actions/deploy-pages@v4
+      # Same checks as `scripts/seo_audit.sh` locally (adapted from Churchly/SEO-audit): a red run
+      # here means the live page has an SEO problem, not that the deploy failed.
+      - name: SEO audit of the live page
+        run: |
+          sleep 20
+          scripts/seo_audit.sh "${{ steps.deployment.outputs.page_url }}"
