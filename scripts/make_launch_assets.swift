@@ -218,8 +218,8 @@ try slide("07-open.png") {
     label("Free · MIT · No account", x: 48, y: 140)
     text("Open source, and nothing leaves your Mac", sans(46, .bold), ink, x: 48, y: 170, width: 1100, tracking: -1.2)
     panel(NSRect(x: 48, y: 290, width: W - 96, height: 360))
-    text("Built on the work of others", sans(22, .semibold), ink, x: 90, y: 330, width: 1000)
-    text("A native macOS port of Osmosis by Konrad Iturbe, the Android app that reverse-engineered how Osmo cameras hand over their files on Wi-Fi. Camera control and live view follow Kaze for DJI by Brian Merchant. Underneath: years of protocol research by the DJI OGs and many others.",
+    text("Made by smithplus", sans(22, .semibold), ink, x: 90, y: 330, width: 1000)
+    text("Built on Osmosis by Konrad Iturbe and Kaze for DJI by Brian Merchant, with years of protocol research by the DJI OGs and others.",
          sans(19, .regular), muted, x: 90, y: 372, width: 1080, line: 1.3)
     text("No analytics. No account. Updates come from GitHub and install only if their signature checks out.",
          sans(19, .regular), ink, x: 90, y: 520, width: 1080, line: 1.3)

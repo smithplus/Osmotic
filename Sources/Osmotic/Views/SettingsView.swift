@@ -151,6 +151,9 @@ private struct CreditsPane: View {
     var body: some View {
         Form {
             Section {
+                LabeledContent("Made by") {
+                    Link(destination: URL(string: "https://x.com/smithplus")!) { Text(verbatim: "smithplus") }
+                }
                 Text("Osmotic stands on the work of people who opened up DJI’s cameras when DJI didn’t. Thank you.")
                     .font(.callout)
             }

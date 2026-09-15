@@ -1297,6 +1297,16 @@
         }
       }
     },
+    "Made by": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hecho por"
+          }
+        }
+      }
+    },
     "Maintenance": {
       "localizations": {
         "es": {

@@ -3,6 +3,6 @@
 "NSLocalNetworkUsageDescription" = "Osmotic se comunica con tu cámara en su propia red Wi-Fi (192.168.2.1) para listar y descargar tus archivos.";
 "NSLocationUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
 "NSLocationWhenInUseUsageDescription" = "macOS solo muestra el nombre de tu red Wi-Fi a las apps con permiso de ubicación. Osmotic lo usa para volver a tu red al terminar. No registra tu ubicación.";
-"NSHumanReadableCopyright" = "Copyright © 2026 colaboradores de Osmotic. Licencia MIT. No afiliado a DJI.";
+"NSHumanReadableCopyright" = "Copyright © 2026 smithplus. Licencia MIT. No afiliado a DJI.";
 "NSCameraUsageDescription" = "Osmotic muestra la imagen de tu cámara DJI cuando la enchufás por USB como webcam.";
 "NSDownloadsFolderUsageDescription" = "Osmotic guarda los videos y fotos de tu cámara en la carpeta DJI de Descargas.";

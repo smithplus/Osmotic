@@ -34,7 +34,7 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>Copyright © 2026 Osmotic contributors. MIT License. Not affiliated with DJI.</string>
+	<string>Copyright © 2026 smithplus. MIT License. Not affiliated with DJI.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Osmotic uses Bluetooth to find your DJI camera and ask it to turn on its Wi-Fi.</string>
 	<key>NSLocalNetworkUsageDescription</key>

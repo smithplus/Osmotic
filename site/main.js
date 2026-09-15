@@ -50,6 +50,7 @@ document.addEventListener("touchstart", () => {}, { passive: true });
     }
     if (/^\d+\.\d+\.\d+$/.test(version)) {
       for (const el of document.querySelectorAll("[data-version]")) el.textContent = `Version ${version}`;
+      for (const el of document.querySelectorAll("[data-version-short]")) el.textContent = `v${version}`;
     }
   } catch {
     // Keep the static links.

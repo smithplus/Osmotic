@@ -10,7 +10,7 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 
 [![Download](https://img.shields.io/github/v/release/smithplus/Osmotic?label=download&style=for-the-badge&color=e6541c)](https://github.com/smithplus/Osmotic/releases/latest)
 
-**[smithplus.github.io/Osmotic](https://smithplus.github.io/Osmotic/)**
+**[smithplus.github.io/Osmotic](https://smithplus.github.io/Osmotic/)** · made by [smithplus](https://x.com/smithplus)
 
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-222?logo=apple)
 ![Apple silicon & Intel](https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-222)
@@ -23,12 +23,6 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 <img src="docs/images/library.png" alt="Osmotic's Files tab: a grid of clips from an Osmo Pocket 3, two selected, a download in progress" width="100%">
 
 </div>
-
-## Built on the work of others
-
-Osmotic exists because other people did the hard part first. It is a native macOS port of **[Osmosis](https://github.com/KonradIT/osmosis)** by **Konrad Iturbe**, the Android app that reverse-engineered how DJI's Osmo cameras hand their files over Wi-Fi. The pairing flow, the camera's control protocol (DUML) and the decoder for its file list are a Swift port of his work, and are checked byte for byte against his captures.
-
-Camera control and the live view follow **[Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI)** by **Brian Merchant**, with notes from **[OpenPocketCine](https://github.com/erik-sutton95/OpenPocketCine)**. Underneath all of it is years of protocol research by the [DJI OGs](https://github.com/o-gs) and many others (see [Credits](#credits)). Thank you.
 
 ## What it does
 
@@ -166,6 +160,8 @@ Contributors and AI agents: start with [CONTRIBUTING.md](CONTRIBUTING.md) and [C
 
 ## Credits
 
+Osmotic is a native macOS port of Osmosis: the pairing flow, the camera's control protocol (DUML) and the file-list decoder are a Swift port of Konrad Iturbe's work, checked byte for byte against his captures. Thank you to everyone below.
+
 **Code this app is built from**
 - [Osmosis](https://github.com/KonradIT/osmosis) by Konrad Iturbe: the protocol and file-list decoder this app is ported from (MIT).
 - [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) by Brian Merchant: capture control and live view, adapted (MIT).
@@ -179,4 +175,4 @@ The same list is in the app: **Settings › Credits**.
 
 ## License
 
-[MIT](LICENSE). Osmotic is an independent project, **not affiliated with or endorsed by DJI**. "DJI" and "Osmo" are trademarks of their owners. The screenshots show demo data.
+Made by [smithplus](https://x.com/smithplus). [MIT](LICENSE). Osmotic is an independent project, **not affiliated with or endorsed by DJI**. "DJI" and "Osmo" are trademarks of their owners. The screenshots show demo data.
