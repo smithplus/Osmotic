@@ -10,6 +10,8 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 
 [![Download](https://img.shields.io/github/v/release/smithplus/Osmotic?label=download&style=for-the-badge&color=e6541c)](https://github.com/smithplus/Osmotic/releases/latest)
 
+**[smithplus.github.io/Osmotic](https://smithplus.github.io/Osmotic/)**
+
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-222?logo=apple)
 ![Apple silicon & Intel](https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-222)
 ![Swift 6.2](https://img.shields.io/badge/Swift-6.2-f05138?logo=swift&logoColor=white)

@@ -4,7 +4,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 
 ## [Unreleased]
 
+### Added
+- A landing page at https://smithplus.github.io/Osmotic/ — static HTML/CSS in the app's style, published by GitHub Pages.
+
 ### Changed
+- New app icon: the wordmark's "o." — a lowercase o and the orange dot — on a graphite plate.
+- The wordmark lines up with the panels below it (the window buttons sit in the title-bar band above, so no gap is kept for them), and its dot sits on the baseline like a period.
 - README and project docs are in English only (the app itself stays in English and Spanish).
 
 ## [0.2.0] — 2026-09-15

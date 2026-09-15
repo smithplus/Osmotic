@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self'; style-src 'self'; script-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#1d1d1c">
+<title>Osmotic — your Osmo camera, on your Mac</title>
+<meta name="description" content="A free, open-source macOS app for DJI Osmo cameras: download footage over Wi-Fi, control the camera and watch it live, or use it as a USB webcam. No cables, no phone app, no account.">
+<link rel="icon" type="image/png" href="images/icon.png">
+<link rel="apple-touch-icon" href="images/icon.png">
+<link rel="canonical" href="https://smithplus.github.io/Osmotic/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Osmotic — your Osmo camera, on your Mac">
+<meta property="og:description" content="Download footage over Wi-Fi, control the camera and watch it live, or use it as a USB webcam. Free and open source.">
+<meta property="og:url" content="https://smithplus.github.io/Osmotic/">
+<meta property="og:image" content="https://smithplus.github.io/Osmotic/images/library.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="style.css">
+<script src="main.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="topbar">
+  <a class="wordmark" href="#top" aria-label="Osmotic, back to top">osmotic<span class="dot" aria-hidden="true"></span></a>
+  <nav aria-label="Sections">
+    <div class="bank bank--compact">
+      <a class="key key--compact" href="#features">Features</a>
+      <a class="key key--compact" href="#install">Install</a>
+      <a class="key key--compact" href="#credits">Credits</a>
+      <a class="key key--compact" href="https://github.com/smithplus/Osmotic">GitHub</a>
+    </div>
+  </nav>
+  <p class="status"><span class="led" aria-hidden="true"></span><span data-version>Latest release</span></p>
+</header>
+
+<main id="main">
+  <section class="hero" id="top">
+    <div class="lcd lcd--hero" role="img" aria-label="Osmo to Mac. No cables. No app.">
+      <p class="lcd-line lcd-line--big">Osmo › Mac</p>
+      <p class="lcd-line"><span>No cables</span><span aria-hidden="true">·</span><span>No app</span><span aria-hidden="true">·</span><span>No account</span></p>
+    </div>
+    <h1>Your Osmo camera,<br>on your Mac.</h1>
+    <p class="lede">Download your footage over Wi-Fi, control the camera and watch it live, or use it as a webcam over USB — in a native macOS app that looks and feels like a piece of gear.</p>
+    <div class="actions">
+      <div class="bank">
+        <a class="key key--primary" href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download for Mac</a>
+        <a class="key" href="https://github.com/smithplus/Osmotic">View on GitHub</a>
+      </div>
+      <p class="fine">Free and open source (MIT) · macOS 15 or later · Apple silicon &amp; Intel</p>
+    </div>
+    <figure class="shot shot--hero">
+      <img src="images/library.png" width="1488" height="1013" alt="Osmotic's Files tab: a grid of clips from an Osmo Pocket 3 grouped by day, two selected, a download in progress at 32.4 MB/s">
+    </figure>
+  </section>
+
+  <section class="section" id="features" aria-labelledby="features-title">
+    <h2 class="index" id="features-title"><span>01</span>What it does</h2>
+
+    <article class="feature">
+      <div class="feature-text">
+        <p class="readout"><span class="label">Tab:</span> Files</p>
+        <h3>The card, on your Mac</h3>
+        <p>The Mac finds the camera over Bluetooth, joins its Wi-Fi and reads the card. Thumbnails by day, filters for videos, photos, starred and new. <strong>Download New</strong> takes everything that isn't on your Mac yet — into a folder per day, each file dated when it was shot.</p>
+        <p>Downloads resume if the link drops and never overwrite anything, even clips over 4&nbsp;GB.</p>
+      </div>
+      <figure class="shot"><img src="images/cameras.png" width="1368" height="659" loading="lazy" alt="Cameras screen: one Osmo Pocket 3 nearby with its signal strength and a Connect key"></figure>
+    </article>
+
+    <article class="feature feature--flip">
+      <div class="feature-text">
+        <p class="readout"><span class="label">Tab:</span> Live</p>
+        <h3>Control it from across the room</h3>
+        <p>Start and stop recording, take photos, switch between Video, Photo, Slow-mo and Low Light, and watch the camera's picture live — all over Wi-Fi. Back in Files, what you just shot is already listed.</p>
+      </div>
+      <figure class="shot"><img src="images/live.png" width="1368" height="933" loading="lazy" alt="Live tab: the camera's picture while recording for 12:34, mode keys and a Stop key"></figure>
+    </article>
+
+    <article class="feature">
+      <div class="feature-text">
+        <p class="readout"><span class="label">Tab:</span> Webcam</p>
+        <h3>A webcam with a gimbal</h3>
+        <p>Plug the camera in with USB-C and choose Webcam on it. The picture shows up in Osmotic — and in Zoom, Meet, FaceTime or OBS, even with Osmotic closed.</p>
+      </div>
+      <figure class="shot"><img src="images/webcam.png" width="1368" height="533" loading="lazy" alt="Webcam tab: three numbered steps to use the camera as a USB webcam"></figure>
+    </article>
+  </section>
+
+  <section class="section" aria-labelledby="details-title">
+    <h2 class="index" id="details-title"><span>02</span>And the details</h2>
+    <ul class="grid">
+      <li class="panel"><h3>Nothing twice</h3><p>A clip already on your Mac is skipped, never replaced. A half-downloaded one picks up where it stopped.</p></li>
+      <li class="panel"><h3>Light previews</h3><p>Space bar opens a preview from the camera's small <code>.LRF</code> proxy, not the full 4K file.</p></li>
+      <li class="panel"><h3>The extras</h3><p>RAW <code>.DNG</code> next to photos and the backup <code>.WAV</code> next to clips, if you want them.</p></li>
+      <li class="panel"><h3>Keyboard first</h3><p>Arrows to move, <kbd>⇧</kbd> to extend, space to preview, <kbd>⌘D</kbd> and <kbd>⇧⌘D</kbd> to download.</p></li>
+      <li class="panel"><h3>Updates itself</h3><p>New versions come from GitHub Releases and install only if their signature checks out.</p></li>
+      <li class="panel"><h3>Private by design</h3><p>No analytics, no accounts, no servers besides the camera. Nothing leaves your Mac.</p></li>
+    </ul>
+  </section>
+
+  <section class="section" id="install" aria-labelledby="install-title">
+    <h2 class="index" id="install-title"><span>03</span>Install</h2>
+    <div class="panel panel--screws install">
+      <ol class="steps">
+        <li><span class="n">01</span><p><a href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download the <code>.dmg</code></a>, open it and drag <strong>Osmotic</strong> onto <strong>Applications</strong>.</p></li>
+        <li><span class="n">02</span><p>Open it. The first time, macOS says it can't verify the app — this build isn't notarized by Apple yet. Go to <strong>System Settings › Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</p></li>
+        <li><span class="n">03</span><p>Turn on the camera and click <strong>Connect</strong>. The first time, approve the pairing on the camera's screen.</p></li>
+      </ol>
+      <p class="note">While connected, the Mac uses the camera's Wi-Fi, so it has no Internet over Wi-Fi; Ethernet or an iPhone shared over USB keep you online. When you disconnect, your Mac goes back to your network.</p>
+    </div>
+  </section>
+
+  <section class="section" aria-labelledby="cameras-title">
+    <h2 class="index" id="cameras-title"><span>04</span>Cameras</h2>
+    <div class="lcd lcd--table">
+      <table>
+        <caption class="visually-hidden">Supported cameras</caption>
+        <thead><tr><th scope="col">Camera</th><th scope="col">Files</th><th scope="col">Live</th><th scope="col">Tested</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Osmo Pocket 3</th><td>Yes</td><td>Yes</td><td class="on">On hardware</td></tr>
+          <tr><th scope="row">Osmo Pocket 4 / 4 Pro</th><td>Yes</td><td>Yes</td><td>Same protocol</td></tr>
+          <tr><th scope="row">Osmo Action 4 / 5 Pro / 6</th><td>Yes</td><td>—</td><td>In Osmosis</td></tr>
+          <tr><th scope="row">Osmo Nano</th><td>Yes</td><td>—</td><td>In Osmosis</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section" id="credits" aria-labelledby="credits-title">
+    <h2 class="index" id="credits-title"><span>05</span>Built on the work of others</h2>
+    <div class="credits">
+      <div class="panel panel--screws">
+        <p>Osmotic is a native macOS port of <a href="https://github.com/KonradIT/osmosis">Osmosis</a> by <strong>Konrad Iturbe</strong>, the Android app that reverse-engineered how DJI's Osmo cameras hand their files over Wi-Fi. Camera control and live view follow <a href="https://github.com/brianmerchant/Kaze-for-DJI">Kaze for DJI</a> by <strong>Brian Merchant</strong>, with notes from <a href="https://github.com/erik-sutton95/OpenPocketCine">OpenPocketCine</a>.</p>
+        <p>Underneath it all is years of protocol research by the <a href="https://github.com/o-gs">DJI OGs</a>, <a href="https://github.com/dimadesu/dji-remote">dji-remote</a>, <a href="https://github.com/SemiConscious/osmo-download">osmo-download</a>, <a href="https://github.com/sniffingpickles/DJI-Wifi-Connect">DJI-Wifi-Connect</a>, <a href="https://github.com/yigitkonur/lib-osmo-ble">lib-osmo-ble</a>, <a href="https://github.com/samuelsadok/dji_protocol">dji_protocol</a> and <a href="https://github.com/xaionaro/reverse-engineering-dji">reverse-engineering-dji</a> — and the testers of Osmosis. Thank you.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" aria-label="Download">
+    <div class="bank">
+      <a class="key key--primary" href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download for Mac</a>
+      <a class="key" href="https://github.com/smithplus/Osmotic/issues">Report an issue</a>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <p><a href="https://github.com/smithplus/Osmotic/blob/main/LICENSE">MIT License</a> · <a href="https://github.com/smithplus/Osmotic/blob/main/SECURITY.md">Security &amp; privacy</a> · <a href="https://github.com/smithplus/Osmotic/blob/main/CHANGELOG.md">Changelog</a></p>
+  <p>An independent project, not affiliated with or endorsed by DJI. "DJI" and "Osmo" are trademarks of their owners. Screenshots show demo data.</p>
+</footer>
+</body>
+</html>

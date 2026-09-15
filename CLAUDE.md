@@ -28,6 +28,7 @@ Tested with a real Pocket 3: Files (2026-09-14) and Files + Live (2026-09-15: li
 | security and privacy | `SECURITY.md` |
 | user-facing history | `CHANGELOG.md` |
 | credits (shown in Settings › Credits) | `Sources/Osmotic/App/Credits.swift` |
+| landing page (GitHub Pages) | `site/` (static HTML/CSS/JS, the app's tokens in CSS), `.github/workflows/pages.yml` |
 
 ## Commands
 
@@ -41,9 +42,11 @@ scripts/package_app.sh [debug]   # build/Osmotic.app (release = universal arm64+
 scripts/notarize.sh              # Developer ID build + DMG + notarization (needs an Apple Developer account; see the script)
 scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest.bin]   # render without hardware; needs build/Osmotic.app
 scripts/release.sh X.Y.Z [--publish]   # DMG + signed zip for the updater (see "Release")
+scripts/build_site.sh            # landing page → build/site (site/ + docs/images); preview: "site" in .claude/launch.json
+swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png ("o." on graphite)
 ```
 
-- CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`.
+- CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`. `pages.yml` publishes the landing page on pushes to `main` that touch `site/` or `docs/images/`.
 - Every run writes a log to `~/Library/Logs/Osmotic/osmotic-*.log` (Window › Technical Log, ⌥⌘L). It is the source of truth for diagnosing tests with the real camera; the key lines are in `docs/STATUS.md` and `docs/CONTROL.md`.
 - Demo mode: `OSMOTIC_DEMO_MANIFEST=<fixture.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<folder of .jpg>] [OSMOTIC_LANG=es]`. No screen: library with a download half done; `camera` = Live tab recording.
 - No screen-recording permission: `screencapture` doesn't work; `scripts/snapshot.sh` uses `ImageRenderer` (AppKit controls and the live view aren't drawn; `ScrollView`s come out blank — that's why views take `scrolls: false`).
@@ -80,7 +83,9 @@ scripts/release.sh X.Y.Z [--publish]   # DMG + signed zip for the updater (see "
 - Motion only through `Motion` via `.motion(_:value:)` (respects Reduce Motion): key down `press`, up `release`, panels `panel` with `.panelFromTop`/`.trayFromBottom`, lights `bloom`, state `quick`. LCD screens don't fade (`LCDGlass` already applies `LCDBoot` and `.transaction { $0.animation = nil }`). No `scaleEffect` on hover.
 - Accessibility: every control has a VoiceOver label and state (`.isSelected` in groups, value on LEDs); contrast ≥ 4.5:1 (`Theme.muted` meets it).
 - Visual references the user approved: Teenage Engineering's EP-133 and the "BASSBOI" VST (Dribbble). Check with `snapshot.sh` before showing anything.
-- README screenshots (`docs/images/`): `snapshot.sh` with `OSMOTIC_LANG=en OSMOTIC_LOCALE=en_US`, fixture `op3_15.bin` and `OSMOTIC_DEMO_THUMBS` pointing at synthetic scenes (never the user's footage or saved cameras: demo mode doesn't read them), cropped and framed (rounded corners, shadow) at 1280–1400 px. Regenerate them when the UI changes.
+- Window chrome: `.hiddenTitleBar`; the window buttons sit in a 32-pt band above the content (x 9…69, y 9…23 pt — `snapshot.sh` logs it), so `TopPlate` keeps no room for them and the wordmark lines up with the panels. Wordmark: "osmotic." with the dot on the baseline; the icon is its "o.".
+- Landing page (`site/`): same tokens as `Theme` in CSS (keys, LCD, panels with screws), no web fonts, no dependencies, strict CSP (no inline script/style). Keep its copy in step with the README.
+- README screenshots (`docs/images/`): `snapshot.sh` with `OSMOTIC_LANG=en OSMOTIC_LOCALE=en_US`, fixture `op3_15.bin` and `OSMOTIC_DEMO_THUMBS` pointing at synthetic scenes (never the user's footage or saved cameras: demo mode doesn't read them), cropped and framed (title-bar band with the window buttons, rounded corners, shadow) at 1280–1400 px. Regenerate them when the UI changes; the landing page uses the same files.
 
 ## Saved state (where it lives)
 

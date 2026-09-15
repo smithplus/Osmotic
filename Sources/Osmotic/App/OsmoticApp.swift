@@ -99,6 +99,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(Double(ProcessInfo.processInfo.environment["OSMOTIC_SNAPSHOT_DELAY"] ?? "") ?? 3))
             guard let model = self.model else { return }
+            // Where the window buttons sit (top-left, in points), since the render can't show them.
+            if let window = NSApp.windows.first(where: { $0.standardWindowButton(.closeButton) != nil }) {
+                let frames = [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton].compactMap { type -> String? in
+                    guard let b = window.standardWindowButton(type) else { return nil }
+                    let r = b.convert(b.bounds, to: nil)
+                    let h = window.frame.height
+                    return "x \(Int(r.minX))…\(Int(r.maxX)) y \(Int(h - r.maxY))…\(Int(h - r.minY))"
+                }
+                log(
+                    "snapshot: window buttons at \(frames.joined(separator: ", ")) (window \(Int(window.frame.width))×\(Int(window.frame.height)), content starts \(Int(window.frame.height - window.contentLayoutRect.maxY)) pt down)"
+                )
+            } else {
+                log("snapshot: no window with buttons (\(NSApp.windows.map { "\(type(of: $0))" }))")
+            }
             let renderer = ImageRenderer(
                 content: SnapshotView().environment(model).tint(Theme.accent).environment(\.colorScheme, .dark))
             renderer.scale = 2
