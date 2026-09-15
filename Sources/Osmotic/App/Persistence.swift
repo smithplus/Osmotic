@@ -58,6 +58,13 @@ enum Preferences {
         set { d.set(newValue, forKey: "pendingRestoreSSID") }
     }
 
+    /// The Mac's address on the camera's network during the pending session: without Location
+    /// permission it's how a relaunch tells "still on the camera" from a home router at 192.168.2.1.
+    static var pendingCameraSideIP: String? {
+        get { d.string(forKey: "pendingCameraSideIP") }
+        set { d.set(newValue, forKey: "pendingCameraSideIP") }
+    }
+
     /// Whether the pending camera network was added by this app (and so may be forgotten).
     static var pendingForgetCamera: Bool {
         get { d.object(forKey: "pendingForgetCamera") as? Bool ?? true }

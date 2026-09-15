@@ -22,6 +22,8 @@ final class UpdateService {
     /// can say an update exists and open its page, but won't install it.
     let publicKey = (Bundle.main.object(forInfoDictionaryKey: "OsmoticUpdatePublicKey") as? String) ?? ""
     var canInstall: Bool { !publicKey.isEmpty }
+    /// Set by the app model: installing quits the app, so it must not cut a camera session or download.
+    @ObservationIgnored var isSafeToInstall: () -> Bool = { false }
 
     let currentVersion =
         SemVer(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
@@ -69,6 +71,10 @@ final class UpdateService {
     /// Download, verify and stage the release, then quit; the swap script reopens the new version.
     func install(_ release: ReleaseInfo) async {
         guard canInstall else { NSWorkspace.shared.open(release.pageURL); return }
+        guard isSafeToInstall() else {
+            state = .failed(String(localized: "Disconnect from the camera to install."))
+            return
+        }
         state = .downloading(release)
         do {
             let staged = try await stage(release)
@@ -87,6 +93,11 @@ final class UpdateService {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: "/bin/sh")
             p.arguments = [script.path, String(ProcessInfo.processInfo.processIdentifier), staged.path, dest.path]
+            // The download took a while: still no camera session or transfer?
+            guard isSafeToInstall() else {
+                state = .failed(String(localized: "Disconnect from the camera to install."))
+                return
+            }
             try p.run()
             log("update: \(release.version) staged — quitting to install")
             NSApp.terminate(nil)

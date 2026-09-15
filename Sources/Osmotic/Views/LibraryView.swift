@@ -45,6 +45,17 @@ struct LibraryView: View {
                     .padding(.horizontal, Theme.s3)
                     .padding(.bottom, Theme.s3)
 
+                if let error = model.controlError {
+                    // Why Live didn't open (downloads running, the camera refused capture mode).
+                    ErrorBanner(message: error)
+                        .padding(.horizontal, Theme.s3)
+                        .padding(.bottom, Theme.s3)
+                        .transition(.panelFromTop)
+                        .task(id: error) {
+                            try? await Task.sleep(for: .seconds(8))
+                            model.dismissControlError(error)
+                        }
+                }
                 if model.linkGaveUp {
                     HStack(spacing: Theme.s3) {
                         ErrorBanner(
@@ -202,7 +213,9 @@ struct WorkspaceTabs: View {
         CassetteKeyBank(compact: true) {
             key("Files", .files, help: "The camera’s card")
             key("Live", .camera, help: "Record, take photos and see what the camera sees (over Wi-Fi)")
-                .disabled(model.screen != .library || model.linkLost || model.target?.model.supportsLive != true)
+                .disabled(
+                    model.screen != .library || model.linkLost || model.transfer != nil
+                        || model.target?.model.supportsLive != true)
             key("Webcam", .webcam, help: "Use the camera as a webcam over USB")
         }
         .disabled(model.switchingWorkspace)
@@ -278,14 +291,14 @@ struct ControlDeck: View {
                     } label: {
                         if pending > 0 {
                             Text("Download \(pending) new")
-                        } else if model.transfer != nil {
+                        } else if !model.queuedIds.isEmpty {
                             Text("All queued")
                         } else {
                             Text("All downloaded")
                         }
                     }
                     .buttonStyle(.primaryKey)
-                    .disabled(pending == 0)
+                    .disabled(pending == 0 || model.linkLost)
                     .help("Download everything that isn't in your folder yet (⇧⌘D)")
                 }
             }
@@ -353,7 +366,7 @@ struct SectionHeader: View {
         let pending = files.filter { !model.isDownloaded($0) && !queued.contains($0.id) }
         HStack(alignment: .center, spacing: Theme.s2) {
             Silk(verbatim: title, color: Theme.ink, size: 10.5)
-            Text(String(format: "%02d", files.count))
+            Text(String(format: "%02ld", files.count))
                 .font(Theme.readout(10, weight: .bold))
                 .foregroundStyle(Theme.accent)
             EngravedRule()
@@ -361,6 +374,7 @@ struct SectionHeader: View {
                 CassetteKeyBank(compact: true) {
                     Button("Download day") { model.enqueue(pending) }
                         .buttonStyle(.compactKey)
+                        .disabled(model.linkLost)
                 }
             }
         }

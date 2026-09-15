@@ -27,7 +27,6 @@ enum Theme {
     // Silkscreen ink
     static let ink = rgb(232, 229, 222)
     static let muted = rgb(160, 157, 150)  // ≥ 4.5:1 on every graphite surface
-    static let hairline = rgb(255, 255, 255, 0.08)
     // Plastics
     static let accent = rgb(238, 92, 36)  // orange key
     static let accentTop = rgb(230, 84, 28)  // key face: dark enough for white text
@@ -312,10 +311,9 @@ struct CassetteKeyBank<Content: View>: View {
     var compact = false
     @ViewBuilder var content: Content
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: compact ? 6 : 8, style: .continuous)
         HStack(spacing: 2) { content }
             .padding(compact ? 2 : 3)
-            .modifier(Pocket(fill: Theme.slot, radius: compact ? 6 : 8, deep: true))
+            .modifier(Pocket(fill: Theme.slot, radius: compact ? Theme.radiusS + 1 : Theme.radiusM - 1, deep: true))
             .fixedSize()
     }
 }
@@ -543,7 +541,7 @@ struct SectionIndex: View {
 
     var body: some View {
         HStack(spacing: Theme.s2) {
-            Text(String(format: "%02d", number))
+            Text(String(format: "%02ld", number))
                 .font(Theme.readout(10, weight: .bold))
                 .foregroundStyle(Theme.accent)
             Silk(title, color: Theme.ink, size: 10)
@@ -622,14 +620,14 @@ enum Format {
 
     static func duration(_ seconds: Int) -> String {
         let h = seconds / 3600, m = (seconds % 3600) / 60, s = seconds % 60
-        return h > 0 ? String(format: "%d:%02d:%02d", h, m, s) : String(format: "%d:%02d", m, s)
+        return h > 0 ? String(format: "%ld:%02ld:%02ld", h, m, s) : String(format: "%ld:%02ld", m, s)
     }
 
     static func clock(_ seconds: TimeInterval) -> String {
         let s = max(0, Int(seconds.rounded()))
         return s >= 3600
-            ? String(format: "%d:%02d:%02d", s / 3600, (s % 3600) / 60, s % 60)
-            : String(format: "%02d:%02d", s / 60, s % 60)
+            ? String(format: "%ld:%02ld:%02ld", s / 3600, (s % 3600) / 60, s % 60)
+            : String(format: "%02ld:%02ld", s / 60, s % 60)
     }
 
     static let dayHeader: DateFormatter = {

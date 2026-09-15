@@ -106,7 +106,7 @@ public enum UpdateInstaller {
         PID="$1"; NEW="$2"; DEST="$3"
         n=0
         while kill -0 "$PID" 2>/dev/null; do
-          sleep 0.2; n=$((n + 1)); [ "$n" -gt 300 ] && exit 1
+          sleep 0.2; n=$((n + 1)); [ "$n" -gt 3000 ] && exit 1   # 10 min: quitting may restore Wi-Fi first
         done
         BACKUP="$DEST.previous"
         rm -rf "$BACKUP"

@@ -30,20 +30,6 @@ enum WiFiService {
     /// The current network's name. Readable only with Location permission (macOS privacy).
     nonisolated static func currentSSID() -> String? { CWWiFiClient.shared().interface()?.ssid() }
 
-    nonisolated static var isPoweredOn: Bool { CWWiFiClient.shared().interface()?.powerOn() ?? false }
-
-    @concurrent
-    static func powerOn() async {
-        guard let iface = CWWiFiClient.shared().interface(), !iface.powerOn() else { return }
-        do {
-            try iface.setPower(true)
-            log("wifi: powered on")
-            try? await Task.sleep(for: .seconds(2))
-        } catch {
-            log("wifi: could not power on (\(error.localizedDescription))")
-        }
-    }
-
     /// Where the Mac ended up on the camera's network — needed later to tell "back home" apart from
     /// "still on the camera", even when home is also a 192.168.2.x network.
     struct Joined: Sendable {
@@ -252,8 +238,6 @@ enum WiFiService {
         return nil
     }
 
-    /// Run `/usr/sbin/networksetup`; returns trimmed output (empty on success).
-    @discardableResult
     /// The Mac's saved Wi-Fi networks, in the system's order.
     nonisolated static func preferredNetworks(_ interface: String? = interfaceName) -> [String] {
         guard let interface else { return [] }
@@ -265,6 +249,8 @@ enum WiFiService {
     @concurrent
     static func isSavedNetwork(_ ssid: String) async -> Bool { preferredNetworks().contains(ssid) }
 
+    /// Run `/usr/sbin/networksetup`; returns trimmed output (empty on success).
+    @discardableResult
     nonisolated static func runNetworksetup(_ args: [String]) -> String {
         let p = Process()
         p.executableURL = URL(fileURLWithPath: "/usr/sbin/networksetup")
@@ -292,11 +278,6 @@ final class LocationPermission: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-    }
-
-    var isAuthorized: Bool {
-        let s = manager.authorizationStatus
-        return s == .authorizedAlways || s == .authorized
     }
 
     var isUndetermined: Bool { manager.authorizationStatus == .notDetermined }

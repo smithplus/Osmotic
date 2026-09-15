@@ -1813,6 +1813,26 @@
         }
       }
     },
+    "Quit": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Salir"
+          }
+        }
+      }
+    },
+    "Quit while files are downloading?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Salir mientras se descargan archivos?"
+          }
+        }
+      }
+    },
     "Reading the camera’s card…": {
       "localizations": {
         "es": {

@@ -114,9 +114,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         guard let model, model.screen != .cameras || model.restoringWifi else { return .terminateNow }
+        if model.transfer != nil {
+            let alert = NSAlert()
+            alert.messageText = String(localized: "Quit while files are downloading?")
+            alert.informativeText = String(localized: "What already arrived stays saved; the rest resumes next time.")
+            alert.addButton(withTitle: String(localized: "Quit"))
+            alert.addButton(withTitle: String(localized: "Cancel"))
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+        }
         Task { @MainActor in
+            // Wi-Fi must be back on the user's network before the app goes — a cancelled connect cleans
+            // up in its own task, so cancel it and then wait for all of it.
             if model.screen == .connecting { model.cancelConnect() }
-            if model.screen == .cameras { await model.finishWifiWork() } else { await model.disconnect() }
+            if model.screen == .library { await model.disconnect() }
+            await model.finishWifiWork()
             sender.reply(toApplicationShouldTerminate: true)
         }
         return .terminateLater

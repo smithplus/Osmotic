@@ -7,9 +7,11 @@ Resumen de un relevamiento de repos (commits: Moblin `58d400e`, Kaze `341a35d`, 
 Implementado y probado contra `FakeCamera` (`ControlTests`), **sin probar todavía con la Pocket 3**:
 - Pestaña **Live** (`AppModel.Workspace.camera`, `CameraControlView`): sale de playback, graba/detiene, foto, modo (Video, Foto, Cámara lenta, Poca luz), vista en vivo; al volver a **Files** re-entra a playback y relee la tarjeta.
 - `DatalinkTransport.windowModel`: `.legacy` (listado/descargas, probado) y `.mimo` (ACK de la app oficial: grupos video/respuestas/TX, routing con el ack de la cámara) — solo en modo captura.
-- `CameraSession` modos `.media/.capture/.live`; bomba de 12 ms (`recvAll(precise:)`) con ACK ≥ 40 Hz; `drainStale()` antes de cada comando (una respuesta vieja `E0` al re-assert de playback se confundía con la del comando).
+- `CameraSession` modos `.media/.capture/.live`; bomba de 12 ms (`recvAll(precise:)`) con ACK ≥ 40 Hz mientras hay video (50 ms / 10 Hz en captura sin video); `drainStale()` antes de cada comando (una respuesta vieja `E0` al re-assert de playback se confundía con la del comando).
 - Salir de playback: `0x02/0x0C 01010000` ×2 → START de `0x01/0x01` sin `09/A8` (así el keyframe no se pierde) → si no, error.
 - Vista en vivo: ráfaga de Kaze (receptor `0x41`), a los 8 s sin video una vez la variante OpenPocketCine (`0x02/0x68 [08]` + `09/A8` a `0x08`); `LiveReassembler` → `LiveVideoRenderer` (`AVSampleBufferDisplayLayer`); el monitor toma la proporción del stream (vertical si la cámara filma vertical).
+- Vista en vivo robusta: un mensaje perdido hace que el decodificador espere un keyframe y se pide `09/A8` (como máximo cada 5 s; si no se puede aún, queda pendiente y lo pide `controlTick`); saltos de seq solo se cuentan (regla de Kaze).
+- Pestañas: salir de Live siempre vuelve a playback (`leaveLive`); no se sale grabando ni con un comando en curso; Live solo para modelos Pocket y sin descargas en curso.
 - Estado `0x02/0x80`: grabando (bit 7 de @0), transición (bit 6), segundos @29, modo @57.
 
 Primera prueba con hardware — mirar en el log: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. Si falla la salida de playback o la imagen queda negra, ver `docs/CONTROL_SPEC.md` (especificación completa con fuentes; §7 = puntos sin verificar).

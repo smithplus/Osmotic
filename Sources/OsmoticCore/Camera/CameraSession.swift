@@ -50,6 +50,8 @@ public final class CameraSession: @unchecked Sendable {
     private var videoSink: (@Sendable ([UInt8]) -> Void)?
     private var discontinuitySink: (@Sendable () -> Void)?
     private var lastKeyframeRequest = Date.distantPast
+    /// The decoder is waiting for a keyframe that hasn't been asked for yet (inside the 5 s spacing).
+    private var keyframeOwed = false
     private var liveRequestedAt: Date?
     private var liveFallbackTried = false
     private var lastVideoAt: Date?
@@ -735,6 +737,7 @@ public final class CameraSession: @unchecked Sendable {
             log("datalink: camera answering again — link restored")
             onLinkRestored?()
         }
+        if keyframeOwed { requestKeyframeIfDue(reason: "keyframe still owed") }
         if mode == .live, lastVideoAt == nil, !liveFallbackTried,
             let asked = liveRequestedAt, now.timeIntervalSince(asked) > 8
         {
@@ -867,6 +870,7 @@ public final class CameraSession: @unchecked Sendable {
         videoSink = onVideo
         discontinuitySink = onDiscontinuity
         lastKeyframeRequest = Date()
+        keyframeOwed = false
         reassembler = LiveReassembler()
         lastVideoAt = nil
         liveFallbackTried = false
@@ -885,11 +889,8 @@ public final class CameraSession: @unchecked Sendable {
             // A lost message damages every frame until the next keyframe, and the camera sends none on
             // its own: ask for one (0x09/0xA8), at most every 5 s — each request resets its encoder.
             discontinuitySink?()
-            if Date().timeIntervalSince(lastKeyframeRequest) >= 5 {
-                lastKeyframeRequest = Date()
-                send(0x09, 0xA8, Self.liveRequest, rType: 0x01, rId: 2)
-                log("live: message lost (dropped \(reassembler.dropped)) — keyframe requested")
-            }
+            keyframeOwed = true
+            requestKeyframeIfDue(reason: "message lost (dropped \(reassembler.dropped))")
         }
         guard let message else { return }
         if lastVideoAt == nil, let asked = liveRequestedAt {
@@ -897,6 +898,24 @@ public final class CameraSession: @unchecked Sendable {
         }
         lastVideoAt = Date()
         videoSink?(message)
+    }
+
+    /// Ask for a keyframe (`0x09/0xA8`) if one is owed and the 5 s spacing allows; otherwise the capture
+    /// tick asks once it does. Each request resets the camera's encoder, so never more often.
+    private func requestKeyframeIfDue(reason: String) {
+        guard keyframeOwed, mode == .live, Date().timeIntervalSince(lastKeyframeRequest) >= 5 else { return }
+        keyframeOwed = false
+        lastKeyframeRequest = Date()
+        send(0x09, 0xA8, Self.liveRequest, rType: 0x01, rId: 2)
+        log("live: \(reason) — keyframe requested")
+    }
+
+    /// The decoder lost its picture (e.g. a failed display layer): ask the camera for a keyframe.
+    public func requestKeyframe() async {
+        await submit { [self] in
+            keyframeOwed = true
+            requestKeyframeIfDue(reason: "decoder asked")
+        }
     }
 
     /// There is no stop command: stop decoding and keep acknowledging whatever still arrives.

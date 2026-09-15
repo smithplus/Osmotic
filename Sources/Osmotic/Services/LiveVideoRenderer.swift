@@ -18,6 +18,8 @@ nonisolated final class LiveVideoRenderer: @unchecked Sendable {
     private var frameIndex: Int64 = 0
     /// Called (on the render queue) when the first picture is on screen.
     var onFirstFrame: (@Sendable () -> Void)?
+    /// Called (on the render queue) when the display layer failed and needs a keyframe to recover.
+    var onNeedsKeyframe: (@Sendable () -> Void)?
     /// Called (on the render queue) with the picture's size whenever the stream's format changes —
     /// a camera filming vertically streams a portrait picture.
     var onDimensions: (@Sendable (CGSize) -> Void)?
@@ -84,6 +86,7 @@ nonisolated final class LiveVideoRenderer: @unchecked Sendable {
         if renderer.status == .failed {
             renderer.flush(removingDisplayedImage: false, completionHandler: nil)
             waitingForKeyframe = true
+            onNeedsKeyframe?()
             return
         }
         renderer.enqueue(sample)

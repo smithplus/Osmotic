@@ -3,8 +3,8 @@
 <plist version="1.0">
 <dict>
 	<!-- Documentation of what the app does with data (not required on macOS; kept for clarity):
-	     no tracking, nothing collected or sent anywhere — everything stays between the Mac and the
-	     camera. Required-reason APIs: UserDefaults (app's own settings) and file timestamps
+	     no tracking, nothing collected. The app talks to the camera and, at most daily, asks GitHub
+	     (api.github.com) for the latest release, sending nothing about the user (can be turned off). Required-reason APIs: UserDefaults (app's own settings) and file timestamps
 	     (sets each download's dates to the capture time). -->
 	<key>NSPrivacyTracking</key>
 	<false/>

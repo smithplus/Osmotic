@@ -192,6 +192,12 @@ extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
             if wantScan { isScanning = false; startScan() }
         } else {
             isScanning = false
+            // CoreBluetooth sends no disconnect when the radio goes away: report it ourselves.
+            if peripheral != nil {
+                peripheral = nil
+                armed = false
+                onDisconnect?(nil)
+            }
         }
     }
 

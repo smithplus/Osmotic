@@ -48,6 +48,7 @@ struct MediaCell: View {
             } else {
                 // Also offered for files the history remembers but that were moved or deleted.
                 Button("Download") { model.enqueue([file]) }
+                    .disabled(model.linkLost || !model.isConnected)
             }
         }
         .task(id: file.id) {

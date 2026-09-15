@@ -136,9 +136,9 @@ final class AppModel {
     @ObservationIgnored private var connectionActivity: NSObjectProtocol?
     /// The session is out of playback (Live): undo it (`leaveLive`) before the card can be listed or
     /// downloaded again.
-    @ObservationIgnored var sessionInControl = false
+    @ObservationIgnored private var sessionInControl = false
     /// Bumped on every live-view start, so a timer from an earlier visit can't touch a newer one.
-    @ObservationIgnored var liveStartToken = 0
+    @ObservationIgnored private var liveStartToken = 0
     let webcam = WebcamService()
     let updater = UpdateService()
     /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
@@ -154,6 +154,8 @@ final class AppModel {
 
     init() {
         configureLiveRenderer()
+        // The updater quits the app to install: only ever with no camera session and no downloads.
+        updater.isSafeToInstall = { [weak self] in self?.screen == .cameras && self?.transfer == nil }
         log(
             "Osmotic \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") — log file \(logSink.url.path)"
         )
@@ -264,10 +266,6 @@ final class AppModel {
         linkLost = false
         linkGaveUp = false
         wifiRestoreFailed = false
-        if connectionActivity == nil {
-            connectionActivity = ProcessInfo.processInfo.beginActivity(
-                options: [.userInitiated], reason: "Connected to a camera")
-        }
         lastTransferSummary = nil
         recoverTask?.cancel()
         stage = .bluetooth
@@ -295,6 +293,8 @@ final class AppModel {
         log("connect: cancelled by user")
         connectGeneration += 1
         connectTask?.cancel()
+        // Stop a datalink handshake now rather than after its ~14 s of retries (close is idempotent).
+        if let s = session { Task { await s.close() } }
         failPending(CancellationError())
         passwordPromptSSID = nil
         needsApproval = false
@@ -306,6 +306,12 @@ final class AppModel {
         /// Still the attempt the user is waiting for? Checked after every suspension.
         func live() throws {
             if Task.isCancelled || gen != connectGeneration { throw CancellationError() }
+        }
+        // Begun here, after any earlier teardown finished (its end would otherwise end ours). App Nap
+        // would coalesce the keep-alive; idle sleep is held off only while downloading (`enqueue`).
+        if connectionActivity == nil {
+            connectionActivity = ProcessInfo.processInfo.beginActivity(
+                options: [.userInitiatedAllowingIdleSystemSleep], reason: "Connected to a camera")
         }
         do {
             // Remember where the Mac's Wi-Fi was, to return there afterwards.
@@ -339,6 +345,7 @@ final class AppModel {
                 Task { @MainActor [weak self] in self?.stageDetail = text }
             }
             cameraSideIP = joined.ip
+            Preferences.pendingCameraSideIP = joined.ip
             try live()
 
             // 3. Datalink: register, playback, newest page.
@@ -437,6 +444,10 @@ final class AppModel {
         }
         ble.onDisconnect = { [weak self] error in
             guard let self, self.stage <= .pairing, self.screen == .connecting else { return }
+            if self.ble.power != .poweredOn {
+                self.failPending(ConnectError.message(String(localized: "The Mac’s Bluetooth is off.")))
+                return
+            }
             self.failPending(
                 ConnectError.message(
                     String(localized: "The camera closed the Bluetooth connection.")
@@ -540,8 +551,11 @@ final class AppModel {
         transferGeneration += 1
         transferTask?.cancel()
         transferTask = nil
-        recoverTask?.cancel()
+        // Stop link recovery and wait for it: a join still in flight could put the Mac back on the
+        // camera's network while the teardown restores the user's.
+        let recovery = recoverTask
         recoverTask = nil
+        recovery?.cancel()
         queue.removeAll()
         queuedIds = []
         currentTransferId = nil
@@ -564,6 +578,7 @@ final class AppModel {
         linkLost = false
         linkGaveUp = false
         screen = .cameras
+        await recovery?.value
         await cleanup(restoreWifi: Preferences.restoreWifi)
         ble.startScan()
         updater.checkIfDue()  // back on the user's network: a good moment
@@ -607,11 +622,14 @@ final class AppModel {
         cameraSideIP = nil
         Preferences.pendingRestoreSSID = nil
         Preferences.pendingCameraSSID = nil
+        Preferences.pendingCameraSideIP = nil
     }
 
-    /// Wait for any Wi-Fi restore still running (quitting from the cameras screen).
+    /// Wait for any Wi-Fi restore still running (quitting), including the cleanup of a connect
+    /// attempt that was just cancelled — it runs in that attempt's task.
     func finishWifiWork() async {
-        for work in [teardownTask, startupRecovery] { await work?.value }
+        for work in [connectTask, recoverTask, teardownTask, startupRecovery] { await work?.value }
+        await teardownTask?.value  // the cancelled attempt's cleanup may have replaced it meanwhile
     }
 
     func backToCameras() {
@@ -635,7 +653,7 @@ final class AppModel {
             liveRenderer.reset()
         }
         log("library: camera link lost — trying to recover")
-        recoverTask = Task { await recoverLink() }
+        if !recovering { recoverTask = Task { await recoverLink() } }
     }
 
     /// "Reconnect" after link recovery gave up.
@@ -720,7 +738,7 @@ final class AppModel {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if !linkLost && !reconnecting { return true }
-            if Task.isCancelled || screen != .library { return false }
+            if Task.isCancelled || screen != .library || linkGaveUp { return false }
             try? await Task.sleep(for: .seconds(1))
         }
         return !linkLost
@@ -731,7 +749,18 @@ final class AppModel {
         guard let cam = Preferences.pendingCameraSSID else { return }
         let current = WiFiService.currentSSID()
         let onCamera: Bool
-        if let current { onCamera = current == cam } else { onCamera = await WiFiService.isCameraReachable() }
+        if let current {
+            onCamera = current == cam
+        } else {
+            // No SSID without Location permission: the camera answering at 192.168.2.1 isn't enough (a
+            // home router can live there too) — the Mac must also still hold the address it had.
+            let reachable = await WiFiService.isCameraReachable()
+            let sameAddress =
+                Preferences.pendingCameraSideIP.map { ip in
+                    WiFiService.interfaceName.flatMap(WiFiService.ipv4Address) == ip
+                } ?? true
+            onCamera = reachable && sameAddress
+        }
         if onCamera {
             log("wifi: recovering from an interrupted session on \(cam)")
             restoringWifi = true
@@ -743,6 +772,7 @@ final class AppModel {
         }
         Preferences.pendingRestoreSSID = nil
         Preferences.pendingCameraSSID = nil
+        Preferences.pendingCameraSideIP = nil
     }
 
     // =========================================================================================
@@ -761,8 +791,6 @@ final class AppModel {
 
     var newFiles: [CameraFile] { files.filter { !downloaded.contains($0.id) } }
 
-    /// Files waiting in the transfer queue or downloading now (read through `transfer`, which changes
-    /// whenever the queue does, so views follow it).
     /// Files waiting in the transfer queue or downloading now. Stored (not derived from `transfer`) so
     /// the grid's cells don't re-render on every progress tick.
     private(set) var queuedIds: Set<String> = []
@@ -814,7 +842,7 @@ final class AppModel {
     }
 
     /// New footage sits at the top of the card, so keep paging back while pages still bring files that
-    /// aren't on the Mac — "Descargar nuevos" then covers a whole trip, not just the newest 45.
+    /// aren't on the Mac — "Download New" then covers a whole trip, not just the newest 45.
     private func loadOlderWhileNew() async {
         var pages = 0
         while screen == .library, workspace != .camera, moreAvailable, pages < 40 {
@@ -1031,6 +1059,12 @@ final class AppModel {
                 guard current() else { break }
                 transfer?.failed.append(f.name)
                 log("transfer: \(f.name) paused at \(bytes / 1_000_000) MB")
+                if linkGaveUp {
+                    // The camera is gone: don't walk the rest of the queue through timeouts one by one.
+                    transfer?.failed += queue.map(\.name)
+                    log("transfer: camera unreachable — stopping the queue (\(queue.count) left for next time)")
+                    queue.removeAll()
+                }
             case .failed(let why):
                 transfer?.failed.append(f.name)
                 log("transfer: \(f.name) FAILED — \(why)")
@@ -1116,7 +1150,7 @@ extension AppModel {
     /// it needs a connected Pocket-family camera and no downloads running.
     func setWorkspace(_ w: Workspace) {
         guard w != workspace, !switchingWorkspace, screen != .connecting else { return }
-        if workspace == .camera && status.recording {
+        if workspace == .camera && (status.recording || controlBusy) {
             controlError = String(localized: "Stop recording before leaving Live.")
             return
         }
@@ -1165,7 +1199,7 @@ extension AppModel {
             log("control: couldn't return to playback — recovering the link")
             sessionInControl = false
             linkLost = true
-            recoverTask = Task { await recoverLink() }
+            if !recovering { recoverTask = Task { await recoverLink() } }
             return
         }
         guard gen == connectGeneration, session === s else { return }
@@ -1191,6 +1225,9 @@ extension AppModel {
                 self.liveView = .live  // also after an 18 s "unavailable": the picture wins
             }
         }
+        liveRenderer.onNeedsKeyframe = {
+            Task { @MainActor [weak self] in await self?.session?.requestKeyframe() }
+        }
         liveRenderer.onDimensions = { size in
             guard size.width > 0, size.height > 0 else { return }
             Task { @MainActor [weak self] in self?.liveAspect = size.width / size.height }
@@ -1214,6 +1251,10 @@ extension AppModel {
             liveView = .unavailable
             log("live: no picture after 18 s")
         }
+    }
+
+    func dismissControlError(_ message: String) {
+        if controlError == message { controlError = nil }
     }
 
     /// The shutter key: start/stop recording in clip modes, one picture in photo modes.

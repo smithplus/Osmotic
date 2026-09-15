@@ -69,6 +69,7 @@ struct PreviewView: View {
                             .buttonStyle(.secondaryKey)
                     } else {
                         Button("Download") { model.enqueue([current]) }
+                            .disabled(model.linkLost || !model.isConnected)
                             .buttonStyle(.primaryKey)
                     }
                     Button("Close") { dismiss() }

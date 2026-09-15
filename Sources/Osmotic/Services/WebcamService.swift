@@ -13,7 +13,8 @@ final class WebcamService {
     /// Width / height of the camera's active format.
     private(set) var aspect: CGFloat = 16 / 9
     private(set) var resolution: String?
-    @ObservationIgnored private(set) var session: AVCaptureSession?
+    /// Observed: the preview view must follow it being replaced or released (hide/show, replug).
+    private(set) var session: AVCaptureSession?
     @ObservationIgnored private var observers: [NSObjectProtocol] = []
     @ObservationIgnored private var active = false
 
