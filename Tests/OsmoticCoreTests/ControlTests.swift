@@ -64,10 +64,11 @@ import Testing
         var r = LiveReassembler()
         let m = message([UInt8](repeating: 7, count: 3000))
         _ = r.feed(datagram(seq: 8, Array(m[0..<1400])), now: 0)
-        #expect(r.feed(datagram(seq: 24, Array(m[2800...])), now: 0) == nil)  // seq 16 lost
-        #expect(r.dropped == 1)
+        #expect(r.feed(datagram(seq: 24, Array(m[2800...])), now: 0) == nil)  // seq 16 lost: counted, not trusted
+        #expect(r.gaps == 1)
         let next: [UInt8] = [0, 0, 0, 1, 0x41, 5]
         #expect(r.feed(datagram(seq: 32, message(next)), now: 0) == next)
+        #expect(r.dropped == 1, "the short message is dropped when the next one starts")
     }
 
     @Test func `joining mid-message waits for the next start`() {
@@ -130,6 +131,28 @@ final class VideoSink: @unchecked Sendable {
         let back = await s.leaveControl()
         #expect(cam.playback)
         #expect(back?.files.count == ManifestDecoder.decode(try fixture("op3_29.bin")).count)
+        await s.close()
+    }
+
+    @Test(.timeLimit(.minutes(1)))
+    func `a visit to Live keeps the card's paging where it was`() async throws {
+        let cam = try FakeCamera(
+            manifest: try fixture("oa4_45.bin"), olderPage: try fixture("op3_15.bin"), refusePlaybackCommand: true)
+        defer { cam.stop() }
+        let sink = LogSink()
+        let s = session(cam, sink)
+        let first = await s.connect()
+        #expect(first.files.count == 45 && first.moreAvailable)
+
+        #expect(await s.enterControl())
+        let during = await s.nextPage()
+        #expect(during.files.isEmpty && during.moreAvailable, "out of playback: nothing now, but not the end")
+
+        let back = await s.leaveControl()
+        #expect(back?.files.count == 45)
+        #expect(back?.moreAvailable == true)
+        let older = await s.nextPage()
+        #expect(older.files.count == 15, "paging carries on from page one's cursor")
         await s.close()
     }
 

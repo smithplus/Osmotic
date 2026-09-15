@@ -1893,6 +1893,16 @@
         }
       }
     },
+    "Stop recording before leaving Live.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejá de grabar antes de salir de En vivo."
+          }
+        }
+      }
+    },
     "Take a photo (↩)": {
       "localizations": {
         "es": {

@@ -48,6 +48,8 @@ public final class CameraSession: @unchecked Sendable {
     private var mode = Mode.media
     private var reassembler = LiveReassembler()
     private var videoSink: (@Sendable ([UInt8]) -> Void)?
+    private var discontinuitySink: (@Sendable () -> Void)?
+    private var lastKeyframeRequest = Date.distantPast
     private var liveRequestedAt: Date?
     private var liveFallbackTried = false
     private var lastVideoAt: Date?
@@ -113,7 +115,9 @@ public final class CameraSession: @unchecked Sendable {
     /// The next older page (only newly seen files), or empty when the library is exhausted.
     public func nextPage() async -> (files: [CameraFile], moreAvailable: Bool) {
         await submit { [self] in
-            guard !isClosed, mode == .media else { return ([], false) }
+            guard !isClosed else { return ([], false) }
+            // Out of playback the card can't be listed; say "nothing now" without ending the paging.
+            guard mode == .media else { return ([], pagination.moreAvailable) }
             let fresh = fetchNextPage()
             return (fresh, pagination.moreAvailable)
         }
@@ -150,8 +154,13 @@ public final class CameraSession: @unchecked Sendable {
     }
 
     /// Start the H.264 live view; `onVideo` receives Annex-B access units on the worker thread.
-    public func startLiveView(onVideo: @escaping @Sendable ([UInt8]) -> Void) async -> Bool {
-        await submit { [self] in !isClosed && liveStart(onVideo) }
+    /// `onDiscontinuity` fires (same thread) when a message was lost: the decoder must wait for the
+    /// keyframe the session then asks for.
+    public func startLiveView(
+        onVideo: @escaping @Sendable ([UInt8]) -> Void,
+        onDiscontinuity: @escaping @Sendable () -> Void = {}
+    ) async -> Bool {
+        await submit { [self] in !isClosed && liveStart(onVideo, onDiscontinuity) }
     }
 
     public func stopLiveView() async {
@@ -555,7 +564,12 @@ public final class CameraSession: @unchecked Sendable {
         for d in datagrams {
             var frames: [UInt8] = []
             DumlScanner.walk(d) { f in
-                if f.cmdSet == 0x00 && f.cmdId == 0x27 { frames += d[f.start..<(f.start + f.length)] }
+                // Full CRC16 too: the walker only checks the header, so a 0x55 in a header could pass.
+                if f.cmdSet == 0x00 && f.cmdId == 0x27,
+                    DumlScanner.frame(in: d, at: f.start, requireCrc16: true) != nil
+                {
+                    frames += d[f.start..<(f.start + f.length)]
+                }
             }
             guard !frames.isEmpty else { continue }
             guard blob.count + frames.count <= Self.maxManifestBytes else {
@@ -757,6 +771,9 @@ public final class CameraSession: @unchecked Sendable {
         mode = .capture
         let out = { self.tracker.playbackReported == false }
         if out() { log("control: camera already out of playback"); return true }
+        // The media keep-alive may have re-asserted playback just before this job; its late E0 must not
+        // pass for the answer to our leave.
+        _ = pumpUntil(0.5) { false }
         // 1. The documented leave (OpenPocketCine), twice.
         for attempt in 1...2 {
             drainStale()
@@ -774,6 +791,9 @@ public final class CameraSession: @unchecked Sendable {
         log("control: camera still reports playback — capture mode not reached")
         mode = .media
         tx.windowModel = .legacy
+        // Back to exactly what the media path had: playback held (re-asserted by the keep-alive) and
+        // released at teardown.
+        if tracker.playbackReported == true { playbackHeld = true } else { enterPlaybackConfirmed() }
         return false
     }
 
@@ -783,10 +803,16 @@ public final class CameraSession: @unchecked Sendable {
         log("control: back to playback for the card")
         mode = .media
         tx.windowModel = .legacy
+        tx.dropVideo = true
         tx.sendAck()
-        guard enterPlaybackConfirmed() else { return nil }
+        if !enterPlaybackConfirmed() {
+            // The proven path: a fresh registration, then playback (capture mode may have outlived the
+            // legacy window model's tolerance for this session).
+            log("control: playback not re-entered — re-registering")
+            guard openAndRegister(model: model, subscribe: false), enterPlaybackConfirmed() else { return nil }
+        }
+        // Only the newest page, merged by the app: the paging cursors keep their place in the card.
         let files = queryNewestPage()
-        pagination.seed(with: files, slices: lastSlices)
         tick = 0
         return (files, pagination.moreAvailable)
     }
@@ -830,9 +856,14 @@ public final class CameraSession: @unchecked Sendable {
         return pumpUntil(1.5) { self.tracker.status.captureMode == m }
     }
 
-    private func liveStart(_ onVideo: @escaping @Sendable ([UInt8]) -> Void) -> Bool {
+    private func liveStart(
+        _ onVideo: @escaping @Sendable ([UInt8]) -> Void,
+        _ onDiscontinuity: @escaping @Sendable () -> Void
+    ) -> Bool {
         guard mode != .media || controlEnter() else { return false }
         videoSink = onVideo
+        discontinuitySink = onDiscontinuity
+        lastKeyframeRequest = Date()
         reassembler = LiveReassembler()
         lastVideoAt = nil
         liveFallbackTried = false
@@ -845,7 +876,19 @@ public final class CameraSession: @unchecked Sendable {
     }
 
     private func handleVideo(_ d: [UInt8]) {
-        guard let message = reassembler.feed(d, now: Date().timeIntervalSinceReferenceDate) else { return }
+        let droppedBefore = reassembler.dropped
+        let message = reassembler.feed(d, now: Date().timeIntervalSinceReferenceDate)
+        if reassembler.dropped != droppedBefore {
+            // A lost message damages every frame until the next keyframe, and the camera sends none on
+            // its own: ask for one (0x09/0xA8), at most every 5 s — each request resets its encoder.
+            discontinuitySink?()
+            if Date().timeIntervalSince(lastKeyframeRequest) >= 5 {
+                lastKeyframeRequest = Date()
+                send(0x09, 0xA8, Self.liveRequest, rType: 0x01, rId: 2)
+                log("live: message lost (dropped \(reassembler.dropped)) — keyframe requested")
+            }
+        }
+        guard let message else { return }
         if lastVideoAt == nil, let asked = liveRequestedAt {
             log("live: first picture data \(Int(Date().timeIntervalSince(asked) * 1000)) ms after the request")
         }
@@ -857,6 +900,7 @@ public final class CameraSession: @unchecked Sendable {
     private func liveStop() {
         guard mode == .live else { return }
         videoSink = nil
+        discontinuitySink = nil
         tx.onVideo = nil
         tx.dropVideo = true
         mode = .capture

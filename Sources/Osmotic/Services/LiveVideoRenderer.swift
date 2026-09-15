@@ -32,6 +32,12 @@ nonisolated final class LiveVideoRenderer: @unchecked Sendable {
         queue.async { [self] in handle(H264AnnexB.units(annexB)) }
     }
 
+    /// Part of the stream was lost: show nothing new until the next keyframe (every frame until then
+    /// would be built on a missing one).
+    func requireKeyframe() {
+        queue.async { [self] in waitingForKeyframe = true }
+    }
+
     /// Forget the stream (a new one starts with fresh parameter sets and a keyframe).
     func reset() {
         queue.async { [self] in

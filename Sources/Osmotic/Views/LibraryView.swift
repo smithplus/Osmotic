@@ -202,7 +202,7 @@ struct WorkspaceTabs: View {
         CassetteKeyBank(compact: true) {
             key("Files", .files, help: "The camera’s card")
             key("Live", .camera, help: "Record, take photos and see what the camera sees (over Wi-Fi)")
-                .disabled(model.screen != .library || model.linkLost)
+                .disabled(model.screen != .library || model.linkLost || model.target?.model.supportsLive != true)
             key("Webcam", .webcam, help: "Use the camera as a webcam over USB")
         }
         .disabled(model.switchingWorkspace)

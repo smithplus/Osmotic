@@ -99,6 +99,10 @@ public struct CameraModel: Sendable, Equatable {
     public var singleSdStorage = false
     public var isDrone = false
 
+    /// The Live tab's commands (capture control, live view) are the Pocket 3's — Kaze for DJI tested
+    /// them on one; other bodies would get untested writes.
+    public var supportsLive: Bool { name.localizedCaseInsensitiveContains("pocket") }
+
     public init(
         name: String, datalinkPort: UInt16 = 9004, tcpPoke: Bool = true, wpa3: Bool = false,
         verified: Bool = false, singleSdStorage: Bool = false, isDrone: Bool = false

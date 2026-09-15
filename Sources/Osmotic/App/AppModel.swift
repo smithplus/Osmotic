@@ -121,6 +121,11 @@ final class AppModel {
     private(set) var controlBusy = false
     private(set) var controlError: String?
     let liveRenderer = LiveVideoRenderer()
+    /// The session is out of playback (Live): undo it (`leaveLive`) before the card can be listed or
+    /// downloaded again.
+    @ObservationIgnored var sessionInControl = false
+    /// Bumped on every live-view start, so a timer from an earlier visit can't touch a newer one.
+    @ObservationIgnored var liveStartToken = 0
     let webcam = WebcamService()
     /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
     /// still be restoring the user's network), the launch-time crash recovery, and link recovery.
@@ -134,6 +139,7 @@ final class AppModel {
     }
 
     init() {
+        configureLiveRenderer()
         log(
             "Osmotic \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "dev") — log file \(logSink.url.path)"
         )
@@ -512,6 +518,7 @@ final class AppModel {
         selection = []
         cursor = nil
         workspace = .files
+        sessionInControl = false
         liveView = .off
         liveRenderer.reset()
         controlError = nil
@@ -584,6 +591,12 @@ final class AppModel {
     private func handleLinkLost(from s: CameraSession) {
         guard screen == .library, session === s else { return }  // ignore a replaced session's last words
         linkLost = true
+        if workspace == .camera {
+            // Nothing on Live works without the link; show the card (and the recovery banner) instead.
+            workspace = .files
+            liveView = .off
+            liveRenderer.reset()
+        }
         log("library: camera link lost — trying to recover")
         recoverTask = Task { await recoverLink() }
     }
@@ -599,6 +612,8 @@ final class AppModel {
         guard linkLost, session === s else { return }
         linkLost = false
         log("library: camera link restored")
+        // The same session came back while out of playback: put it back into playback for the card.
+        if sessionInControl { Task { await leaveLive() } }
     }
 
     /// The camera went quiet: rejoin its AP if the Mac left it, and re-register a fresh session if
@@ -633,6 +648,7 @@ final class AppModel {
             guard stillWanted() else { return }
             let s = makeSession(model: t.model, interface: iface)
             session = s
+            sessionInControl = false  // a fresh session starts in playback
             let result = await s.connect()
             guard screen == .library, gen == connectGeneration, session === s else {
                 if session === s { session = nil }
@@ -763,7 +779,7 @@ final class AppModel {
     /// aren't on the Mac — "Descargar nuevos" then covers a whole trip, not just the newest 45.
     private func loadOlderWhileNew() async {
         var pages = 0
-        while screen == .library, moreAvailable, pages < 40 {
+        while screen == .library, workspace != .camera, moreAvailable, pages < 40 {
             let newOnTop = files.isEmpty || !newFiles.isEmpty
             guard newOnTop else { break }
             if await loadOlderPage() == 0 { break }
@@ -1048,86 +1064,105 @@ final class AppModel {
 // =========================================================================================
 
 extension AppModel {
+    /// Switch tabs. Leaving Live (to Files or Webcam) always goes back through playback first; entering
+    /// it needs a connected Pocket-family camera and no downloads running.
     func setWorkspace(_ w: Workspace) {
         guard w != workspace, !switchingWorkspace, screen != .connecting else { return }
-        // Webcam and back need no camera session.
-        if w == .webcam || workspace == .webcam {
-            if workspace == .camera {
-                // Leave capture first, so the card is listed again for when the user comes back.
-                setWorkspace(.files)
-                Task {
-                    while switchingWorkspace { try? await Task.sleep(for: .milliseconds(100)) }
-                    workspace = .webcam
-                }
+        if workspace == .camera && status.recording {
+            controlError = String(localized: "Stop recording before leaving Live.")
+            return
+        }
+        if w == .camera {
+            guard screen == .library, !linkLost, session != nil, target?.model.supportsLive == true else { return }
+            if transfer != nil {
+                controlError = String(localized: "Finish or cancel the downloads before using the camera.")
                 return
             }
-            if w == .camera {
-                workspace = .files
-                setWorkspace(.camera)
-            } else {
-                workspace = w
-            }
-            return
-        }
-        guard screen == .library, !linkLost, let s = session else { return }
-        if w == .camera && transfer != nil {
-            controlError = String(localized: "Finish or cancel the downloads before using the camera.")
-            return
         }
         controlError = nil
-        selection = []
         switchingWorkspace = true
-        let gen = connectGeneration
         Task {
             defer { switchingWorkspace = false }
-            if w == .camera {
-                log("control: entering camera mode")
-                guard await s.enterControl() else {
-                    if gen == connectGeneration { controlError = String(localized: "The camera didn’t switch to capture mode.") }
-                    return
-                }
-                guard gen == connectGeneration, session === s else { return }
-                workspace = .camera
-                await startLiveView(s)
-            } else {
-                log("control: back to the card")
-                await s.stopLiveView()
-                liveRenderer.reset()
-                liveView = .off
-                workspace = .files
-                if let page = await s.leaveControl(), gen == connectGeneration, session === s {
-                    let resolved = await http.resolveStorage(page.files, singleSdStorage: s.model.singleSdStorage)
-                    guard gen == connectGeneration, session === s else { return }
-                    let known = Set(files.map(\.id))
-                    let fresh = resolved.filter { !known.contains($0.id) }
-                    if !fresh.isEmpty {
-                        files = (fresh + files).sorted {
-                            $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq
-                        }
-                        refreshDownloaded()
-                    }
-                    log("control: card relisted, \(fresh.count) new file(s)")
-                }
+            if sessionInControl && w != .camera { await leaveLive() }
+            if w == .camera { await enterLive() } else { workspace = w }
+        }
+    }
+
+    private func enterLive() async {
+        guard let s = session else { return }
+        let gen = connectGeneration
+        selection = []
+        log("control: entering camera mode")
+        guard await s.enterControl() else {
+            if gen == connectGeneration { controlError = String(localized: "The camera didn’t switch to capture mode.") }
+            return
+        }
+        guard gen == connectGeneration, session === s else { return }
+        sessionInControl = true
+        workspace = .camera
+        await startLiveView(s)
+    }
+
+    /// Back to playback: stop the picture, relist the newest page (clips recorded meanwhile) and let
+    /// the paging carry on where it was. If playback can't be restored, recover like a lost link.
+    func leaveLive() async {
+        guard let s = session, sessionInControl else { sessionInControl = false; return }
+        let gen = connectGeneration
+        log("control: back to the card")
+        await s.stopLiveView()
+        liveRenderer.reset()
+        liveView = .off
+        guard let page = await s.leaveControl() else {
+            guard gen == connectGeneration, session === s else { return }
+            log("control: couldn't return to playback — recovering the link")
+            sessionInControl = false
+            linkLost = true
+            recoverTask = Task { await recoverLink() }
+            return
+        }
+        guard gen == connectGeneration, session === s else { return }
+        sessionInControl = false
+        let resolved = await http.resolveStorage(page.files, singleSdStorage: s.model.singleSdStorage)
+        guard gen == connectGeneration, session === s else { return }
+        let known = Set(files.map(\.id))
+        let fresh = resolved.filter { !known.contains($0.id) }
+        if !fresh.isEmpty {
+            files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
+            refreshDownloaded()
+        }
+        moreAvailable = moreAvailable || page.moreAvailable
+        log("control: card relisted, \(fresh.count) new file(s), more=\(moreAvailable)")
+        Task { await loadOlderWhileNew() }
+    }
+
+    /// The renderer's callbacks, set once (the render queue reads them).
+    func configureLiveRenderer() {
+        liveRenderer.onFirstFrame = {
+            Task { @MainActor [weak self] in
+                guard let self, self.workspace == .camera, self.liveView != .off else { return }
+                self.liveView = .live  // also after an 18 s "unavailable": the picture wins
             }
+        }
+        liveRenderer.onDimensions = { size in
+            guard size.width > 0, size.height > 0 else { return }
+            Task { @MainActor [weak self] in self?.liveAspect = size.width / size.height }
         }
     }
 
     private func startLiveView(_ s: CameraSession) async {
         liveView = .starting
         liveRenderer.reset()
+        liveStartToken += 1
+        let token = liveStartToken
         let renderer = liveRenderer
-        renderer.onFirstFrame = { Task { @MainActor [weak self] in if self?.liveView == .starting { self?.liveView = .live } } }
-        renderer.onDimensions = { size in
-            guard size.width > 0, size.height > 0 else { return }
-            Task { @MainActor [weak self] in self?.liveAspect = size.width / size.height }
-        }
-        let ok = await s.startLiveView { renderer.enqueue(annexB: $0) }
+        let ok = await s.startLiveView(
+            onVideo: { renderer.enqueue(annexB: $0) },
+            onDiscontinuity: { renderer.requireKeyframe() })
         if !ok, liveView == .starting { liveView = .unavailable; return }
         // The request and one fallback take up to ~16 s; past that, say so instead of waiting forever.
-        let gen = connectGeneration
         Task {
             try? await Task.sleep(for: .seconds(18))
-            guard gen == connectGeneration, liveView == .starting, workspace == .camera else { return }
+            guard token == liveStartToken, liveView == .starting, workspace == .camera else { return }
             liveView = .unavailable
             log("live: no picture after 18 s")
         }
@@ -1137,6 +1172,8 @@ extension AppModel {
     func pressShutter() {
         guard workspace == .camera, !controlBusy, let s = session else { return }
         let recording = status.recording
+        // Only modes whose shutter command is known (the deck); stopping is always allowed.
+        guard recording || status.captureMode.map(CaptureMode.deck.contains) ?? true else { return }
         let clip = status.captureMode?.records ?? true
         controlBusy = true
         controlError = nil

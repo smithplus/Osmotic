@@ -102,7 +102,7 @@ struct CameraControlView: View {
                     }
                 }
                 .buttonStyle(CassetteKeyStyle(finish: .primary, width: 132))
-                .disabled(model.controlBusy)
+                .disabled(model.controlBusy || !(recording || (model.status.captureMode.map(CaptureMode.deck.contains) ?? true)))
                 .keyboardShortcut(.return, modifiers: [])
                 .help(recording ? "Stop recording (↩)" : records ? "Start recording (↩)" : "Take a photo (↩)")
             }

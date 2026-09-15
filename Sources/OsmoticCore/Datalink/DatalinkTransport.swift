@@ -278,9 +278,12 @@ public final class DatalinkTransport {
             if type == 0x02 { rxVideoSeq = seq; seenVideo = true }
             if type == 0x03 { rxReplySeq = seq; seenReply = true }
         }
-        if type == 0x01 && d.count == 34 {
+        if type == 0x01 && d.count == 34 {  // the legacy model's cursors: exactly as proven
             peerCursor = d.u16le(10)
             peerDownloadCursor = d.u16le(18)
+        }
+        // Window block (some cameras prefix every pktType-0x01 packet with it): the new model's cursors.
+        if type == 0x01 && d.count >= 34 {
             if !seenVideo, d.u16le(10) != 0 { rxVideoSeq = d.u16le(10) }
             if !seenReply, d.u16le(18) != 0 { rxReplySeq = d.u16le(18) }
             if d.u16le(24) != 0 { peerAckedTxSeq = d.u16le(24) }
