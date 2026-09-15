@@ -67,10 +67,10 @@ strong { color: #fff; font-weight: 600; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* ---- Top bar ------------------------------------------------------------------------------ */
-/* Top: the wordmark on the centre line, with the version readout under it. */
+/* Top: just the wordmark, on the centre line (the version lives in the footer). */
 .topbar {
-  max-width: 1120px; margin: 0 auto; padding-block: var(--s5) var(--s2);
-  display: flex; flex-direction: column; align-items: center; gap: var(--s2);
+  max-width: 1120px; margin: 0 auto; padding-block: var(--s5) var(--s3);
+  display: flex; flex-direction: column; align-items: center;
 }
 
 /* The keys follow the reader: in the flow under the wordmark, then stuck to the top of the window,
@@ -79,19 +79,28 @@ strong { color: #fff; font-weight: 600; }
 .navdock {
   position: sticky; top: 0; z-index: 20;
   display: flex; justify-content: center;
-  padding-block: var(--s2) var(--s4);
+  padding-bottom: var(--s5);
 }
 .navdock .bank {
-  transition: background-color 220ms var(--ease-out), box-shadow 220ms var(--ease-out),
-    border-radius 220ms var(--ease-out), padding 220ms var(--ease-out);
+  transition: background-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out),
+    border-radius 200ms var(--ease-out);
 }
+/* Docked: the slot squares off against the top edge of the window and lights its own backdrop,
+   the way a module seats into the bezel. It slides the last few pixels home once. */
 .navdock.is-stuck .bank {
-  border-radius: 999px;
-  padding: 5px 7px 0;
-  background: rgb(20 20 19 / 0.72);
+  border-radius: 0 0 var(--radius-m) var(--radius-m);
+  background: rgb(20 20 19 / 0.74);
   -webkit-backdrop-filter: blur(18px) saturate(1.1);
   backdrop-filter: blur(18px) saturate(1.1);
-  box-shadow: inset 0 1px 0 var(--lip), inset 0 0 0 1px rgb(255 255 255 / 0.05), 0 10px 26px rgb(0 0 0 / 0.5);
+  box-shadow:
+    inset 0 -1px 0 rgb(255 255 255 / 0.05),
+    inset 0 0 0 1px rgb(255 255 255 / 0.04),
+    0 12px 28px rgb(0 0 0 / 0.5);
+  animation: dock-in 220ms var(--ease-out) both;
+}
+@keyframes dock-in {
+  from { transform: translateY(-6px); }
+  to { transform: none; }
 }
 .wordmark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; display: inline-flex; align-items: baseline; gap: 3px; }
 /* "osmotic." : the dot on the baseline, like a period (the app icon's "o."). */
@@ -387,6 +396,7 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .navdock .bank { flex-wrap: nowrap; }
   .navdock .key--compact { padding: 0 8px; font-size: 9.5px; letter-spacing: 0.05em; }
   .lcd--hero .lcd-line:not(.lcd-line--big) span { white-space: nowrap; }
+  .navdock { padding-bottom: var(--s4); }
   .stages { grid-template-columns: 1fr; }
   .icons { grid-template-columns: 1fr 1fr; }
   .panel--screws { padding: var(--s4); }
@@ -406,6 +416,7 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 /* Reduce Motion: keep the fades (they carry meaning), drop every movement. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
+  .navdock.is-stuck .bank { animation: none; }
   .key, .key:active { transition: none; }
   .key:active { transform: none; }
   .lcd--hero .lcd-line, .hero h1, .hero .lede, .hero .actions, .shot--hero { animation: fade 300ms linear both; }
