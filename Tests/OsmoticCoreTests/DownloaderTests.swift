@@ -152,10 +152,10 @@ final class FakeHTTPServer: @unchecked Sendable {
         let (r, got, server) = try await run([.cutAfter(700_000), .cutAfter(900_000), .serve])
         guard case .saved = r else { Issue.record("\(r)"); return }
         #expect(got == body)
-        // Where a cut lands depends on socket timing; what matters is that every resume asks for the
-        // bytes it doesn't have yet.
+        // Where a cut lands depends on socket timing (a cut can even arrive before any byte, so a resume
+        // may repeat the same offset); what matters is that no resume ever goes back.
         #expect(server.ranges.count == 3 && server.ranges.first == 0)
-        #expect(server.ranges == server.ranges.sorted() && Set(server.ranges).count == 3)
+        #expect(server.ranges == server.ranges.sorted())
     }
 
     @Test(.timeLimit(.minutes(1))) func `transient 404 and 500 are waited out, not fatal`() async throws {
