@@ -4,6 +4,8 @@
 
 Open an [issue](https://github.com/smithplus/Osmotic/issues) labeled **security**, or, if you'd rather keep it private, ask for a private channel in that same issue without details. We aim to respond within a week. Only the latest version receives fixes.
 
+One repository holds both surfaces, so this file covers both: the macOS app (`Sources/`) and the landing page (`site/`).
+
 ## What the app does with your Mac and your data
 
 - **Nothing leaves your Mac**: no accounts, no analytics, no servers of our own. The app talks to the camera (Bluetooth and its Wi-Fi network `192.168.2.1`) and, at most once a day, asks GitHub (`api.github.com`) for the latest version, without sending any of your data; it can be turned off in Settings › Updates.
@@ -13,6 +15,12 @@ Open an [issue](https://github.com/smithplus/Osmotic/issues) labeled **security*
 - **Camera Wi-Fi password**: in the Keychain, only if you typed it in manually.
 - **No App Sandbox**: joining a Wi-Fi network is not possible from the sandbox. This is offset by the hardened runtime and validation of everything that comes from the camera (file names, sizes, frames).
 - **Technical Log** in `~/Library/Logs/Osmotic`: no passwords; your networks are abbreviated and paths omit your username.
+
+## What the website does
+
+`https://smithplus.github.io/Osmotic/` is a static page on GitHub Pages: no cookies, no analytics, no trackers, no web fonts, and no third-party scripts or styles. It carries a strict Content Security Policy (everything loads from the page's own origin; no inline script or style).
+
+It makes exactly one outside request: the page asks `api.github.com` for the latest release, so the Download key can point straight at the `.dmg` and show the version. That request tells GitHub your address, as any request to a site does; without JavaScript the key still works and goes to the releases page. GitHub Pages itself serves the page, so GitHub sees those requests too.
 
 ## For people working on the code
 

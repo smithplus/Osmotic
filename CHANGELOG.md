@@ -5,7 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 ## [Unreleased]
 
 ### Added
-- A landing page at https://smithplus.github.io/Osmotic/: static HTML/CSS in the app's style, published by GitHub Pages.
+- A landing page at https://smithplus.github.io/Osmotic/: static HTML and CSS in the app's style, published by GitHub Pages, with install steps, a comparison, an FAQ and an illustration of each step of the install.
+- A user guide (`docs/GUIDE.md`), which the Help menu now opens: every screen, the keyboard shortcuts and what to try when something fails.
+- Settings › Credits now names the maker and links a way to support the work.
 
 ### Security
 - Sizes stated by the camera's web server are bounded, and small reads (thumbnails, preview stills) are capped: a device answering at the camera's address could otherwise crash the app or make it buffer without end.

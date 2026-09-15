@@ -234,15 +234,15 @@ strong { color: #fff; font-weight: 600; }
 .lcd .label { color: var(--lcd-caption); text-shadow: none; }
 .lcd-line { margin: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s3); font-size: 14px; }
 .lcd-line--big { font-size: clamp(22px, 4vw, 30px); margin-bottom: var(--s2); }
+/* Used by 404.html: a centred readout block. */
+.lcd--hero { display: inline-block; text-align: center; padding: var(--s4) var(--s6); margin-bottom: var(--s5); max-width: 100%; }
+.lcd--hero .lcd-line { justify-content: center; }
 .readout { margin: 0 0 var(--s2); font: 500 13px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--lcd-text); text-shadow: 0 0 6px rgb(255 146 52 / 0.3); }
 .readout .label { color: var(--muted); text-shadow: none; }
 
 /* ---- Hero ---------------------------------------------------------------------------------- */
 main { max-width: 1120px; margin: 0 auto; }
-.hero { padding-block: var(--s5) var(--s4); text-align: center; }
-/* Centered block, centered content: the hero is one axis, so the LCD's lines sit on it too. */
-.lcd--hero { display: inline-block; text-align: center; padding: var(--s4) var(--s6); margin-bottom: var(--s5); max-width: 100%; }
-.lcd--hero .lcd-line { justify-content: center; }
+.hero { padding-block: var(--s4) var(--s4); text-align: center; }
 h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.035em; margin: 0 0 var(--s3); font-weight: 700; }
 .lede { max-width: 640px; margin: 0 auto var(--s5); color: var(--muted); font-size: clamp(16px, 2vw, 19px); }
 .actions { display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-bottom: var(--s6); }
@@ -409,7 +409,10 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   to { opacity: 1; transform: none; }
 }
 .lcd--hero .lcd-line { animation: lcd-boot 520ms steps(1, end) both; }
-.lcd--hero .lcd-line + .lcd-line { animation-delay: 90ms; }
+.reveal-ready .lcd--proof.is-in p { animation: lcd-boot 460ms steps(1, end) both; }
+.reveal-ready .lcd--proof.is-in p:nth-child(2) { animation-delay: 70ms; }
+.reveal-ready .lcd--proof.is-in p:nth-child(3) { animation-delay: 140ms; }
+.reveal-ready .lcd--proof.is-in p:nth-child(4) { animation-delay: 210ms; }
 .hero h1 { animation: rise 500ms var(--ease-out) 80ms both; }
 .hero .lede { animation: rise 500ms var(--ease-out) 140ms both; }
 .hero .actions { animation: rise 500ms var(--ease-out) 200ms both; }
@@ -453,17 +456,12 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .steps--row { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
-  /* One row for the dock and for the hero readout, down to 320 px. */
   .navdock .bank { flex-wrap: nowrap; }
   .navdock .key--compact { padding: 0 8px; font-size: 9.5px; letter-spacing: 0.05em; }
-  .lcd--hero .lcd-line:not(.lcd-line--big) span { white-space: nowrap; }
   .navdock { padding-bottom: var(--s4); }
   .stages { grid-template-columns: 1fr; }
   .icons { grid-template-columns: 1fr 1fr; }
   .panel--screws { padding: var(--s4); }
-  .lcd--hero { padding: var(--s3) var(--s4); }
-  /* One row on a phone: a separator left at the end of a line reads as a stray dot. */
-  .lcd--hero .lcd-line:not(.lcd-line--big) { font-size: 11px; letter-spacing: 0.08em; gap: 0 var(--s2); flex-wrap: nowrap; }
   .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
   .shot--hero { margin-inline: calc(-1 * var(--s2)); }
   .section { padding-block: var(--s6) 0; }
@@ -483,7 +481,8 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .key:hover, .panel:hover, .faq details:hover, .shot:hover img, .chips a:hover { transform: none; }
   .key, .key:active { transition: none; }
   .key:active { transform: none; }
-  .lcd--hero .lcd-line, .hero h1, .hero .lede, .hero .actions, .shot--hero { animation: fade 300ms linear both; }
+  .lcd--hero .lcd-line, .hero h1, .hero .lede, .hero .actions, .shot--hero,
+  .reveal-ready .lcd--proof.is-in p { animation: fade 300ms linear both; }
   @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
   .reveal-ready [data-reveal], .reveal-ready [data-reveal="tray"] { transform: none; }
   .reveal-ready [data-reveal].is-in { transition: opacity 300ms linear; transition-delay: 0ms; }

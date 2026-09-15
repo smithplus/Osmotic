@@ -21,6 +21,7 @@ Tested with a real Pocket 3: Files (2026-09-14) and Files + Live (2026-09-15: li
 
 | For… | Read |
 |---|---|
+| the user guide (every screen, shortcuts, troubleshooting; the app's Help menu points here) | `docs/GUIDE.md` |
 | what's done / tested / pending | `docs/STATUS.md` |
 | file map, flows, threads | `docs/ARCHITECTURE.md` (use it instead of walking the code) |
 | protocol (BLE, datalink, list, HTTP) | `docs/PROTOCOL.md`; details in upstream's `MEDIA_PROTOCOL.md` |
@@ -80,7 +81,7 @@ swift scripts/make_install_steps.swift .   # the landing's install-step illustra
 - Restoring Wi-Fi must finish even if the task that asked for it was cancelled: `WiFiService.pause` (not cancellable) and `AppModel.cleanup` (its own task, kept in `teardownTask`; a new connection waits for it).
 - Logs never carry the user's SSID (`redactedSSID`, also inside `networksetup` output) or passwords (length only).
 - Credits: Osmosis (MIT) in README, LICENSE and comments; Kaze for DJI (MIT, parts adapted; LICENSE names it); OpenPocketCine (Apache-2.0, only re-implemented from its documentation: if code is ever copied, add its NOTICE). Don't use "DJI"/"Osmo" as a product name.
-- Authorship: the work is signed "made by smithplus" (linking https://x.com/smithplus) first: the landing's footer signature line, under the README hero and in its License line, Settings › Credits, the About box and the copyright. Upstream credits stay accurate but low-key (the landing's footer, the README's Credits section at the end); never lead with them.
+- Authorship: the work is signed "made by smithplus" first, linking https://smithplus.me (never a social network), with https://buymeacoffee.com/smithplus beside it. Where: the landing's footer, under the README hero and in its License line, Settings › Credits, the About box and the copyright. Upstream credits stay accurate but low-key (the landing's footer, the README's Credits section at the end); never lead with them.
 - New tests use Swift Testing (`@Test`, `#expect`). Simulators: `FakeCamera` (the Pocket 3 datalink: playback, list, capture mode with pktType 0x03 replies, fragmented H.264 stream) and `FakeHTTPServer` (in `DownloaderTests.swift`: cuts, 404/500, ignored Range, HTML, redirects, 416). `ThroughputProbe` only runs with `OSMOTIC_PERF=1`.
 
 ## UI (design system)

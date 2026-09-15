@@ -152,7 +152,7 @@ private struct CreditsPane: View {
         Form {
             Section {
                 LabeledContent("Made by") {
-                    Link(destination: URL(string: "https://x.com/smithplus")!) { Text(verbatim: "smithplus") }
+                    Link(destination: URL(string: "https://smithplus.me")!) { Text(verbatim: "smithplus") }
                 }
                 Text("Osmotic stands on the work of people who opened up DJI’s cameras when DJI didn’t. Thank you.")
                     .font(.callout)
@@ -162,6 +162,7 @@ private struct CreditsPane: View {
             section("Testers", Credits.testers)
             Section {
                 Link("Osmotic on GitHub", destination: URL(string: "https://github.com/smithplus/Osmotic")!)
+                Link("Buy me a coffee", destination: URL(string: "https://buymeacoffee.com/smithplus")!)
                 Text("MIT License. Not affiliated with DJI.").font(.footnote).foregroundStyle(.secondary)
             }
         }

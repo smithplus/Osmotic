@@ -344,6 +344,16 @@
         }
       }
     },
+    "Buy me a coffee": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Invitame un café"
+          }
+        }
+      }
+    },
     "Camera": {
       "localizations": {
         "es": {

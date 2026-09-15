@@ -10,7 +10,7 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 
 [![Download](https://img.shields.io/github/v/release/smithplus/Osmotic?label=download&style=for-the-badge&color=e6541c)](https://github.com/smithplus/Osmotic/releases/latest)
 
-**[smithplus.github.io/Osmotic](https://smithplus.github.io/Osmotic/)** · made by [smithplus](https://x.com/smithplus)
+**[smithplus.github.io/Osmotic](https://smithplus.github.io/Osmotic/)** · made by [smithplus](https://smithplus.me)
 
 ![macOS 15+](https://img.shields.io/badge/macOS-15%2B-222?logo=apple)
 ![Apple silicon & Intel](https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-222)
@@ -141,6 +141,21 @@ While connected, the Mac uses the camera's Wi-Fi, so it has **no Internet over W
 
 **Something doesn't work.** Open **Window › Technical Log** (⌥⌘L) and attach the file to an [issue](https://github.com/smithplus/Osmotic/issues). The log leaves out your Wi-Fi password and network name.
 
+**Is there a manual?** Yes: the [guide](docs/GUIDE.md) covers every screen, the keyboard shortcuts and what to try when something fails.
+
+## Repository
+
+One repository, three things: the app, the site and the tooling.
+
+| Path | What |
+|---|---|
+| `Sources/OsmoticCore` | the protocol, without UI (BLE, pairing, the UDP datalink, the file-list decoder, HTTP downloads, capture control, live-view reassembly) |
+| `Sources/Osmotic` | the SwiftUI app (CoreBluetooth, CoreWLAN, AVFoundation) |
+| `Tests` | the golden captures, the fake camera and the fake HTTP server |
+| `site` | the landing page (static HTML, CSS and JS; published by GitHub Pages) |
+| `scripts` | build, sign, release, screenshots, textures, icon, launch assets, SEO audit |
+| `docs` | the [guide](docs/GUIDE.md), status, architecture, protocol, launch kit |
+
 ## Build from source
 
 Xcode 26 (Swift 6.2 or later).
@@ -175,4 +190,4 @@ The same list is in the app: **Settings › Credits**.
 
 ## License
 
-Made by [smithplus](https://x.com/smithplus). [MIT](LICENSE). Osmotic is an independent project, **not affiliated with or endorsed by DJI**. "DJI" and "Osmo" are trademarks of their owners. The screenshots show demo data.
+Made by [smithplus](https://smithplus.me). If it saved you a cable, [buy me a coffee](https://buymeacoffee.com/smithplus). [MIT](LICENSE). Osmotic is an independent project, **not affiliated with or endorsed by DJI**. "DJI" and "Osmo" are trademarks of their owners. The screenshots show demo data.

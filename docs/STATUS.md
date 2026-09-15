@@ -41,6 +41,10 @@ The whole Files flow worked on the first try: BLE armed (MTU 512), already paire
 - Signed with hardened runtime + location and camera entitlements (`Resources/Osmotic.entitlements`); no `NSAllowsArbitraryLoads`. `NSAllowsLocalNetworking` is what enables HTTP to `192.168.2.1` on macOS 14+: don't remove it.
 - Connection: "Try Again" fixed; a new connection waits for the previous Wi-Fi restore and for recoveries; `CameraSession.close()` idempotent.
 
+## Website (2026-09-15)
+
+`site/` is the landing page on GitHub Pages (https://smithplus.github.io/Osmotic/), published by `.github/workflows/pages.yml` on every push to `main` that touches it. `scripts/seo_audit.sh` runs against the live page after each deploy and is green (46 checks). Around 87 KB on first load, no fonts or dependencies. `docs/LANDING_REFERENCES.md` holds the density targets; `docs/GUIDE.md` is the user guide the app's Help menu opens.
+
 ## Audit round (2026-09-15, after v0.2.0)
 
 Four parallel audits (writing with `.claude/skills/osmotic-writing`, landing engineering against Emil Kowalski's animation rules, app correctness and security, design system and code health). Fixed: unbounded sizes and reads from the camera's HTTP server (crash / memory), quitting before the Wi-Fi was handed back, downloads starting while Live starts, two >4 GiB probe gaps, `release.sh` tag and notes checks; orange key contrast, motion curves, missing slide-in animations, VoiceOver labels and values, per-page disk checks, tab-bar redraws, a Canvas segment meter; copy that promised untested things (webcam, day folders were off by default), Latin American Spanish conventions. `AppModel` was split into extension files by responsibility. Left for later: the remaining token cleanups (radii in `MediaCell`, a shared badge and orange gradient), named timing constants in the connection code, caching `visibleFiles`, `isOnDisk` in the preview's body.

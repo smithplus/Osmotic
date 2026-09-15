@@ -49,7 +49,7 @@ struct OsmoticApp: App {
                 OpenLogButton()
             }
             CommandGroup(replacing: .help) {
-                Link("Osmotic Help", destination: URL(string: "https://github.com/smithplus/Osmotic#readme")!)
+                Link("Osmotic Help", destination: URL(string: "https://github.com/smithplus/Osmotic/blob/main/docs/GUIDE.md")!)
                 Link("Report an Issue…", destination: URL(string: "https://github.com/smithplus/Osmotic/issues")!)
                 Divider()
                 OpenLogButton(shortcut: false)  // ⌥⌘L lives on the Window menu item
