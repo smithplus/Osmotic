@@ -46,6 +46,7 @@ scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest
 scripts/release.sh X.Y.Z [--publish]   # DMG + signed zip for the updater (see "Release")
 scripts/build_site.sh            # landing page → build/site (site/ + docs/images); preview: "site" in .claude/launch.json
 swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png ("o." on graphite)
+swift scripts/make_launch_assets.swift .   # Product Hunt gallery + thumbnail → build/launch (see docs/LAUNCH.md)
 ```
 
 - CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`. `pages.yml` publishes the landing page on pushes to `main` that touch `site/` or `docs/images/`.

@@ -57,7 +57,11 @@ What their pages do well, worth copying: a short concrete hero (Camo), social pr
 
 **Topics:** Mac, Open Source, Photography (alternates: Video, Webcam, GitHub).
 
-## Assets to produce
+## Assets
+
+`swift scripts/make_icon.swift . && swift scripts/make_launch_assets.swift .` renders the gallery and thumbnail into `build/launch/` (1270×760 at 2x, from the README screenshots): hero, how it works, connect, Live, Webcam, comparison, open and private. Still to make by hand: the Finder slide (needs real downloads) and the demo video.
+
+The full list, for reference:
 
 Gallery (1270×760):
 1. Hero: the app window with tagline 1.
