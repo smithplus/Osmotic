@@ -1,49 +1,49 @@
-# Panel de control y vista en vivo — investigación (2026-09-14)
+# Control panel and live view — research (2026-09-14)
 
-Resumen de un relevamiento de repos (commits: Moblin `58d400e`, Kaze `341a35d`, OpenPocketCine `9b30b93`).
+Summary of a survey of repos (commits: Moblin `58d400e`, Kaze `341a35d`, OpenPocketCine `9b30b93`).
 
-## Estado de la implementación (2026-09-14)
+## Implementation status (2026-09-14)
 
-Implementado y probado contra `FakeCamera` (`ControlTests`), **sin probar todavía con la Pocket 3**:
-- Pestaña **Live** (`AppModel.Workspace.camera`, `CameraControlView`): sale de playback, graba/detiene, foto, modo (Video, Foto, Cámara lenta, Poca luz), vista en vivo; al volver a **Files** re-entra a playback y relee la tarjeta.
-- `DatalinkTransport.windowModel`: `.legacy` (listado/descargas, probado) y `.mimo` (ACK de la app oficial: grupos video/respuestas/TX, routing con el ack de la cámara) — solo en modo captura.
-- `CameraSession` modos `.media/.capture/.live`; bomba de 12 ms (`recvAll(precise:)`) con ACK ≥ 40 Hz mientras hay video (50 ms / 10 Hz en captura sin video); `drainStale()` antes de cada comando (una respuesta vieja `E0` al re-assert de playback se confundía con la del comando).
-- Salir de playback: `0x02/0x0C 01010000` ×2 → START de `0x01/0x01` sin `09/A8` (así el keyframe no se pierde) → si no, error.
-- Vista en vivo: ráfaga de Kaze (receptor `0x41`), a los 8 s sin video una vez la variante OpenPocketCine (`0x02/0x68 [08]` + `09/A8` a `0x08`); `LiveReassembler` → `LiveVideoRenderer` (`AVSampleBufferDisplayLayer`); el monitor toma la proporción del stream (vertical si la cámara filma vertical).
-- Vista en vivo robusta: un mensaje perdido hace que el decodificador espere un keyframe y se pide `09/A8` (como máximo cada 5 s; si no se puede aún, queda pendiente y lo pide `controlTick`); saltos de seq solo se cuentan (regla de Kaze).
-- Pestañas: salir de Live siempre vuelve a playback (`leaveLive`); no se sale grabando ni con un comando en curso; Live solo para modelos Pocket y sin descargas en curso.
-- Estado `0x02/0x80`: grabando (bit 7 de @0), transición (bit 6), segundos @29, modo @57.
+Implemented and tested against `FakeCamera` (`ControlTests`), **not yet tested with the Pocket 3**:
+- **Live** tab (`AppModel.Workspace.camera`, `CameraControlView`): leaves playback, records/stops, photo, mode (Video, Photo, Slow-mo, Low light), live view; on returning to **Files** it re-enters playback and rereads the card.
+- `DatalinkTransport.windowModel`: `.legacy` (listing/downloads, tested) and `.mimo` (the official app's ACK: video/responses/TX groups, routing with the camera's ack) — capture mode only.
+- `CameraSession` modes `.media/.capture/.live`; 12 ms pump (`recvAll(precise:)`) with ACK ≥ 40 Hz while there is video (50 ms / 10 Hz in capture without video); `drainStale()` before each command (a stale `E0` reply to the playback re-assert was mistaken for the command's reply).
+- Leaving playback: `0x02/0x0C 01010000` ×2 → START of `0x01/0x01` without `09/A8` (so the keyframe isn't lost) → otherwise, error.
+- Live view: Kaze's burst (receiver `0x41`); after 8 s without video, once, the OpenPocketCine variant (`0x02/0x68 [08]` + `09/A8` to `0x08`); `LiveReassembler` → `LiveVideoRenderer` (`AVSampleBufferDisplayLayer`); the monitor takes the stream's aspect ratio (portrait if the camera shoots portrait).
+- Robust live view: a lost message makes the decoder wait for a keyframe and `09/A8` is requested (at most every 5 s; if it can't be sent yet, it stays pending and `controlTick` requests it); seq gaps are only counted (Kaze's rule).
+- Tabs: leaving Live always returns to playback (`leaveLive`); you can't leave while recording or with a command in progress; Live only for Pocket models and with no downloads in progress.
+- Status `0x02/0x80`: recording (bit 7 of @0), transition (bit 6), seconds @29, mode @57.
 
-Primera prueba con hardware — mirar en el log: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. Si falla la salida de playback o la imagen queda negra, ver `docs/CONTROL_SPEC.md` (especificación completa con fuentes; §7 = puntos sin verificar).
+First hardware test — look in the log for: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. If leaving playback fails or the picture stays black, see `docs/CONTROL_SPEC.md` (full specification with sources; §7 = unverified points).
 
-Pendiente: Timelapse/Hyperlapse (¿disparo por `02/01` o `02/02`?), truco de "primera imagen negra" (`02/18` ida y vuelta), re-registro de respaldo si las escrituras se pierden (`txLagSlots`), descargas en modo captura (hoy se bloquea entrar a Live con descargas en curso).
+To do: Timelapse/Hyperlapse (trigger via `02/01` or `02/02`?), "black first picture" trick (`02/18` round trip), fallback re-registration if writes are lost (`txLagSlots`), downloads in capture mode (today, entering Live with downloads in progress is blocked).
 
-## Fuentes útiles
+## Useful sources
 
-| Repo | Qué aporta | Pocket 3 | Licencia |
+| Repo | What it provides | Pocket 3 | License |
 |---|---|---|---|
-| brianmerchant/Kaze-for-DJI (Swift/iOS) | grabar, foto, modos, ajustes, gimbal, **live view H.264 directo** por datalink 9004 | probado | MIT |
-| erik-sutton95/OpenPocketCine | live monitor, grabar, ISO/EV/WB, captura de RTMP de Mimo, notas de recuperación | probado (fw 01.06.10.04) | Apache-2.0 (solo re-implementado desde su documentación: no hace falta NOTICE mientras no se copie código) |
-| eerimoq/moblin, dimadesu/dji-remote | setup de livestream RTMP por BLE; Moblin tiene servidor RTMP Swift | listado | MIT (+ HaishinKit BSD-3) |
-| xaionaro-go/djictl | Wi-Fi join + RTMP | sí | CC0 |
-| DJI Osmo-GPS-Controller-Demo (R-SDK) | control oficial por BLE | **no** (solo Action/360) | EULA DJI |
+| brianmerchant/Kaze-for-DJI (Swift/iOS) | record, photo, modes, settings, gimbal, **direct H.264 live view** over datalink 9004 | tested | MIT |
+| erik-sutton95/OpenPocketCine | live monitor, record, ISO/EV/WB, capture of Mimo's RTMP, recovery notes | tested (fw 01.06.10.04) | Apache-2.0 (only re-implemented from its documentation: no NOTICE needed as long as no code is copied) |
+| eerimoq/moblin, dimadesu/dji-remote | RTMP livestream setup over BLE; Moblin has a Swift RTMP server | listed | MIT (+ HaishinKit BSD-3) |
+| xaionaro-go/djictl | Wi-Fi join + RTMP | yes | CC0 |
+| DJI Osmo-GPS-Controller-Demo (R-SDK) | official control over BLE | **no** (Action/360 only) | DJI EULA |
 
-## Comandos de control (App `0x02` → Cámara `0x01`, cmd_type `0x40`, por el datalink)
+## Control commands (App `0x02` → Camera `0x01`, cmd_type `0x40`, over the datalink)
 
-- Grabar: `0x02/0x02` `[01]` start / `[00]` stop (no es toggle: `[01]` grabando → `df`). Confirmar por `0x02/0x80` byte 0 bit 7 (Pocket 3: `01→41→81`, stop `c1→01`).
-- Foto: `0x02/0x01 [01]` (`d9` en modo video). Panorama `[07]`.
-- Modo: `0x02/0xE1 [m]` — `00` SlowMo, `01` Video, `02` Timelapse, `05` Foto, `0A` Hyperlapse, `0C` Panorama, `18` Motionlapse, `28` Low-Light. Lectura en `0x02/0x80` byte 57.
-- Resolución/fps: `0x02/0x18` `[res][fps] 00 00 00`. Parámetros: `0x02/0x8E` GET/SET.
-- Antes de escribir: ampliar el ACK (grupo del pktType `0x03`) y re-registrar si la sesión tiene >40 s.
+- Record: `0x02/0x02` `[01]` start / `[00]` stop (not a toggle: `[01]` while recording → `df`). Confirm via `0x02/0x80` byte 0 bit 7 (Pocket 3: `01→41→81`, stop `c1→01`).
+- Photo: `0x02/0x01 [01]` (`d9` in video mode). Panorama `[07]`.
+- Mode: `0x02/0xE1 [m]` — `00` SlowMo, `01` Video, `02` Timelapse, `05` Photo, `0A` Hyperlapse, `0C` Panorama, `18` Motionlapse, `28` Low-Light. Read back in `0x02/0x80` byte 57.
+- Resolution/fps: `0x02/0x18` `[res][fps] 00 00 00`. Parameters: `0x02/0x8E` GET/SET.
+- Before writing: widen the ACK (the pktType `0x03` group) and re-register if the session is >40 s old.
 
-## Live view directo (recomendado)
+## Direct live view (recommended)
 
-- Pedir: `0x09/0xA8` payload `00 04 02 00 00 00 00 00 00 00` (OpenPocketCine a receptor `0x08`; Kaze a `0x41` + ráfagas `0x01/0x01`). Cuál hace falta: **sin verificar**.
-- Llega como pktType `0x02`: primer fragmento `00 00 01 FF` + u32 LE largo + 8 B meta + H.264 Annex-B 720p (~25 fps medido).
-- ACK pktType `0x04` a ~40 Hz con los últimos seq de `0x02` y `0x03` y nuestro cursor TX. Puerto local efímero (bindear :9004 corta el video).
-- Keyframes solo re-pidiendo `0x09/0xA8` tras un corte (con cooldown). Pocket 3: la primera imagen puede quedar negra hasta un cambio y reversión de formato `0x02/0x18`.
-- Decodificar con `AVSampleBufferDisplayLayer` (Kaze `Pocket3VideoOutput.swift`).
+- Request: `0x09/0xA8` payload `00 04 02 00 00 00 00 00 00 00` (OpenPocketCine to receiver `0x08`; Kaze to `0x41` + `0x01/0x01` bursts). Which one is needed: **unverified**.
+- Arrives as pktType `0x02`: first fragment `00 00 01 FF` + u32 LE length + 8 B meta + H.264 Annex-B 720p (~25 fps measured).
+- ACK pktType `0x04` at ~40 Hz with the latest seq of `0x02` and `0x03` and our TX cursor. Ephemeral local port (binding :9004 cuts the video).
+- Keyframes only by re-requesting `0x09/0xA8` after a drop (with a cooldown). Pocket 3: the first picture may stay black until a format change and revert with `0x02/0x18`.
+- Decode with `AVSampleBufferDisplayLayer` (Kaze `Pocket3VideoOutput.swift`).
 
-## RTMP (alternativa 1080p, más adelante)
+## RTMP (1080p alternative, later)
 
-Por BLE: pair → `0x02/0x8E 01 01 1A 00 01 02` → `0x02/0xE1 [1A]` → `0x07/0x47` (ssid/psk de TU red) → `0x08/0x78` (res/kbps/fps/url) → `0x02/0x8E 01 01 1A 00 01 01`. La cámara se une a tu Wi-Fi (el Mac no pierde Internet) y empuja a un servidor RTMP en el Mac (el de Moblin, MIT). Contras: la cámara pasa a modo Live (no es preview mientras graba); latencia sin medir.
+Over BLE: pair → `0x02/0x8E 01 01 1A 00 01 02` → `0x02/0xE1 [1A]` → `0x07/0x47` (ssid/psk of YOUR network) → `0x08/0x78` (res/kbps/fps/url) → `0x02/0x8E 01 01 1A 00 01 01`. The camera joins your Wi-Fi (the Mac doesn't lose Internet) and pushes to an RTMP server on the Mac (Moblin's, MIT). Cons: the camera switches to Live mode (it's not a preview while recording); latency not measured.

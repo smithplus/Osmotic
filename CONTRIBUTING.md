@@ -1,9 +1,9 @@
-# Contribuir
+# Contributing
 
-Guía corta; el detalle para trabajar en el código está en [`CLAUDE.md`](CLAUDE.md) (sirve igual para personas y para agentes de IA).
+Short guide; the details for working on the code are in [`CLAUDE.md`](CLAUDE.md) (it works the same for people and for AI agents).
 
-1. `swift build && swift test` antes de proponer cambios; `scripts/lint.sh --fix` para el formato.
-2. Textos de UI en inglés con `Text("…")`/`String(localized:)`; después `scripts/sync_strings.sh` y el español en `Resources/Localizable.xcstrings`.
-3. Tests nuevos con Swift Testing. El protocolo se prueba contra `FakeCamera`/`FakeHTTPServer`, sin hardware.
-4. Commits chicos, en inglés, en imperativo ("Fix …", "Add …"). Anotá en `CHANGELOG.md` lo que ve el usuario.
-5. Código adaptado de otros proyectos: respetá su licencia y dejá el crédito (ver `LICENSE`, `README.md`).
+1. `swift build && swift test` before proposing changes; `scripts/lint.sh --fix` for formatting.
+2. UI text in English with `Text("…")`/`String(localized:)`; then `scripts/sync_strings.sh` and the Spanish in `Resources/Localizable.xcstrings`.
+3. New tests with Swift Testing. The protocol is tested against `FakeCamera`/`FakeHTTPServer`, without hardware.
+4. Small commits, in English, in the imperative ("Fix …", "Add …"). Note user-visible changes in `CHANGELOG.md`.
+5. Code adapted from other projects: respect its license and keep the credit (see `LICENSE`, `README.md`).

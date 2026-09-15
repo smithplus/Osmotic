@@ -16,11 +16,9 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 [![CI](https://github.com/smithplus/Osmotic/actions/workflows/ci.yml/badge.svg)](https://github.com/smithplus/Osmotic/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-222)](LICENSE)
 
-English · [Español](README.es.md)
-
 <br>
 
-<img src="docs/images/en/library.png" alt="Osmotic's Files tab: a grid of clips from an Osmo Pocket 3, two selected, a download in progress" width="100%">
+<img src="docs/images/library.png" alt="Osmotic's Files tab: a grid of clips from an Osmo Pocket 3, two selected, a download in progress" width="100%">
 
 </div>
 
@@ -50,8 +48,8 @@ Start and stop recording, take photos, switch between Video, Photo, Slow-mo and 
 </td>
 </tr>
 <tr>
-<td valign="top"><img src="docs/images/en/cameras.png" alt="Cameras screen: one Osmo Pocket 3 nearby with signal strength and a Connect key"></td>
-<td valign="top"><img src="docs/images/en/live.png" alt="Live tab: the camera's picture, recording for 12:34, mode keys and a Stop key"></td>
+<td valign="top"><img src="docs/images/cameras.png" alt="Cameras screen: one Osmo Pocket 3 nearby with signal strength and a Connect key"></td>
+<td valign="top"><img src="docs/images/live.png" alt="Live tab: the camera's picture, recording for 12:34, mode keys and a Stop key"></td>
 </tr>
 <tr>
 <td valign="top">
@@ -70,8 +68,8 @@ Plug the camera in with USB-C and choose Webcam on it: the picture shows up in t
 </td>
 </tr>
 <tr>
-<td valign="top"><img src="docs/images/en/connecting.png" alt="Connecting: Bluetooth done, waiting for the pairing approval on the camera"></td>
-<td valign="top"><img src="docs/images/en/webcam.png" alt="Webcam tab: three steps to use the camera as a USB webcam"></td>
+<td valign="top"><img src="docs/images/connecting.png" alt="Connecting: Bluetooth done, waiting for the pairing approval on the camera"></td>
+<td valign="top"><img src="docs/images/webcam.png" alt="Webcam tab: three steps to use the camera as a USB webcam"></td>
 </tr>
 </table>
 

@@ -1,72 +1,72 @@
-# Estado
+# Status
 
-_Última actualización: 2026-09-15. Dos pruebas con la Pocket 3 real: Files (build `776be7d`) y Files + Live (build 25, rama `ui/te-style`). Sin probar con hardware todavía: Webcam, foto en modo Photo, permisos desde Finder, primer emparejamiento._
+_Last updated: 2026-09-15. Two tests with a real Pocket 3: Files (build `776be7d`) and Files + Live (build 25, branch `ui/te-style`). Not yet tested with hardware: Webcam, photo in Photo mode, permissions with the app opened from Finder, first pairing._
 
-## Próxima prueba con hardware (en este orden)
+## Next hardware test (in this order)
 
-1. **Barra de progreso con clips > 4 GiB** — mandar a bajar un clip largo (el tamaño del manifiesto es u32): el total y el tiempo restante tienen que ser reales desde el inicio (log: `library: … is N MB (listed as M MB)`).
-2. **Foto** en modo Photo (Live); paginar con > 45 archivos; primer emparejamiento si se puede (resetear la cámara).
-3. **Webcam** — enchufar por USB-C, elegir Webcam en la cámara, ver la imagen; permiso de cámara.
-4. **Permisos con la app abierta desde Finder** (no Terminal): Bluetooth, Ubicación (dar y negar), Red local (negar y después permitir), Descargas, Cámara, Notificaciones.
+1. **Progress bar with clips > 4 GiB** — download a long clip (the manifest size is u32): the total and the time remaining must be correct from the start (log: `library: … is N MB (listed as M MB)`).
+2. **Photo** in Photo mode (Live); pagination with > 45 files; first pairing if possible (reset the camera).
+3. **Webcam** — plug in over USB-C, choose Webcam on the camera, check the picture; camera permission.
+4. **Permissions with the app opened from Finder** (not Terminal): Bluetooth, Location (grant and deny), Local Network (deny, then allow), Downloads, Camera, Notifications.
 
-Pedir el log `~/Library/Logs/Osmotic/osmotic-*.log` de cada prueba.
+Ask for the log `~/Library/Logs/Osmotic/osmotic-*.log` from each test.
 
-## Verificado con la Pocket 3 real (2026-09-15, build 25, log `osmotic-20260915-023644.log`)
+## Verified with a real Pocket 3 (2026-09-15, build 25, log `osmotic-20260915-023644.log`)
 
-Files + Live, todo a la primera: BLE (ya emparejada), Wi-Fi por CoreWLAN al primer intento, playback por `0x01/0x01`, 11 archivos. **Live**: salida de playback (`0x02/0x0c` → `e0`, luego START), vista en vivo a los 17 ms del pedido, 0 fragmentos perdidos; grabar → `camera recording: YES`, detener → `no`; modos Photo, Slow-mo y Low light confirmados por el estado de la cámara; vuelta a la tarjeta con relistado (1 clip nuevo). Descargas a ~33 MB/s, `.WAV` de respaldo, reanudación a 3685 MB de un clip de más de 4 GiB, cancelar y desconectar; vuelta a la red de casa en 4 s (otra vez `-3900 tmpErr` de `networksetup`, pero macOS vuelve solo).
+Files + Live, everything worked on the first try: BLE (already paired), Wi-Fi via CoreWLAN on the first attempt, playback via `0x01/0x01`, 11 files. **Live**: leaving playback (`0x02/0x0c` → `e0`, then START), live view 17 ms after the request, 0 fragments lost; record → `camera recording: YES`, stop → `no`; Photo, Slow-mo and Low light modes confirmed by the camera status; back to the card with a relist (1 new clip). Downloads at ~33 MB/s, backup `.WAV`, resume at 3685 MB of a clip over 4 GiB, cancel and disconnect; back on the home network in 4 s (again `-3900 tmpErr` from `networksetup`, but macOS rejoins on its own).
 
-Corregido después de esta prueba: (1) el tamaño del manifiesto es u32 y un clip de más de 4 GiB aparecía con el tamaño "dado la vuelta" — la barra llegaba a 100 % con 00:00 restante. Ahora se pide el tamaño real por HEAD a los videos de más de 2 min y el descargador informa el del servidor (`onTotal`). (2) El error de `networksetup` repetía el nombre de la red de casa en el log: ahora se tapa. (3) El espacio libre se registraba cada 400 ms al grabar: ahora cada GB.
+Fixed after this test: (1) the manifest size is u32, and a clip over 4 GiB showed a "wrapped-around" size — the bar reached 100% with 00:00 remaining. Now the real size is requested via HEAD for videos longer than 2 min, and the downloader reports the server's size (`onTotal`). (2) The `networksetup` error repeated the home network name in the log: it is now masked. (3) Free space was logged every 400 ms while recording: now once per GB.
 
-## Verificado con la Pocket 3 real (2026-09-14, build `776be7d`, log `osmotic-20260914-175922.log`)
+## Verified with a real Pocket 3 (2026-09-14, build `776be7d`, log `osmotic-20260914-175922.log`)
 
-Todo el flujo de Files funcionó a la primera: BLE armado (MTU 512), ya emparejada (`0x01`), SSID y password por BLE, CoreWLAN `associate` al primer intento (sin `networksetup`), ruta por `en0`, handshake udp/9004, `0x02/0x0c` → `e0` → playback por `0x01/0x01` en 5 tramas, 9 archivos (SD), 4 MP4 + 4 WAV bajados (1,97 GB a ~32 MB/s), salida de playback, vuelta a la red de casa. Los archivos son MP4 válidos. Al restaurar, `networksetup -setairportnetwork` devolvió `-3900 tmpErr` pero macOS ya estaba volviendo solo; el chequeo por IP lo detectó en 4 s.
+The whole Files flow worked on the first try: BLE armed (MTU 512), already paired (`0x01`), SSID and password over BLE, CoreWLAN `associate` on the first attempt (no `networksetup`), route via `en0`, handshake udp/9004, `0x02/0x0c` → `e0` → playback via `0x01/0x01` in 5 frames, 9 files (SD), 4 MP4 + 4 WAV downloaded (1.97 GB at ~32 MB/s), leaving playback, back on the home network. The files are valid MP4s. On restore, `networksetup -setairportnetwork` returned `-3900 tmpErr`, but macOS was already rejoining on its own; the IP check detected it in 4 s.
 
-## Verificado sin hardware
+## Verified without hardware
 
-`swift test`: **83 tests en 20 suites**, en verde; también en CI (GitHub Actions, macos-26).
-- Decodificador idéntico al upstream en las **14 capturas golden** (6 de Pocket 3); tramas BLE/datalink idénticas a capturas reales.
-- Sesión contra `FakeCamera`: handshake, rechazo `0x02/0x0c`, playback por `0x01/0x01`, lista, paginación inline, salida de playback al cerrar.
-- Control contra `FakeCamera` (`ControlTests`): salida de playback (dos vías), grabar/detener, foto, modo, vista en vivo H.264 reensamblada; vectores de bytes de Kaze para ACK y routing.
-- Descargas contra `FakeHTTPServer`: cortes con reanudación byte a byte, 404/500, Range ignorado, tamaño del manifiesto menor que el real, HTML, redirecciones, 416.
-- Robustez: nombres de archivo no confiables (`PathSafetyTests`), datos aleatorios en todos los parsers de red (`FuzzTests`, limpio con AddressSanitizer).
-- UI revisada con `scripts/snapshot.sh` en inglés y español (todas las pantallas).
+`swift test`: **83 tests in 20 suites**, green; also in CI (GitHub Actions, macos-26).
+- Decoder identical to upstream on the **14 golden captures** (6 from Pocket 3); BLE/datalink frames identical to real captures.
+- Session against `FakeCamera`: handshake, `0x02/0x0c` rejection, playback via `0x01/0x01`, list, inline pagination, leaving playback on close.
+- Control against `FakeCamera` (`ControlTests`): leaving playback (two paths), record/stop, photo, mode, reassembled H.264 live view; Kaze byte vectors for ACK and routing.
+- Downloads against `FakeHTTPServer`: drops with byte-exact resume, 404/500, Range ignored, manifest size smaller than the real one, HTML, redirects, 416.
+- Robustness: untrusted file names (`PathSafetyTests`), random data in every network parser (`FuzzTests`, clean under AddressSanitizer).
+- UI reviewed with `scripts/snapshot.sh` in English and Spanish (all screens).
 
-## Cambios en el camino de Files desde la primera prueba (probados con hardware el 2026-09-15)
+## Changes to the Files path since the first test (tested with hardware on 2026-09-15)
 
-- Manifiesto armado solo con tramas `0x00/0x27` por datagrama (antes: datagramas concatenados; un `0x55` suelto con CRC válido podía tragarse fragmentos — lista corta).
-- Datalink: descarta paquetes que no vienen de la IP de la cámara; tope de 8 MB del manifiesto; pktType 0x02 se desvía fuera del parser de estado solo en modo captura.
-- Descargas: completas solo si los bytes coinciden con Content-Length/Content-Range (el tamaño del manifiesto es una pista); 416 con `.part` completo termina; se rechazan HTML y redirecciones; nombres locales saneados; nunca borra en el destino; `.part` nunca sigue un symlink.
-- Wi-Fi: solo olvida la red de la cámara si la agregó la app; no se une a una red abierta con el nombre de la cámara; `networksetup` con contraseña recién al 4.º intento; aviso si no vuelve sola a tu red.
-- Contraseña de la cámara en el Llavero (solo si se escribe a mano).
-- Firma con hardened runtime + entitlements de ubicación y cámara (`Resources/Osmotic.entitlements`); sin `NSAllowsArbitraryLoads`. `NSAllowsLocalNetworking` es lo que habilita HTTP a `192.168.2.1` en macOS 14+: no quitarlo.
-- Conexión: "Try Again" arreglado; una conexión nueva espera la restauración de Wi-Fi anterior y las recuperaciones; `CameraSession.close()` idempotente.
+- Manifest built only from `0x00/0x27` frames, per datagram (before: concatenated datagrams; a stray `0x55` with a valid CRC could swallow fragments — short list).
+- Datalink: drops packets that don't come from the camera's IP; 8 MB cap on the manifest; pktType 0x02 is diverted away from the status parser only in capture mode.
+- Downloads: complete only if the bytes match Content-Length/Content-Range (the manifest size is a hint); 416 with a complete `.part` finishes; HTML and redirects are rejected; local names sanitized; never deletes at the destination; `.part` never follows a symlink.
+- Wi-Fi: only forgets the camera's network if the app added it; doesn't join an open network with the camera's name; `networksetup` with the password only from the 4th attempt; notice if it doesn't rejoin your network on its own.
+- Camera password in the Keychain (only if typed by hand).
+- Signed with hardened runtime + location and camera entitlements (`Resources/Osmotic.entitlements`); no `NSAllowsArbitraryLoads`. `NSAllowsLocalNetworking` is what enables HTTP to `192.168.2.1` on macOS 14+: don't remove it.
+- Connection: "Try Again" fixed; a new connection waits for the previous Wi-Fi restore and for recoveries; `CameraSession.close()` idempotent.
 
-## Revisiones hechas (2026-09-14)
+## Reviews done (2026-09-14)
 
-Rendimiento medido (M4, demo): pantalla de conexión 7–15 % → 0,3 % de CPU; cámaras 13 % → ~0 %; Live 4 % → 0,2 %. Los logs de las corridas demo/snapshot van a una carpeta temporal (antes rotaban los logs reales: el de la prueba de hardware se perdió así).
+Measured performance (M4, demo): connection screen 7–15% → 0.3% CPU; cameras 13% → ~0%; Live 4% → 0.2%. Logs from demo/snapshot runs go to a temporary folder (before, they rotated out the real logs: the one from the hardware test was lost that way).
 
-Seguridad, implementación, UI/accesibilidad, guías de Apple (distribución, privacidad, HIG), formato (`swift-format`). Lo aplicado está en `CHANGELOG.md`; lo que depende de una cuenta Apple Developer está abajo.
+Security, implementation, UI/accessibility, Apple guidelines (distribution, privacy, HIG), formatting (`swift-format`). What was applied is in `CHANGELOG.md`; what depends on an Apple Developer account is below.
 
-## Pendiente (en orden)
+## To do (in order)
 
-1. **Próxima prueba con hardware** (arriba) y ajustar según el log.
-2. Live: Timelapse/Hyperlapse (¿disparo por `02/01` o `02/02`?), truco de "primera imagen negra" (`02/18`), re-registro de respaldo si las escrituras se pierden, descargas en modo captura. Ver `docs/CONTROL.md`.
-3. **Distribución**: cuenta Apple Developer → `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh` (DMG notarizado). Sin eso, macOS vuelve a pedir permisos en cada build y quien la baje tiene que usar "Abrir igualmente".
-4. Mover la lógica testeable de la app (decisiones de red, cola de descargas) a una librería con tests.
-5. Accesibilidad: anillo de foco visible en `CassetteKeyStyle` con acceso total por teclado; variantes de Aumentar contraste.
-6. Expandir ráfagas/intervalos (`_001` → frames) con el group-expand `0x00/0x26` modo `0x10` (hoy solo baja el primero).
-7. Favoritos y borrado en la cámara (`0x02/0xbf`, `0x00/0x28`) — portado en Kotlin, no en Swift.
-8. Recorte de clips (trim) con `AVAssetExportSession` passthrough; actualizaciones con Sparkle 2.
-9. Dos archivos con el mismo nombre en carpetas/tarjetas distintas van al mismo destino (el Pocket 3 usa nombres con fecha y hora; no pasa en la práctica).
+1. **Next hardware test** (above) and adjust based on the log.
+2. Live: Timelapse/Hyperlapse (trigger via `02/01` or `02/02`?), "black first picture" trick (`02/18`), fallback re-registration if writes are lost, downloads in capture mode. See `docs/CONTROL.md`.
+3. **Distribution**: Apple Developer account → `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh` (notarized DMG). Without it, macOS asks for permissions again on every build, and anyone who downloads it has to use "Open Anyway".
+4. Move the app's testable logic (network decisions, download queue) into a library with tests.
+5. Accessibility: visible focus ring on `CassetteKeyStyle` with full keyboard access; Increase Contrast variants.
+6. Expand bursts/intervals (`_001` → frames) with the group-expand `0x00/0x26` mode `0x10` (today only the first one is downloaded).
+7. Favorites and deletion on the camera (`0x02/0xbf`, `0x00/0x28`) — ported in Kotlin, not in Swift.
+8. Clip trimming with `AVAssetExportSession` passthrough; updates with Sparkle 2.
+9. Two files with the same name in different folders/cards go to the same destination (the Pocket 3 uses date-and-time names; it doesn't happen in practice).
 
-Pregunta abierta del usuario: ¿puede la cámara unirse al Wi-Fi de casa para no perder Internet? El Pocket 3 se une a redes solo para *livestream* RTMP; nadie documentó descargas en ese modo. Hoy: Ethernet o iPhone por cable mantienen Internet.
+Open question from the user: can the camera join the home Wi-Fi so the Mac doesn't lose Internet? The Pocket 3 joins networks only for RTMP *livestream*; nobody has documented downloads in that mode. Today: Ethernet or a tethered iPhone (cable) keeps Internet.
 
-## Cómo diagnosticar una prueba real
+## How to diagnose a real test
 
-Líneas clave del log:
-- `BLE: control channel armed` → GATT OK. `BLE: pairing reply 0x01/0x02` → pairing. `BLE: Wi-Fi password received` → credenciales.
-- `wifi: camera reachable at 192.168.2.1 (ssid …, ip …)` y `wifi: route to 192.168.2.1 goes via en0 ✓` → Wi-Fi OK.
-- `datalink: handshake OK on udp/9004` → `playback mode held via 0x01/0x01` → `per-store lists — SD N` → lista OK. `SD slice TRUNCATED` → lista corta (reportar).
-- `transfer: … saved` / `link dropped … resuming` → descargas.
-- Live: `control: …` y `live: …` (ver `docs/CONTROL.md`). Webcam: `webcam: found …`.
-- Vuelta a casa: `wifi: back on "X…" (N chars)` o `wifi: could not rejoin a network automatically`.
+Key log lines:
+- `BLE: control channel armed` → GATT OK. `BLE: pairing reply 0x01/0x02` → pairing. `BLE: Wi-Fi password received` → credentials.
+- `wifi: camera reachable at 192.168.2.1 (ssid …, ip …)` and `wifi: route to 192.168.2.1 goes via en0 ✓` → Wi-Fi OK.
+- `datalink: handshake OK on udp/9004` → `playback mode held via 0x01/0x01` → `per-store lists — SD N` → list OK. `SD slice TRUNCATED` → short list (report it).
+- `transfer: … saved` / `link dropped … resuming` → downloads.
+- Live: `control: …` and `live: …` (see `docs/CONTROL.md`). Webcam: `webcam: found …`.
+- Back home: `wifi: back on "X…" (N chars)` or `wifi: could not rejoin a network automatically`.

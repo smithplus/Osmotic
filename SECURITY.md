@@ -1,19 +1,19 @@
-# Seguridad
+# Security
 
-## Reportar un problema
+## Reporting a problem
 
-Abrí un [issue](https://github.com/smithplus/Osmotic/issues) marcado **security**, o si preferís que no sea público, pedí un canal privado en ese mismo issue sin detalles. Se responde en lo posible dentro de una semana. Solo la última versión recibe arreglos.
+Open an [issue](https://github.com/smithplus/Osmotic/issues) labeled **security**, or, if you'd rather keep it private, ask for a private channel in that same issue without details. We aim to respond within a week. Only the latest version receives fixes.
 
-## Qué hace la app con tu Mac y tus datos
+## What the app does with your Mac and your data
 
-- **Nada sale del Mac**: sin cuentas, sin analítica, sin servidores propios. La app habla con la cámara (Bluetooth y su red Wi-Fi `192.168.2.1`) y, una vez por día como máximo, pregunta a GitHub (`api.github.com`) por la última versión — sin mandar datos tuyos; se apaga en Ajustes › Updates.
-- **Actualizaciones**: solo se instala un zip cuya firma Ed25519 coincide con la clave pública incluida en la app (`OsmoticUpdatePublicKey`); descargas solo desde GitHub por HTTPS; se verifica el bundle (identificador, versión, `codesign`) antes de reemplazar la app. La clave privada está en el Llavero de quien publica, nunca en el repo.
-- **Permisos** y para qué: Bluetooth (encontrar la cámara), Red local (hablar con ella), Ubicación (macOS solo muestra el nombre de tu Wi-Fi con este permiso; se usa para volver a tu red), Descargas (guardar en `~/Downloads/DJI`), Cámara (pestaña Webcam, solo con una cámara USB enchufada), Notificaciones (aviso al terminar).
-- **Cambia la red Wi-Fi** del Mac mientras está conectada (CoreWLAN y `/usr/sbin/networksetup`) y la restaura al terminar. Solo olvida la red de la cámara si la agregó ella.
-- **Contraseña Wi-Fi de la cámara**: en el Llavero, solo si la escribiste a mano.
-- **Sin App Sandbox**: unirse a una red Wi-Fi no es posible desde el sandbox. Se compensa con hardened runtime y validación de todo lo que llega de la cámara (nombres de archivo, tamaños, tramas).
-- **Registro técnico** en `~/Library/Logs/Osmotic`: sin contraseñas; tus redes van abreviadas y las rutas sin tu usuario.
+- **Nothing leaves your Mac**: no accounts, no analytics, no servers of our own. The app talks to the camera (Bluetooth and its Wi-Fi network `192.168.2.1`) and, at most once a day, asks GitHub (`api.github.com`) for the latest version — without sending any of your data; it can be turned off in Settings › Updates.
+- **Updates**: only a zip whose Ed25519 signature matches the public key included in the app (`OsmoticUpdatePublicKey`) is installed; downloads come only from GitHub over HTTPS; the bundle is verified (identifier, version, `codesign`) before the app is replaced. The private key is in the publisher's Keychain, never in the repo.
+- **Permissions** and what they are for: Bluetooth (find the camera), Local Network (talk to it), Location (macOS only shows your Wi-Fi name with this permission; used to return to your network), Downloads (save to `~/Downloads/DJI`), Camera (Webcam tab, only with a USB camera plugged in), Notifications (alert when finished).
+- **Changes the Mac's Wi-Fi network** while connected (CoreWLAN and `/usr/sbin/networksetup`) and restores it when done. It only forgets the camera's network if the app added it.
+- **Camera Wi-Fi password**: in the Keychain, only if you typed it in manually.
+- **No App Sandbox**: joining a Wi-Fi network is not possible from the sandbox. This is offset by the hardened runtime and validation of everything that comes from the camera (file names, sizes, frames).
+- **Technical Log** in `~/Library/Logs/Osmotic`: no passwords; your networks are abbreviated and paths omit your username.
 
-## Para quien toque el código
+## For people working on the code
 
-La cámara es un par de red **no confiable**: todo lo que manda (nombres, tamaños, tramas, HTTP) se valida. Ver `docs/STATUS.md` (revisión de seguridad) y los tests `PathSafetyTests`, `DownloaderTests`, `FuzzTests`.
+The camera is an **untrusted** network peer: everything it sends (names, sizes, frames, HTTP) is validated. See `docs/STATUS.md` (security review) and the `PathSafetyTests`, `DownloaderTests`, `FuzzTests` tests.

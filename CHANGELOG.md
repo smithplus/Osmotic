@@ -1,39 +1,42 @@
 # Changelog
 
-Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones [SemVer](https://semver.org/lang/es/). El número de build del `.app` es la cantidad de commits.
+Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [SemVer](https://semver.org/). The `.app` build number is the commit count.
 
 ## [Unreleased]
 
+### Changed
+- README and project docs are in English only (the app itself stays in English and Spanish).
+
 ## [0.2.0] — 2026-09-15
 
-Probada con una Osmo Pocket 3: conexión, lista, descargas, vista en vivo, grabar/detener y cambio de modo.
+Tested with an Osmo Pocket 3: connection, file list, downloads, live view, start/stop recording, and mode switching.
 
-### Agregado
-- Pestañas **Files · Live · Webcam**. Live: grabar/detener, foto, modos (Video, Foto, Cámara lenta, Poca luz) y vista en vivo por Wi-Fi. Webcam: la cámara enchufada por USB en modo webcam.
-- Instalador `.dmg` (arrastrar a Aplicaciones) en cada release, con una nota para el primer arranque de una build sin notarizar.
-- README nuevo en inglés y español, con capturas.
-- Interfaz en inglés con traducción al español; tema oscuro de equipo de audio (teclas de cassette, pantallas LCD, LEDs).
-- Navegación de la grilla con flechas; VoiceOver en celdas, filtros, LEDs y etapas; Reducir movimiento.
-- Binario universal (Apple silicon + Intel); licencias y créditos dentro de la app; scripts de firma Developer ID y notarización.
+### Added
+- **Files · Live · Webcam** tabs. Live: start/stop recording, photo, modes (Video, Photo, Slow-mo, Low light), and live view over Wi-Fi. Webcam: the camera plugged in over USB in webcam mode.
+- `.dmg` installer (drag to Applications) with every release, with a note for the first launch of a non-notarized build.
+- New README in English and Spanish, with screenshots.
+- English interface with a Spanish translation; dark audio-gear theme (cassette keys, LCD screens, LEDs).
+- Arrow-key navigation in the grid; VoiceOver on cells, filters, LEDs, and stages; Reduce Motion.
+- Universal binary (Apple silicon + Intel); licenses and credits inside the app; Developer ID signing and notarization scripts.
 
-### Actualizaciones y créditos
-- Actualización automática desde GitHub Releases (Ajustes › Updates, menú Check for Updates…): descarga, verifica la firma Ed25519 y el bundle, reemplaza la app y la reabre. `scripts/release.sh` arma y firma la release; publica solo con `--publish`.
-- Ajustes › Credits: quienes hicieron posible la app (Osmosis, Kaze for DJI, OpenPocketCine, la investigación del protocolo y los testers de Osmosis).
+### Updates and credits
+- Automatic updates from GitHub Releases (Settings › Updates, Check for Updates… menu): downloads, verifies the Ed25519 signature and the bundle, replaces the app, and relaunches it. `scripts/release.sh` builds and signs the release; it publishes only with `--publish`.
+- Settings › Credits: the people who made the app possible (Osmosis, Kaze for DJI, OpenPocketCine, the protocol research, and the Osmosis testers).
 
-### Rendimiento
-- En reposo la app ya casi no consume: los LEDs parpadean en dos pasos (no animación continua) y todo lo animado, el escaneo Bluetooth y la webcam se pausan con la ventana oculta (pantalla de cámaras: 13 % → ~0 % de CPU).
-- Miniaturas reducidas a 560 px al recibirlas (~40 KB en vez de ~460 KB) y en una caché con límite; ordenar y agrupar una tarjeta grande ya no congela la ventana; el progreso de descarga no redibuja toda la grilla.
-- Descargas largas con la ventana atrás: sin App Nap mientras hay conexión y sin reposo mientras se descarga.
+### Performance
+- The app now uses almost nothing when idle: LEDs blink in two steps (no continuous animation), and everything animated, Bluetooth scanning, and the webcam pause while the window is hidden (cameras screen: 13% → ~0% CPU).
+- Thumbnails are scaled down to 560 px on arrival (~40 KB instead of ~460 KB) and kept in a size-limited cache; sorting and grouping a large card no longer freezes the window; download progress no longer redraws the whole grid.
+- Long downloads with the window in the background: no App Nap while connected and no sleep while downloading.
 
-### Corregido
-- Clips de más de 4 GB: la lista de la cámara da el tamaño en 32 bits, así que la barra llegaba a 100 % con 00:00 restante mientras seguía bajando. Ahora se usa el tamaño real (se le pregunta a la cámara) en la barra, el tiempo restante y la grilla.
-- El registro técnico podía incluir el nombre de tu red Wi-Fi dentro de un error de `networksetup`.
-- En español, el tamaño de cada clip se cortaba ("69,8…") por el formato de hora "p. m.": ahora se acorta primero la resolución.
-- **Seguridad**: un archivo de la cámara llamado `..` podía borrar la carpeta que contiene a la de descargas; un SSID falso podía borrar una red guardada del Mac; la contraseña Wi-Fi de la cámara quedaba en texto plano.
-- "Try Again" no hacía nada; conexiones y restauraciones de Wi-Fi podían pisarse; descargas podían darse por completas con bytes de menos o una página HTML.
-- La lista de la tarjeta podía llegar corta (un paquete de estado se "tragaba" fragmentos).
-- Permiso de ubicación bajo hardened runtime (sin él no se leía el nombre de tu Wi-Fi).
+### Fixed
+- Clips over 4 GB: the camera's list reports the size in 32 bits, so the bar reached 100% with 00:00 remaining while the download continued. The real size (queried from the camera) is now used in the bar, the remaining time, and the grid.
+- The Technical Log could include your Wi-Fi network name inside a `networksetup` error.
+- In Spanish, each clip's size was truncated ("69,8…") because of the "p. m." time format: the resolution is now shortened first.
+- **Security**: a camera file named `..` could delete the folder containing the downloads folder; a fake SSID could delete a saved network from the Mac; the camera's Wi-Fi password was stored in plain text.
+- "Try Again" did nothing; connections and Wi-Fi restores could overlap; downloads could be marked complete with missing bytes or an HTML page.
+- The card's file list could come back short (a status packet "swallowed" fragments).
+- Location permission under the hardened runtime (without it, your Wi-Fi name could not be read).
 
 ## [0.1.0] — 2026-09-14
 
-Primera versión: descarga desde una Osmo Pocket 3 por BLE + Wi-Fi, verificada con hardware real.
+First version: downloads from an Osmo Pocket 3 over BLE + Wi-Fi, verified with real hardware.
