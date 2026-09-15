@@ -50,6 +50,7 @@ scripts/seo_audit.sh [url]       # technical SEO audit of the landing (default: 
 swift scripts/make_textures.swift .        # site/textures/*.webp (grain, brushed); see the script header for the cwebp step
 swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png ("o." on graphite)
 swift scripts/make_launch_assets.swift .   # Product Hunt gallery + thumbnail → build/launch (see docs/LAUNCH.md)
+swift scripts/make_install_steps.swift .   # the landing's install-step illustrations → docs/images/step-*.png (then cwebp)
 ```
 
 - CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`. `pages.yml` publishes the landing page on pushes to `main` that touch `site/` or `docs/images/`.

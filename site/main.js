@@ -34,21 +34,16 @@
 
 const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 
-// One scroll handler, coalesced into a frame: the docked keys, the progress meter across the top
-// edge, and a few pixels of parallax under the hero shot.
+// One scroll handler, coalesced into a frame: the docked keys and a few pixels of parallax under
+// the hero shot.
 (() => {
   const dock = document.querySelector(".navdock");
-  const meter = document.querySelector(".scroll-meter");
   const hero = document.querySelector(".shot--hero img");
   let queued = false;
   const update = () => {
     queued = false;
     const y = window.scrollY;
     if (dock) dock.classList.toggle("is-stuck", dock.getBoundingClientRect().top <= 0.5);
-    if (meter) {
-      const max = document.documentElement.scrollHeight - innerHeight;
-      meter.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
-    }
     // The hero image trails the page slightly, the way a part deeper in the case would.
     if (hero && !reduceMotion.matches) {
       const shift = Math.max(-14, Math.min(0, -y * 0.03));
