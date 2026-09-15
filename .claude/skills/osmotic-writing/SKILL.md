@@ -32,6 +32,7 @@ For each finding: quote the text, say in one sentence why it's weak, give the re
 ## Osmotic voice
 
 - **Like a good gear manual**: plain, precise, calm. The UI is audio hardware (keys, LCD, LEDs); the copy is the printed legend on it. No startup hype: no "revolutionary", "the best", "#1", "the only", "magic", "effortless".
+- **The owner's voice, not a launch template.** Anything posted as the owner (Product Hunt, release notes, replies) opens with the substance: no "Hi Product Hunt!", "Excited to share", "Thrilled to announce", no emoji garnish, no sign-off clichés. First person, concrete, short; a dry, slightly ironic line is welcome ("For a camera with its own Wi-Fi, that felt backwards."), as in the owner's own notes.
 - **No em dashes (—).** They read as machine-written. Use a period, comma, colon or parentheses. En dashes stay in ranges (10–16 s).
 - **Honest status.** Say what was tested on hardware and what wasn't ("Tested on a Pocket 3"; "Not yet tested"). Never imply DJI endorsement: keep "not affiliated with DJI".
 - **Credit first.** Osmosis (Konrad Iturbe), Kaze for DJI (Brian Merchant) and the protocol researchers are named whenever the origin of the work comes up.

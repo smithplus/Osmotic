@@ -46,14 +46,16 @@ What their pages do well, worth copying: a short concrete hero (Camo), social pr
 **Description** (235 characters):
 > Free, open-source Mac app for DJI Osmo cameras. Pairs over Bluetooth, joins the camera's Wi-Fi and downloads clips into day folders, dated when shot and resumable. Plus remote record, live view and USB webcam. No phone app, no account.
 
-**Maker's first comment** (as in the draft, 986 of Product Hunt's 1000 characters; the code credit lives here because Osmosis and Kaze for DJI aren't Product Hunt products, so they can't be shoutouts):
-> Hi Product Hunt! I shoot on an Osmo Pocket 3 and got tired of the routine: a cable or card reader on the Mac, or DJI Mimo on the phone and then AirDrop. Osmotic lets the Mac talk to the camera directly: it pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot, resuming if the link drops. It also starts and stops recording, shows the live picture, and over USB-C the camera works as a webcam.
+**Maker's first comment** (as in the draft, 928 of Product Hunt's 1000 characters; no greeting, in the owner's voice; the code credit lives here because Osmosis and Kaze for DJI aren't Product Hunt products, so they can't be shoutouts):
+> I shoot on an Osmo Pocket 3, and getting footage onto my Mac always meant a cable, a card reader, or DJI Mimo on the phone and then AirDrop. For a camera with its own Wi-Fi, that felt backwards.
 >
-> Credit where it's due: this stands on Osmosis by Konrad Iturbe, the open-source Android app that worked out the camera's protocol (Osmotic is its native macOS port), and on Kaze for DJI by Brian Merchant for live control. Thank you both, and everyone who documented the protocol before us.
+> Osmotic lets the Mac talk to the camera directly. It pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot. If the link drops, it picks up where it left off. It also starts and stops recording, shows the live picture, and over USB-C the camera works as a webcam.
 >
-> Tested on a real Pocket 3. Free, MIT, no analytics, no account. It isn't notarized by Apple yet, so the first launch needs Privacy & Security › Open Anyway, once.
+> It stands on Osmosis by Konrad Iturbe, the open-source Android app that worked out the camera's protocol (Osmotic is its native macOS port), and on Kaze for DJI by Brian Merchant for live control. Thanks to both.
 >
-> Which Osmo do you shoot with, and what would make offloading painless for you?
+> Free, MIT, no account, no analytics. Tested on a Pocket 3. Not notarized by Apple yet, so the first launch needs Privacy & Security › Open Anyway, once.
+>
+> Got a different Osmo? Tell me if it works.
 
 **Topics:** Mac, Open Source, Photography (alternates: Video, Webcam, GitHub).
 
