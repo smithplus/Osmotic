@@ -20,7 +20,9 @@
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
-        if (!e.isIntersecting) continue;
+        // In view, or already above it: a jump (a nav link, a fast scroll) can skip past a block
+        // without it ever intersecting, and it must not stay hidden when the reader scrolls back.
+        if (!e.isIntersecting && e.boundingClientRect.top > 0) continue;
         e.target.classList.add("is-in");
         io.unobserve(e.target);
       }

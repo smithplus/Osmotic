@@ -4,7 +4,7 @@
 
 # Osmotic
 
-**Your DJI Osmo camera, on your Mac. No cables, no phone app, no account.**
+**Your DJI Osmo camera, on your Mac. Wireless downloads, no phone app, no account.**
 
 Download your footage over Wi-Fi, control the camera and see it live, or use it as a webcam over USB. A native macOS app that looks like a piece of gear.
 
@@ -26,7 +26,7 @@ Download your footage over Wi-Fi, control the camera and see it live, or use it 
 
 ## Built on the work of others
 
-Osmotic exists because other people did the hard part first. It is a native macOS port of **[Osmosis](https://github.com/KonradIT/osmosis)** by **Konrad Iturbe**, the Android app that reverse-engineered how DJI's Osmo cameras hand their files over Wi-Fi. The pairing flow, the DUML protocol and the decoder for the camera's file list are a Swift port of his work, and are checked byte for byte against his captures.
+Osmotic exists because other people did the hard part first. It is a native macOS port of **[Osmosis](https://github.com/KonradIT/osmosis)** by **Konrad Iturbe**, the Android app that reverse-engineered how DJI's Osmo cameras hand their files over Wi-Fi. The pairing flow, the camera's control protocol (DUML) and the decoder for its file list are a Swift port of his work, and are checked byte for byte against his captures.
 
 Camera control and the live view follow **[Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI)** by **Brian Merchant**, with notes from **[OpenPocketCine](https://github.com/erik-sutton95/OpenPocketCine)**. Underneath all of it is years of protocol research by the [DJI OGs](https://github.com/o-gs) and many others (see [Credits](#credits)). Thank you.
 
@@ -67,7 +67,7 @@ The Mac finds the camera over Bluetooth, gets its Wi-Fi password from it, joins 
 
 ### Webcam
 
-Plug the camera in with USB-C and choose Webcam on it: the picture shows up in the Webcam tab, and in Zoom, Meet, FaceTime or OBS even with Osmotic closed.
+Plug the camera in with USB-C and choose Webcam on it: the picture shows up in the Webcam tab, and in Zoom, Meet, FaceTime or OBS even with Osmotic closed. (Not yet tested on hardware.)
 
 </td>
 </tr>
@@ -79,10 +79,10 @@ Plug the camera in with USB-C and choose Webcam on it: the picture shows up in t
 
 ### And the details
 
-- **Everything lands where you expect it:** `~/Downloads/DJI`, one folder per day, each file dated with the moment it was shot, so Finder and your editor sort it right.
+- **Everything lands where you expect it:** `~/Downloads/DJI`, one folder per day (you can turn that off), each file dated with the moment it was shot, so Finder and your editor sort it right.
 - **Nothing twice.** A clip already on your Mac is skipped, never replaced; a half-downloaded one picks up where it stopped, even clips over 4 GB.
 - **Proxies for previews.** Space bar opens a quick preview using the camera's light `.LRF` proxy, not the full 4K file.
-- **The extras, if you want them:** RAW `.DNG` next to photos and the backup `.WAV` next to clips.
+- **The extras:** RAW `.DNG` next to photos and the backup `.WAV` next to clips (on by default; turn them off in Settings).
 - **Keyboard all the way:** arrows, ⇧ to extend, space to preview, ⌘D and ⇧⌘D to download.
 - **Updates itself** from GitHub Releases, only after checking the release's signature.
 - **English and Spanish**, following your Mac's language. VoiceOver labels, Reduce Motion and a dark hardware look throughout.
@@ -108,7 +108,7 @@ Later versions install themselves (**Osmotic › Check for Updates…**).
 | Camera | Show the picture in the Webcam tab (asked only once a camera is plugged in) |
 | Notifications | Tell you when a download finishes |
 
-Nothing leaves your Mac: no analytics, no accounts, no servers besides the camera and GitHub (to check for updates). See [SECURITY.md](SECURITY.md).
+No account, no analytics; nothing leaves your Mac except update checks with GitHub. See [SECURITY.md](SECURITY.md).
 
 ## Cameras
 
@@ -137,13 +137,13 @@ sequenceDiagram
     Note over Mac: back on your Wi-Fi
 ```
 
-While connected, the Mac uses the camera's Wi-Fi, so it has **no Internet over Wi-Fi**; Ethernet or an iPhone shared over USB keep you online. The protocol notes are in [docs/PROTOCOL.md](docs/PROTOCOL.md) and [docs/CONTROL.md](docs/CONTROL.md).
+While connected, the Mac uses the camera's Wi-Fi, so it has **no Internet over Wi-Fi**; Ethernet, or an iPhone sharing its connection over a cable, keeps you online. The protocol notes are in [docs/PROTOCOL.md](docs/PROTOCOL.md) and [docs/CONTROL.md](docs/CONTROL.md).
 
 ## FAQ
 
-**What happens if I download the same clip twice?** It is skipped. Osmotic never replaces a file in your folder; an unfinished one resumes from where it stopped.
+**What happens if I download the same clip twice?** Nothing: it's skipped. Osmotic never replaces a file in your folder; an unfinished one resumes from where it stopped.
 
-**Does it delete anything from the camera?** No. It only reads.
+**Does it delete anything from the camera?** No. It never deletes or changes files already on the camera.
 
 **Something doesn't work.** Open **Window › Technical Log** (⌥⌘L) and attach the file to an [issue](https://github.com/smithplus/Osmotic/issues). The log leaves out your Wi-Fi password and network name.
 
@@ -153,7 +153,7 @@ Xcode 26 (Swift 6.2 or later).
 
 ```bash
 git clone https://github.com/smithplus/Osmotic.git && cd Osmotic
-swift test                     # 83 tests: protocol, decoder, downloads, a simulated Pocket 3
+swift test                     # 94 tests: protocol, decoder, downloads, a simulated Pocket 3
 scripts/package_app.sh         # build/Osmotic.app
 open build/Osmotic.app
 ```

@@ -129,8 +129,6 @@ public final class CameraHTTP: Sendable {
             }
             out.append(f)
         }
-        return out.sorted { a, b in
-            a.timestamp != b.timestamp ? a.timestamp > b.timestamp : a.seq > b.seq
-        }
+        return out.newestFirst()
     }
 }

@@ -23,7 +23,7 @@ The whole Files flow worked on the first try: BLE armed (MTU 512), already paire
 
 ## Verified without hardware
 
-`swift test`: **83 tests in 20 suites**, green; also in CI (GitHub Actions, macos-26).
+`swift test`: **94 tests in 21 suites**, green; also in CI (GitHub Actions, macos-26).
 - Decoder identical to upstream on the **14 golden captures** (6 from Pocket 3); BLE/datalink frames identical to real captures.
 - Session against `FakeCamera`: handshake, `0x02/0x0c` rejection, playback via `0x01/0x01`, list, inline pagination, leaving playback on close.
 - Control against `FakeCamera` (`ControlTests`): leaving playback (two paths), record/stop, photo, mode, reassembled H.264 live view; Kaze byte vectors for ACK and routing.
@@ -40,6 +40,10 @@ The whole Files flow worked on the first try: BLE armed (MTU 512), already paire
 - Camera password in the Keychain (only if typed by hand).
 - Signed with hardened runtime + location and camera entitlements (`Resources/Osmotic.entitlements`); no `NSAllowsArbitraryLoads`. `NSAllowsLocalNetworking` is what enables HTTP to `192.168.2.1` on macOS 14+: don't remove it.
 - Connection: "Try Again" fixed; a new connection waits for the previous Wi-Fi restore and for recoveries; `CameraSession.close()` idempotent.
+
+## Audit round (2026-09-15, after v0.2.0)
+
+Four parallel audits (writing with `.claude/skills/osmotic-writing`, landing engineering against Emil Kowalski's animation rules, app correctness and security, design system and code health). Fixed: unbounded sizes and reads from the camera's HTTP server (crash / memory), quitting before the Wi-Fi was handed back, downloads starting while Live starts, two >4 GiB probe gaps, `release.sh` tag and notes checks; orange key contrast, motion curves, missing slide-in animations, VoiceOver labels and values, per-page disk checks, tab-bar redraws, a Canvas segment meter; copy that promised untested things (webcam, day folders were off by default), Latin American Spanish conventions. `AppModel` was split into extension files by responsibility. Left for later: the remaining token cleanups (radii in `MediaCell`, a shared badge and orange gradient), named timing constants in the connection code, caching `visibleFiles`, `isOnDisk` in the preview's body.
 
 ## Reviews done (2026-09-14)
 

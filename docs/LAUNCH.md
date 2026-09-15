@@ -4,11 +4,11 @@ Research done 2026-09-15 from public pages (sources at the end). Prices and stat
 
 ## Positioning
 
-**The gap:** DJI's own export guide says wireless transfer from an Osmo goes **to a phone only** (DJI Mimo); to a computer it's a cable or a card reader. GoPro removed Quik for desktop from the Mac App Store (Dec 31). Pro offload tools (OffShoot, ShotPut Pro) cost $169+ and assume a card reader. So wireless Osmo → Mac is Osmotic's unique claim; the webcam tab is a bonus (the Pocket 3 is a plain UVC webcam, and Camo already covers phones-as-webcams).
+**The gap:** DJI's own export guide says wireless transfer from an Osmo goes **to a phone only** (DJI Mimo); to a computer it's a cable or a card reader. GoPro removed Quik for desktop from the Mac App Store (see the GoPro and TechRadar sources). Pro offload tools (OffShoot, ShotPut Pro) cost $169+ and assume a card reader. So wireless Osmo → Mac is Osmotic's unique claim; the webcam tab is a bonus (the Pocket 3 is a plain UVC webcam, and Camo already covers phones-as-webcams).
 
 Three angles:
 1. **The missing wireless path to the Mac:** closes the gap DJI's own docs describe.
-2. **Offload for creators, not film crews:** free, no setup, understands the camera's files (proxies, `.WAV`/`.DNG` sidecars, "Download New", day folders dated when shot).
+2. **Offload for creators, not film crews:** free, three steps to install, understands the camera's files (proxies, `.WAV`/`.DNG` sidecars, "Download New", day folders dated when shot).
 3. **Private and open:** no account, no analytics, MIT, lineage from Osmosis.
 
 ## Competitors (checked 2026-09-15)
@@ -20,7 +20,7 @@ Three angles:
 | OffShoot (ex-Hedge) | $169 / Pro $249 / $49 per 30 days; Mac/Windows | Built for DITs with card readers; no Osmo awareness |
 | ShotPut Pro | $169 or $60 rental; Mac/Windows | Pro cinema cameras; dense page |
 | Camera Import (Mac App Store) | ~¥300 JP (US price unverified) | Needs a card or drive |
-| GoPro Quik for desktop | Sunset (removed Dec 31) | Even GoPro left desktop import |
+| GoPro Quik for desktop | Sunset (removed from the Mac App Store) | Even GoPro left desktop import |
 | Insta360 Studio | Free | Insta360 only, over a cable |
 | Camo (on PH, launched 2020 and 2023) | Free / Pro (current price unverified) | Webcam only; generic about action cams |
 
@@ -38,20 +38,20 @@ What their pages do well, worth copying: a short concrete hero (Camo), social pr
 
 **Taglines** (character counts in parentheses):
 1. Download your DJI Osmo footage to your Mac over Wi-Fi (53) ← recommended
-2. Your Osmo camera, on your Mac. No cables, no phone app. (55)
+2. Your Osmo camera, on your Mac. Wireless, no phone app. (54)
 3. Wireless offload for Osmo cameras. Free and open source. (56)
 4. Offload your Osmo over Wi-Fi. Nothing leaves your Mac. (54)
-5. The open-source Mac app for Osmo: offload, control, webcam (58)
+5. Open-source Mac app for Osmo: offload, control, webcam (54)
 
-**Description** (246 characters):
-> Free, open-source Mac app for DJI Osmo cameras. Pairs over Bluetooth, joins the camera's Wi-Fi and downloads clips into day folders, dated when shot and resumable. Plus remote record, live view and USB webcam. No cables, no phone app, no account.
+**Description** (235 characters):
+> Free, open-source Mac app for DJI Osmo cameras. Pairs over Bluetooth, joins the camera's Wi-Fi and downloads clips into day folders, dated when shot and resumable. Plus remote record, live view and USB webcam. No phone app, no account.
 
 **Maker's first comment** (edit before posting; keep it honest):
-> Hi Product Hunt! I shoot on an Osmo Pocket 3 and got tired of the routine: cable or card reader on the Mac, or DJI Mimo on the phone and then AirDrop. Osmotic lets the Mac talk to the camera directly: it pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot, resuming if the link drops.
+> Hi Product Hunt! I shoot on an Osmo Pocket 3 and got tired of the routine: cable or card reader on the Mac, or DJI Mimo on the phone and then AirDrop. Osmotic lets the Mac talk to the camera directly. It pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot, resuming if the link drops.
 >
 > It stands on the shoulders of Osmosis, Konrad Iturbe's open-source Android app that reverse-engineered the protocol; Osmotic is a native macOS port. Remote control and live view follow Kaze for DJI.
 >
-> Honest status: tested on a real Pocket 3; other Osmo models work in Osmosis but are untested here. Free, MIT, no analytics, no account.
+> Honest status: tested on a real Pocket 3 (downloads, recording, live view); the webcam tab and other Osmo models aren't tested yet. Free, MIT, no analytics, no account.
 >
 > Which Osmo do you shoot with, and what would make offloading painless for you?
 

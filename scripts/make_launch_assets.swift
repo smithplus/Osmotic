@@ -226,6 +226,31 @@ try slide("07-open.png") {
     text("github.com/smithplus/Osmotic", mono(15), amber, x: 90, y: 590, width: 600, tracking: 1, glow: amber.withAlphaComponent(0.3))
 }
 
+// Social card for the landing page (og:image, 1200×630 at 1x), committed to docs/images.
+do {
+    let cw: CGFloat = 1200, chh: CGFloat = 630
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(cw), pixelsHigh: Int(chh), bitsPerSample: 8,
+                               samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
+                               bytesPerRow: 0, bitsPerPixel: 0)!
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
+    NSGraphicsContext.current?.imageInterpolation = .high
+    // Reuse the slide drawing at a scale that fits 1270×760 into 1200×630, then crop the overflow.
+    let k = cw / W
+    NSGraphicsContext.current?.cgContext.translateBy(x: 0, y: chh - H * k)
+    NSGraphicsContext.current?.cgContext.scaleBy(x: k, y: k)
+    plate()
+    wordmark()
+    label("Osmo › Mac · Wireless", x: 48, y: 150)
+    let h = text("Download your DJI Osmo footage to your Mac over Wi-Fi", sans(46, .bold), ink, x: 48, y: 182, width: 470, tracking: -1.2, line: 1.02)
+    text("Free and open source. No phone app, no account.", sans(19, .regular), muted, x: 48, y: 182 + h + 22, width: 440, line: 1.25)
+    shot("library.png", x: 560, y: 110, width: 760)
+    NSGraphicsContext.restoreGraphicsState()
+    // JPEG: link previews (WhatsApp, iMessage) often skip cards over ~300 KB.
+    try rep.representation(using: .jpeg, properties: [.compressionFactor: 0.82])!.write(to: images.appendingPathComponent("og.jpg"))
+    print(images.appendingPathComponent("og.jpg").path)
+}
+
 // Thumbnail: the icon at 240×240.
 if let icon = NSImage(contentsOf: root.appendingPathComponent("build/icon-1024.png")) {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: 240, pixelsHigh: 240, bitsPerSample: 8, samplesPerPixel: 4,

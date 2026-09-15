@@ -16,4 +16,6 @@ Open an [issue](https://github.com/smithplus/Osmotic/issues) labeled **security*
 
 ## For people working on the code
 
-The camera is an **untrusted** network peer: everything it sends (names, sizes, frames, HTTP) is validated. See `docs/STATUS.md` (security review) and the `PathSafetyTests`, `DownloaderTests`, `FuzzTests` tests.
+The camera is an **untrusted** network peer: everything it sends (names, sizes, frames, HTTP) is validated. Sizes stated over HTTP must be between 1 byte and 1 TiB (`CameraHTTP.plausibleSize`); small reads are capped (`CameraHTTP.data(_:limit:)`, `range`); a file is complete only when the server's size arrived; redirects and HTML answers are refused. See `docs/STATUS.md` (security review) and the `PathSafetyTests`, `DownloaderTests`, `FuzzTests` tests.
+
+The landing page (`site/`) is static, loads nothing from third parties, and carries a strict Content Security Policy (no inline script or style; the only connection is `api.github.com` for the latest release).

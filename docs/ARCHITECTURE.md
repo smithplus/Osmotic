@@ -40,6 +40,7 @@ Tabs (`AppModel.Workspace`): **Files** (`.files`, Wi-Fi flow: cameras → connec
 | `Camera/Pagination.swift` | per-store cursors, `SliceInfo`, `collectStores` (SD/internal split by request counter) |
 | `Camera/StatusTracker.swift` | status pushes: battery `0x0d/02`, storage `0x02/dc`, `0x02/80` (playback, recording, seconds, mode) |
 | `Camera/CameraFile.swift` | file model, `localName` (local name that is safe against untrusted names), URLs `/v2?storage=N&path=…`, `CameraStatus` (battery, storage, recording, mode) |
+| `Camera/LibraryOrder.swift` | library order on `[CameraFile]`: `newestFirst` (stamp, then sequence number, descending), `oldestFirst` (download queue), `merging` (a listed page joins the library: new files by `id`, re-sorted) |
 | `Video/LiveReassembler.swift` | pktType 0x02 fragments → Annex-B messages (continuity by seq, 8 MB cap) |
 | `Video/H264AnnexB.swift` | NALs, AVCC |
 | `HTTP/CameraHTTP.swift` | ephemeral URLSession without redirects, HEAD/data/range, `resolveStorage` |
@@ -52,7 +53,13 @@ Tabs (`AppModel.Workspace`): **Files** (`.files`, Wi-Fi flow: cameras → connec
 
 | File | What it does |
 |---|---|
-| `App/AppModel.swift` | **orchestrator**: screens, connection stages (`connectGeneration`), `teardownTask`/`startupRecovery`/`recoverTask` (never overlapped by a new connection), library, auto-paging, download queue (`transferGeneration`, `queuedIds`), link recovery (`linkGaveUp`), tabs (`Workspace`, `setWorkspace`), control and live view, demo mode (`loadDemo`) |
+| `App/AppModel.swift` | **orchestrator**, split by area into the `AppModel+*.swift` extensions below. This file: the shared types (`Screen`, `Stage`, `Filter`, `Target`, `TransferState`, `TransferSummary`, `Workspace`, `LiveView`), every stored property (setters are internal because the extensions write them), `init` and small shared helpers (`cacheThumbnail`, saved cameras) |
+| `App/AppModel+Connection.swift` | connect: `start` (waits for `teardownTask`/`startupRecovery`/`recoverTask`, never overlaps them), `runConnect` stages (`connectGeneration`), `makeSession`, pairing and credentials, `cancelConnect`, `retry`, `backToCameras` |
+| `App/AppModel+Teardown.swift` | `requestDisconnect`, `disconnect`, `cleanup`/`teardown` (Wi-Fi restore in its own task), `hasWifiWorkPending`/`finishWifiWork` (quit), link recovery (`recoverLink`, `linkGaveUp`, `waitForLink`), startup recovery (`recoverInterruptedSession`) |
+| `App/AppModel+Library.swift` | filters, selection and keyboard cursor, `refreshDownloaded`, `size(of:)` and `probeRealSizes` (sizes over 4 GiB), auto-paging (`loadOlderPage`, `loadOlderWhileNew`), thumbnails, Finder |
+| `App/AppModel+Transfers.swift` | download queue: `enqueue` (oldest first), `runQueue` (`transferGeneration`, `queuedIds`, resume after a lost link), `cancelTransfers`, progress and real size, sidecars, `stampDates` |
+| `App/AppModel+Live.swift` | tabs (`setWorkspace`), `enterLive`/`leaveLive` (back to playback and relist), live view, shutter, modes |
+| `App/AppModel+Demo.swift` | demo mode (`loadDemo`, the `OSMOTIC_DEMO_*` variables) |
 | `App/OsmoticApp.swift` | scenes (main `Window`, Settings, Technical Log), Camera and Help menus, `AppDelegate` (disconnects on quit, waits for the Wi-Fi to come back, `OSMOTIC_SNAPSHOT` hook) |
 | `App/Persistence.swift` | `Preferences` (UserDefaults), `SavedCameraStore`, `Keychain` (camera Wi-Fi password), `DownloadHistory`, `DownloadPaths` |
 | `App/AppLog.swift` | thread-safe `log()` → file (no username in paths) + visible `LogStore`; `redactedSSID` |

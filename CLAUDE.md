@@ -36,7 +36,7 @@ Tested with a real Pocket 3: Files (2026-09-14) and Files + Live (2026-09-15: li
 
 ```bash
 swift build                      # app + core
-swift test                       # 83 tests in 20 suites (~50 s; the session and control e2e tests take 10–16 s each)
+swift test                       # 94 tests in 21 suites (~50 s; the session and control e2e tests take 10–16 s each)
 swift test --filter Golden       # only the decoder snapshots
 scripts/lint.sh [--fix]          # swift-format (.swift-format: 4 spaces, 130 columns); CI enforces it
 scripts/sync_strings.sh          # new strings → Resources/Localizable.xcstrings; lists the untranslated ones
