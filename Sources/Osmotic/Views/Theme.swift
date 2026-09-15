@@ -126,6 +126,10 @@ enum Depth {
     static func glow(_ color: Color, _ strength: Double = 0.35) -> ShadowToken {
         ShadowToken(color: color.opacity(strength), radius: 3)
     }
+    /// The wider halo a lit lens throws on the plate around it (only LEDs use it, over `glow`).
+    static func bloom(_ color: Color, _ strength: Double = 0.22) -> ShadowToken {
+        ShadowToken(color: color.opacity(strength), radius: 9)
+    }
 }
 
 extension View {
@@ -511,25 +515,46 @@ struct LED: View {
                 ?? (state == .off ? Text("Off") : state == .blink ? Text("Blinking") : Text("On")))
     }
 
+    /// A real panel lamp, in three parts: the hole it sits in, the domed lens (bright just above
+    /// the middle, darker at the limb) and the specular dot where the light above it lands.
     private func lens(dim: Double) -> some View {
         let lit = state != .off
         return ZStack {
-            Circle().fill(Color.black.opacity(0.45)).frame(width: size + 2, height: size + 2)  // bezel hole
+            // The bezel: a dark hole whose bottom edge catches the light, like every cut-out here.
+            Circle()
+                .fill(Color.black.opacity(0.6))
+                .frame(width: size + 3, height: size + 3)
+                .overlay {
+                    Circle().strokeBorder(
+                        LinearGradient(
+                            colors: [.black.opacity(0.7), Theme.lip.opacity(0.9)],
+                            startPoint: .top, endPoint: .bottom),
+                        lineWidth: 1)
+                }
             Circle()
                 .fill(
                     RadialGradient(
                         colors: lit
-                            ? [color.opacity(1), color.opacity(0.75), color.opacity(0.45)]
-                            : [Color(white: 0.16), Color(white: 0.09)],
-                        center: .init(x: 0.4, y: 0.35), startRadius: 0, endRadius: size * 0.7)
+                            ? [color.opacity(1), color.opacity(0.94), color.opacity(0.7)]
+                            : [Color(white: 0.17), Color(white: 0.08)],
+                        center: .init(x: 0.44, y: 0.4), startRadius: 0, endRadius: size * 0.62)
                 )
+                // Limb darkening: the lens is a dome, so its edge turns away from the eye.
+                .overlay {
+                    Circle().fill(
+                        RadialGradient(
+                            colors: [.clear, .black.opacity(lit ? 0.35 : 0.5)],
+                            center: .center, startRadius: size * 0.2, endRadius: size * 0.52))
+                }
                 .frame(width: size, height: size)
                 .opacity(1 - dim)
-            Circle().fill(.white.opacity(lit ? 0.85 : 0.12))
-                .frame(width: size * 0.28, height: size * 0.28)
-                .offset(x: -size * 0.16, y: -size * 0.18)
+            Circle().fill(.white.opacity(lit ? 0.9 : 0.12))
+                .frame(width: size * 0.26, height: size * 0.26)
+                .blur(radius: size * 0.04)
+                .offset(x: -size * 0.17, y: -size * 0.19)
         }
-        .shadow(Depth.glow(lit ? color : .clear, 0.6 * (1 - dim)))
+        .shadow(Depth.glow(lit ? color : .clear, 0.65 * (1 - dim)))
+        .shadow(Depth.bloom(lit ? color : .clear, 0.28 * (1 - dim)))
         .accessibilityHidden(true)
     }
 }

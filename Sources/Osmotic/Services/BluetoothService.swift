@@ -63,7 +63,11 @@ final class BluetoothService: NSObject {
     }
 
     /// Demo/snapshot only: show a camera without any radio.
-    func injectDemo(_ camera: DiscoveredCamera) { cameras[camera.id] = camera }
+    /// Demo mode only: a camera in the list, and the radio shown as on (no CoreBluetooth involved).
+    func injectDemo(_ camera: DiscoveredCamera) {
+        cameras[camera.id] = camera
+        power = .poweredOn
+    }
 
     var sortedCameras: [DiscoveredCamera] { cameras.values.sorted { $0.rssi > $1.rssi } }
 

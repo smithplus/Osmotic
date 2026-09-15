@@ -38,7 +38,7 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 // the hero shot.
 (() => {
   const dock = document.querySelector(".navdock");
-  const hero = document.querySelector(".shot--hero img");
+  const hero = document.querySelector(".shot--hero video, .shot--hero img");
   let queued = false;
   const update = () => {
     queued = false;
@@ -81,35 +81,107 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   for (const { section } of sections) io.observe(section);
 })();
 
-// Readouts count up when they come into view, the way a meter settles on its value.
+// Readouts count up when they come into view, the way a meter settles on its value: a beat after
+// the readout lights (so the reader sees the needle move), brighter while it climbs.
 (() => {
   const targets = [...document.querySelectorAll("[data-count]")];
   if (targets.length === 0 || !("IntersectionObserver" in window)) return;
+  const run = (el) => {
+    const end = Number(el.dataset.count);
+    if (!Number.isFinite(end)) return;
+    const line = el.closest("p") || el;
+    if (reduceMotion.matches) {
+      el.textContent = String(end);
+      return;
+    }
+    el.textContent = "0";
+    line.classList.add("is-counting");
+    const started = performance.now();
+    const tick = (now) => {
+      const t = Math.min(1, (now - started) / 1000);
+      const eased = 1 - Math.pow(1 - t, 3);  // ease-out, so it lands softly
+      el.textContent = String(Math.round(end * eased));
+      if (t < 1) return requestAnimationFrame(tick);
+      line.classList.remove("is-counting");
+    };
+    requestAnimationFrame(tick);
+  };
   const io = new IntersectionObserver(
     (entries) => {
       for (const e of entries) {
         if (!e.isIntersecting) continue;
         io.unobserve(e.target);
-        const end = Number(e.target.dataset.count);
-        if (!Number.isFinite(end)) continue;
-        if (reduceMotion.matches) {
-          e.target.textContent = String(end);
-          continue;
-        }
-        const started = performance.now();
-        const tick = (now) => {
-          const t = Math.min(1, (now - started) / 700);
-          const eased = 1 - Math.pow(1 - t, 3);  // ease-out, so it lands softly
-          e.target.textContent = String(Math.round(end * eased));
-          if (t < 1) requestAnimationFrame(tick);
-        };
-        e.target.textContent = "0";
-        requestAnimationFrame(tick);
+        // The readout flickers on first (lcd-boot, 460 ms); the meter moves after that.
+        setTimeout(() => run(e.target), 520);
       }
     },
     { threshold: 0.6 },
   );
   for (const el of targets) io.observe(el);
+})();
+
+// The hero video: one session with a camera, on a loop. It starts once the page has loaded (the
+// poster is what paints first), shows which step is on screen, stops while it is out of view, and
+// the reader can pause it (a moving picture must be stoppable). Reduce Motion leaves the poster.
+(() => {
+  const figure = document.querySelector("[data-demo]");
+  if (!figure) return;
+  const video = figure.querySelector("video");
+  const bar = figure.querySelector(".demo-bar");
+  const stepName = figure.querySelector("[data-demo-step]");
+  const toggle = figure.querySelector("[data-demo-toggle]");
+  // "seconds:Name" pairs, written by scripts/make_demo_video.swift's storyboard.
+  const steps = (figure.dataset.steps || "")
+    .split(",")
+    .map((pair) => pair.split(":"))
+    .map(([t, name]) => ({ t: Number(t), name }))
+    .filter((s) => Number.isFinite(s.t) && s.name);
+  let userPaused = reduceMotion.matches;
+  let inView = true;
+
+  const label = () => {
+    const now = video.currentTime;
+    let current = steps[0];
+    for (const s of steps) if (s.t <= now) current = s;
+    if (current && stepName.textContent !== current.name) stepName.textContent = current.name;
+  };
+  const sync = () => {
+    toggle.textContent = video.paused ? "Play" : "Pause";
+    toggle.setAttribute("aria-pressed", String(video.paused));
+  };
+  const play = () => {
+    if (userPaused || !inView) return;
+    video.play().catch(() => {});  // autoplay refused: the poster stays, the key still works
+  };
+
+  video.addEventListener("timeupdate", label);
+  video.addEventListener("play", sync);
+  video.addEventListener("pause", sync);
+  toggle.addEventListener("click", () => {
+    userPaused = !video.paused;
+    if (userPaused) video.pause();
+    else {
+      inView = true;
+      play();
+    }
+  });
+
+  const start = () => {
+    bar.hidden = false;
+    sync();
+    new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          inView = e.isIntersecting;
+          if (inView) play();
+          else video.pause();
+        }
+      },
+      { threshold: 0.2 },
+    ).observe(figure);
+  };
+  if (document.readyState === "complete") start();
+  else addEventListener("load", start, { once: true });
 })();
 
 // iOS Safari applies :active (the key press) only when a touch listener exists.

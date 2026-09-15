@@ -63,7 +63,9 @@ struct MediaCell: View {
             .fill(Theme.lcd.opacity(0.85))
             .aspectRatio(16 / 9, contentMode: .fit)
             .overlay {
-                if let image {
+                // The cache first: a recreated cell (scrolling, a filter) shows its print at once, and
+                // renders that never run `.task` (ImageRenderer snapshots) still get it.
+                if let image = image ?? model.cachedThumbnail(for: file) {
                     // Landscape fills the frame; a vertical clip or photo is shown whole, not cropped to a sliver.
                     let portrait = image.size.height > image.size.width
                     Image(nsImage: image)

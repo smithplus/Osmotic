@@ -49,6 +49,17 @@ struct TopPlate<Center: View, Trailing: View>: View {
     }
 }
 
+/// The Settings key on the plate: the same door as ⌘, and the menu item, where a hand looks for it.
+struct SettingsKey: View {
+    var body: some View {
+        SettingsLink {
+            Label("Settings", systemImage: "gearshape.fill")
+        }
+        .buttonStyle(.compactKey)
+        .help("Open Osmotic's settings")
+    }
+}
+
 extension TopPlate where Center == EmptyView {
     init(@ViewBuilder trailing: () -> Trailing) {
         self.center = EmptyView()

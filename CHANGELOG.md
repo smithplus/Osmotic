@@ -8,6 +8,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 - A landing page at https://smithplus.github.io/Osmotic/: static HTML and CSS in the app's style, published by GitHub Pages, with install steps, a comparison, an FAQ and an illustration of each step of the install.
 - A user guide (`docs/GUIDE.md`), which the Help menu now opens: every screen, the keyboard shortcuts and what to try when something fails.
 - Settings › Credits now names the maker and links a way to support the work.
+- A Settings key on the top plate, next to Bluetooth and in the library beside Disconnect.
+- The landing page opens with a short looping video of a whole session, drawn by the app itself.
 
 ### Security
 - Sizes stated by the camera's web server are bounded, and small reads (thumbnails, preview stills) are capped: a device answering at the camera's address could otherwise crash the app or make it buffer without end.
@@ -19,6 +21,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 - VoiceOver: the LCD readouts read as one, progress meters report their value, and Connect and Download Day keys say which camera or day.
 - Notices say what to do next; Spanish follows Latin American macOS ("la Mac", "Configuración del Sistema").
 - New app icon: the wordmark's "o." (a lowercase o and the orange dot) on a graphite plate.
+- LEDs look like panel lamps: a domed lens in its bezel, with a halo on the plate when lit.
+- Thumbnails already decoded show at once when the grid redraws, instead of blinking in again.
 - The wordmark lines up with the panels below it. The window buttons sit in the title-bar band above, so no gap is kept for them. Its dot sits on the baseline like a period.
 - README and project docs are in English only (the app itself stays in English and Spanish).
 

@@ -1567,6 +1567,16 @@
         }
       }
     },
+    "Open Osmotic's settings": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la configuración de Osmotic"
+          }
+        }
+      }
+    },
     "Open Release Page": {
       "localizations": {
         "es": {
@@ -2069,6 +2079,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Elegidos"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Configuración"
           }
         }
       }

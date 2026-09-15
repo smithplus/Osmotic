@@ -244,6 +244,7 @@ struct LibraryTopPlate: View {
                     state: model.linkLost || model.switchingWorkspace ? .blink : .on,
                     label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
                 CassetteKeyBank(compact: true) {
+                    SettingsKey()
                     Button {
                         model.requestDisconnect()
                     } label: {

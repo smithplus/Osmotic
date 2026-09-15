@@ -19,10 +19,13 @@ struct CamerasView: View {
             TopPlate {
                 WorkspaceTabs()
             } trailing: {
-                switch model.ble.power {
-                case .poweredOn: LED(color: Theme.success, state: .on, label: "Bluetooth")
-                case .unknown: LED(state: .off, label: "Bluetooth", spokenState: "Starting")
-                default: LED(color: Theme.danger, state: .blink, label: "Bluetooth", spokenState: "Unavailable")
+                HStack(spacing: Theme.s3) {
+                    switch model.ble.power {
+                    case .poweredOn: LED(color: Theme.success, state: .on, label: "Bluetooth")
+                    case .unknown: LED(state: .off, label: "Bluetooth", spokenState: "Starting")
+                    default: LED(color: Theme.danger, state: .blink, label: "Bluetooth", spokenState: "Unavailable")
+                    }
+                    CassetteKeyBank(compact: true) { SettingsKey() }
                 }
             }
             if model.workspace == .webcam {

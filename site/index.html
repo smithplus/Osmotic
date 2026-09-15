@@ -25,6 +25,8 @@
 <link rel="sitemap" type="application/xml" href="sitemap.xml">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","@id":"https://smithplus.github.io/Osmotic/#app","name":"Osmotic","description":"Free, open-source Mac app for DJI Osmo cameras: download footage over the camera's own Wi-Fi, control the camera and watch it live, or use it as a USB webcam.","applicationCategory":"MultimediaApplication","operatingSystem":"macOS 15 or later","processorRequirements":"Apple silicon or Intel","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"downloadUrl":"https://github.com/smithplus/Osmotic/releases/latest","url":"https://smithplus.github.io/Osmotic/","image":"https://smithplus.github.io/Osmotic/images/icon.png","screenshot":"https://smithplus.github.io/Osmotic/images/og.jpg","license":"https://opensource.org/licenses/MIT","isAccessibleForFree":true,"inLanguage":["en","es"],"author":{"@type":"Person","name":"smithplus","url":"https://smithplus.me","sameAs":["https://github.com/smithplus"]},"isBasedOn":{"@type":"SoftwareSourceCode","name":"Osmosis","url":"https://github.com/KonradIT/osmosis"},"sameAs":["https://github.com/smithplus/Osmotic"]},{"@type":"WebSite","@id":"https://smithplus.github.io/Osmotic/#site","name":"Osmotic","url":"https://smithplus.github.io/Osmotic/","inLanguage":"en","about":{"@id":"https://smithplus.github.io/Osmotic/#app"}}]}</script>
 <link rel="stylesheet" href="style.css">
+<!-- The hero video's poster is the first thing painted: fetch it before anything else. -->
+<link rel="preload" as="image" type="image/webp" href="images/demo-poster.webp" fetchpriority="high">
 <script src="main.js" defer></script>
 </head>
 <body>
@@ -57,8 +59,18 @@
       </div>
       <p class="fine">Free and open source · macOS 15+ · Apple silicon and Intel</p>
     </div>
-    <figure class="shot shot--hero">
-      <img src="images/library.webp" width="1488" height="1053" fetchpriority="high" alt="Osmotic's Files tab: clips from an Osmo Pocket 3 grouped by day, two selected, a download in progress">
+    <figure class="shot shot--hero demo" data-demo data-steps="0:Download,2.7:Done,5.3:Connect,7.4:Link,10.4:Pick,13.35:Download">
+      <!-- One session with a camera, rendered by the app itself in demo mode
+           (scripts/make_demo_video.swift): no screen recording, synthetic footage. main.js starts it
+           once the page has loaded, unless the reader asked for reduced motion. -->
+      <video class="demo-video" width="1400" height="966" poster="images/demo-poster.webp" muted loop playsinline preload="none"
+             aria-label="Osmotic connecting to an Osmo Pocket 3, two clips ticked, and their download to the Mac">
+        <source src="images/demo.mp4" type="video/mp4">
+      </video>
+      <figcaption class="demo-bar" hidden>
+        <span class="demo-step"><span class="label">Step:</span> <span data-demo-step>Download</span></span>
+        <span class="bank"><button type="button" class="key key--compact" data-demo-toggle>Pause</button></span>
+      </figcaption>
     </figure>
     <div class="lcd lcd--proof" data-reveal>
       <p><span class="label">Speed:</span> ~<span data-count="33">33</span> MB/s</p>

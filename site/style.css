@@ -107,10 +107,36 @@ strong { color: #fff; font-weight: 600; }
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 5px rgb(238 92 36 / 0.5); }
 .status { margin: 0; display: inline-flex; align-items: center; gap: var(--s2); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
 
-/* LEDs: an unlit lens, and a lit layer that fades in over it (opacity only). */
-.led { position: relative; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgb(70 70 68), rgb(24 24 23) 70%); box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--lip); flex: none; }
-.led::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c8f7da, var(--led-green) 45%, #1d7a41); box-shadow: 0 0 6px rgb(74 222 128 / 0.6); opacity: 0; }
+/* LEDs: a lens sunk into its bezel. Unlit it is dark glass; lit, the dome lights from the middle,
+   keeps a specular dot at the top left and throws a little light on the plate. Opacity only. */
+.led {
+  position: relative; width: 11px; height: 11px; border-radius: 50%; flex: none;
+  background:
+    radial-gradient(circle at 36% 30%, rgb(255 255 255 / 0.07) 0 22%, transparent 40%),
+    radial-gradient(circle at 50% 60%, rgb(52 52 50), rgb(15 15 14) 78%);
+  box-shadow:
+    inset 0 1.5px 2px rgb(0 0 0 / 0.8),          /* the hole it sits in */
+    0 0 0 1px rgb(0 0 0 / 0.5),                  /* bezel */
+    0 1px 0 rgb(255 255 255 / 0.07);             /* the bezel's lit top edge */
+}
+.led::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; opacity: 0;
+  background:
+    radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.92) 0 10%, transparent 32%),
+    radial-gradient(circle at 50% 58%, #e2ffee 0 6%, var(--led-green) 44%, #12703a 92%);
+  box-shadow:
+    inset 0 0 3px rgb(255 255 255 / 0.45),
+    0 0 7px 1px rgb(74 222 128 / 0.5),
+    0 0 18px 3px rgb(74 222 128 / 0.18);
+}
 .led--on::after { opacity: 1; }
+/* The bigger stage lights show the mesh of a real panel lamp. */
+.led--stage::after {
+  background:
+    radial-gradient(circle at 36% 28%, rgb(255 255 255 / 0.9) 0 9%, transparent 30%),
+    repeating-radial-gradient(circle at 50% 58%, rgb(0 0 0 / 0.14) 0 0.6px, transparent 0.6px 2.2px),
+    radial-gradient(circle at 50% 58%, #e2ffee 0 6%, var(--led-green) 44%, #12703a 92%);
+}
 
 /* ---- Keys (CassetteKeyStyle) ----------------------------------------------------------------- */
 .bank {
@@ -252,7 +278,22 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
 
 .shot { margin: 0; }
 .shot img { width: 100%; }
-.shot--hero { margin-inline: calc(-1 * var(--s3)); }
+/* The hero video is the bare window: the corners and the shadow are drawn here, so the file
+   carries no transparent margin (video has no alpha). */
+.demo-video {
+  display: block; width: 100%; height: auto; aspect-ratio: 1400 / 966;
+  border-radius: 12px; background: #1d1d1c;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1), 0 14px 38px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.demo-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
+  margin-top: var(--s3); font: 500 11px/1 var(--mono); letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--muted);
+}
+.demo-step .label { color: var(--lcd-caption); }
+.demo-step [data-demo-step] { color: var(--lcd-text); }
+.demo-bar .key { min-width: 76px; }
+.shot--hero { margin-inline: 0; }
 
 .lcd--proof {
   display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2) var(--s5);
@@ -303,8 +344,18 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 
 /* How it works: the connecting screen's stage lights */
 .stages { list-style: none; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4); }
+/* Between one light and the next, the run of copper the signal travels. Drawn per stage so it
+   lines up with the lenses whatever the panel's padding is. */
+.stages li { position: relative; }
+.stages li + li::before {
+  content: ""; position: absolute; top: 7px; height: 2px;
+  left: calc(-50% - var(--s4) + 13px); right: calc(50% + 13px);
+  background: linear-gradient(90deg, rgb(255 146 52 / 0.2), rgb(255 146 52 / 0.5));
+  box-shadow: 0 0 6px rgb(255 146 52 / 0.2);
+  transform-origin: left center;
+}
 .stages li { display: grid; justify-items: center; text-align: center; gap: var(--s2); }
-.stages .led { width: 13px; height: 13px; }
+.stages .led { width: 16px; height: 16px; }
 .stage-name { font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 .stages p { margin: 0; color: var(--muted); font-size: 15px; }
 
@@ -418,6 +469,9 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 .hero .actions { animation: rise 500ms var(--ease-out) 200ms both; }
 .shot--hero { animation: tray 600ms var(--ease-out) 120ms both; }
 .status .led::after { opacity: 0; animation: led-on 1ms linear 600ms forwards; }
+/* While a meter is settling, its digits sit a shade brighter, like a needle still moving. */
+.lcd--proof p.is-counting { color: #ffd9b0; text-shadow: 0 0 10px rgb(255 146 52 / 0.55); }
+.lcd--proof p { transition: color 260ms var(--ease-out), text-shadow 260ms var(--ease-out); }
 @keyframes led-on { to { opacity: 1; } }
 
 /* Scroll reveals (main.js adds .reveal-ready, then .is-in as each block comes into view). */
@@ -439,6 +493,30 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 .stages li:nth-child(4), .lcd--table tbody tr:nth-child(4) { --i: 3; }
 .lcd--table tbody tr:nth-child(5) { --i: 4; }
 .lcd--table tbody tr:nth-child(6) { --i: 5; }
+/* Each run of copper draws just before the light at its end comes on. */
+.reveal-ready .stages li + li::before { transform: scaleX(0); }
+.reveal-ready .stages.is-in li + li::before {
+  transform: scaleX(1);
+  transition: transform 280ms var(--ease-out);
+  transition-delay: calc(400ms + (var(--i, 1) - 1) * 320ms);
+}
+/* A feature's screenshot slides in from the side it sits on, like a tray pulled out. */
+.reveal-ready .feature .shot { transform: translate(16px, 20px) scale(0.985); }
+.reveal-ready .feature--flip .shot { transform: translate(-16px, 20px) scale(0.985); }
+.reveal-ready .feature .shot.is-in { transform: none; }
+/* Step numbers light like a readout. */
+.reveal-ready .steps--row li.is-in .n { animation: lcd-boot 420ms steps(1, end) 120ms both; }
+/* One pass of light across the grille when the download plate arrives. */
+.cta .panel { position: relative; overflow: hidden; }
+.cta .panel::after {
+  content: ""; position: absolute; inset: -20% -40%; pointer-events: none; opacity: 0;
+  background: linear-gradient(105deg, transparent 38%, rgb(255 255 255 / 0.05) 50%, transparent 62%);
+}
+.reveal-ready .cta .panel.is-in::after { opacity: 1; animation: sweep 1100ms var(--ease-out) 260ms both; }
+@keyframes sweep {
+  from { transform: translateX(-60%); }
+  to { transform: translateX(60%); }
+}
 /* Stage lights come on one after another, as they do while connecting. */
 .reveal-ready .stages.is-in .led::after { opacity: 1; transition: opacity 120ms steps(2, end); transition-delay: calc(350ms + var(--i, 0) * 320ms); }
 .stages .led::after { opacity: 1; }  /* lit without JS */
@@ -449,6 +527,7 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 
 /* ---- Narrow screens ------------------------------------------------------------------------ */
 @media (max-width: 860px) {
+  .stages li + li::before { display: none; }  /* the stages wrap: nothing to connect sideways */
   .feature { grid-template-columns: 1fr; gap: var(--s3); }
   .feature--flip .feature-text { order: 0; }
   .icons { grid-template-columns: repeat(3, 1fr); }
@@ -476,7 +555,6 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .icons { grid-template-columns: 1fr 1fr; }
   .panel--screws { padding: var(--s4); }
   .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
-  .shot--hero { margin-inline: calc(-1 * var(--s2)); }
   .section { padding-block: var(--s6) 0; }
 }
 
@@ -507,4 +585,8 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .reveal-ready [data-reveal].is-in { transition: opacity 300ms linear; transition-delay: 0ms; }
   .reveal-ready .index::after { transform: none; }
   .reveal-ready .stages .led::after, .reveal-ready .lcd--table tbody tr { transition-delay: 0ms !important; }
+  .reveal-ready .stages li + li::before, .reveal-ready .stages.is-in li + li::before { transform: none; transition: none; }
+  .reveal-ready .feature .shot, .reveal-ready .feature--flip .shot { transform: none; }
+  .reveal-ready .steps--row li.is-in .n, .reveal-ready .cta .panel.is-in::after { animation: none; }
+  .cta .panel::after { display: none; }
 }
