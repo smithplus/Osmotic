@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Debug: render a demo screen of build/Osmotic.app to a PNG without hardware.
-#   scripts/snapshot.sh <out.png> [library|connecting|cameras] [manifest.bin]
+#   scripts/snapshot.sh <out.png> [library|connecting|cameras|camera|webcam] [manifest.bin]
 #   OSMOTIC_LANG=es scripts/snapshot.sh …   renders in another language
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

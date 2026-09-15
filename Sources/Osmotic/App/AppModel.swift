@@ -147,7 +147,7 @@ final class AppModel {
     }
 
     /// UI demo without hardware: a captured manifest on screen, or the connection stepper mid-way.
-    /// `OSMOTIC_DEMO_MANIFEST=<file.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras]`.
+    /// `OSMOTIC_DEMO_MANIFEST=<file.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<dir>]`.
     private func loadDemo(manifestPath: String, screen demoScreen: String?) {
         log("demo: \(manifestPath)")
         let bytes = (try? Data(contentsOf: URL(fileURLWithPath: manifestPath))).map { [UInt8]($0) } ?? []

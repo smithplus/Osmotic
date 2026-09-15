@@ -120,7 +120,7 @@ public struct CameraModel: Sendable, Equatable {
         return m
     }
 
-    public static let `default` = CameraModel(name: "Cámara DJI Osmo")
+    public static let `default` = CameraModel(name: "DJI Osmo camera")
     public static let idPocket3 = 0x0020
 
     static let byId: [Int: CameraModel] = [

@@ -1,6 +1,6 @@
 # Protocolo (lo que usamos)
 
-Fuente completa: [`MEDIA_PROTOCOL.md`](https://github.com/KonradIT/osmosis/blob/main/MEDIA_PROTOCOL.md) del upstream. Esto es el resumen para no tener que releerlo.
+Fuente completa: [`MEDIA_PROTOCOL.md`](https://github.com/KonradIT/osmosis/blob/main/MEDIA_PROTOCOL.md) del upstream. Esto es el resumen para no tener que releerlo. Control de captura y vista en vivo (pestaña Live): `docs/CONTROL.md`.
 
 ## Trama DUML
 
@@ -17,11 +17,11 @@ Fuente completa: [`MEDIA_PROTOCOL.md`](https://github.com/KonradIT/osmosis/blob/
 
 ## Datalink (UDP a 192.168.2.1)
 
-- Pocket 3 / Nano / Action 5-6 / Pocket 4: **UDP 9004** + poke TCP 7001 (SetPairingPIN). Xtra: 10004 sin poke. Si no hay handshake se prueba el alternativo.
-- Paquete: `[8B: 0x8000|total, session, seq, pktType, xor][12B routing: ack=seq-8, seq, 0000, counter, 01, 00, 00][DUML]`. pktType `00` handshake, `01` telemetría, `04` ACK de ventanas (eco del cursor de descarga del peer), `05` comando.
+- Pocket 3 / Nano / Action 5-6 / Pocket 4: **UDP 9004** + poke TCP 7001 (SetPairingPIN). Xtra: 10004 sin poke. Drones (Mavic 3, Neo 2): 9003 sin poke. Si no hay handshake se prueba el alternativo. Solo se aceptan paquetes de la IP de la cámara.
+- Paquete: `[8B: 0x8000|total, session, seq, pktType, xor][12B routing: ack=seq-8, seq, 0000, counter, 01, 00, 00][DUML]`. pktType `00` handshake, `01` telemetría, `02` video en vivo, `03` respuestas (en modo captura), `04` ACK de ventanas (eco del cursor de descarga del peer; en modo captura, el modelo de la app oficial: ver `docs/CONTROL.md`), `05` comando.
 - Registro: `0x00/0x81` (deviceinfo, cmdType 4, DM368 id2) → `0x00/0x88` APP presence → `0x03/0xDA 05ffffffff` → 8 suscripciones `0x00/0x99` → `0x00/0x6a` hora+TZ a `0x28`.
 - **Playback**: `0x02/0x0c 01010001`; confirmado solo por **bit 30 de `0x02/0x80`**. Pocket 3 responde `e0` → ruta `0x01/0x01` (cmdType 0): 6× `0300000000040000000701` y luego `0000000000040000000401` a ~20 Hz hasta el bit. Salir: `0x02/0x0c 01010000`.
-- Lista: `0x00/0x26` con contador en `@4` y cursor u32 en `@10`: ctr1 `0x00000001` (SD), trigger `4a040e10…`, ctr2 `0x40000001` (interno). Respuesta: chunks `0x00/0x27` `[4A sub 00 00 ctr 00 seq16 00 00][datos]`, sub `04` start / `01` datos / `03` fin. Página = 45; siguiente página = cursor al handle más viejo de cada store; fin = TLV `0c 01 0d`.
+- Lista: `0x00/0x26` con contador en `@4` y cursor u32 en `@10`: ctr1 `0x00000001` (SD), trigger `4a040e10…`, ctr2 `0x40000001` (interno). Respuesta: chunks `0x00/0x27` `[4A sub 00 00 ctr 00 seq16 00 00][datos]`, sub `04` start / `01` datos / `03` fin. La sesión arma el blob solo con estas tramas, recorriendo cada datagrama por separado (tope 8 MB). Página = 45; siguiente página = cursor al handle más viejo de cada store; fin = TLV `0c 01 0d`.
 - Keep-alive: ACK + beat `0x00/0x88 170046237c415050000000000002` ~1 Hz. Sin esto la cámara suelta playback y el AP.
 
 ## HTTP

@@ -533,7 +533,7 @@ struct LED: View {
     }
 }
 
-/// Section header printed on the plate: `01 CERCA` with a thin engraved rule.
+/// Section header printed on the plate: `01 NEARBY` with a thin engraved rule.
 struct SectionIndex: View {
     let number: Int
     let title: LocalizedStringKey

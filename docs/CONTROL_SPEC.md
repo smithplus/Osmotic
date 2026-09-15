@@ -1,7 +1,9 @@
 # Osmotic — camera control + live view spec (Pocket 3, Wi-Fi datalink)
 
-Implementation-ready spec. Nothing here is implemented or hardware-tested in Osmotic yet.
-Written 2026-09-14 from source reading only (no hardware in this pass).
+Implementation-ready spec, written 2026-09-14 from source reading only. Implemented in `19ecd04`
+(see `docs/CONTROL.md`); not yet hardware-tested. `ours …:N` line references are from before the
+implementation and the swift-format pass and no longer match. The `research/…` paths were a session
+scratchpad and are not in the repo (clone the upstream projects to follow the citations).
 
 ## 0. Sources, citation keys, evidence
 

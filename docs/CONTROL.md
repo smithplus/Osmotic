@@ -21,7 +21,7 @@ Pendiente: Timelapse/Hyperlapse (¿disparo por `02/01` o `02/02`?), truco de "pr
 | Repo | Qué aporta | Pocket 3 | Licencia |
 |---|---|---|---|
 | brianmerchant/Kaze-for-DJI (Swift/iOS) | grabar, foto, modos, ajustes, gimbal, **live view H.264 directo** por datalink 9004 | probado | MIT |
-| erik-sutton95/OpenPocketCine | live monitor, grabar, ISO/EV/WB, captura de RTMP de Mimo, notas de recuperación | probado (fw 01.06.10.04) | Apache-2.0 (mantener NOTICE) |
+| erik-sutton95/OpenPocketCine | live monitor, grabar, ISO/EV/WB, captura de RTMP de Mimo, notas de recuperación | probado (fw 01.06.10.04) | Apache-2.0 (solo re-implementado desde su documentación: no hace falta NOTICE mientras no se copie código) |
 | eerimoq/moblin, dimadesu/dji-remote | setup de livestream RTMP por BLE; Moblin tiene servidor RTMP Swift | listado | MIT (+ HaishinKit BSD-3) |
 | xaionaro-go/djictl | Wi-Fi join + RTMP | sí | CC0 |
 | DJI Osmo-GPS-Controller-Demo (R-SDK) | control oficial por BLE | **no** (solo Action/360) | EULA DJI |
