@@ -456,6 +456,19 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .steps--row { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
+  /* Five columns don't fit a phone: the comparison becomes one LABEL: value line per option,
+     the way the app's readouts are written. */
+  .lcd--pairs { overflow-x: visible; }
+  .lcd--pairs table, .lcd--pairs tbody, .lcd--pairs tr, .lcd--pairs th, .lcd--pairs td { display: block; }
+  .lcd--pairs thead { display: none; }
+  .lcd--pairs tbody tr { padding: var(--s3) 0; }
+  .lcd--pairs tbody tr + tr { border-top: 1px solid rgb(255 146 52 / 0.1); }
+  .lcd--pairs tbody th { padding: 0 0 6px; white-space: normal; }
+  .lcd--pairs tbody td { display: flex; justify-content: space-between; gap: var(--s3); padding: 3px 0; border: 0; }
+  .lcd--pairs tbody td::before { content: attr(data-label); color: var(--lcd-caption); }
+  /* The cameras table fits once its names may wrap. */
+  .lcd--table tbody th { white-space: normal; }
+  .lcd--table th, .lcd--table td { padding-right: var(--s2); }
   .navdock .bank { flex-wrap: nowrap; }
   .navdock .key--compact { padding: 0 8px; font-size: 9.5px; letter-spacing: 0.05em; }
   .navdock { padding-bottom: var(--s4); }
@@ -465,6 +478,12 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
   .shot--hero { margin-inline: calc(-1 * var(--s2)); }
   .section { padding-block: var(--s6) 0; }
+}
+
+/* Touch: a finger needs more room than a cursor, and the dock is the only place with small keys. */
+@media (pointer: coarse) {
+  .key--compact { height: 40px; padding: 0 14px; }
+  .faq summary { padding-block: var(--s3); }
 }
 
 /* Printing: reveals never run on paper. */

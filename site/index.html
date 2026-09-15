@@ -141,14 +141,16 @@
 
   <section class="section" aria-labelledby="compare-title">
     <h2 class="index" id="compare-title" data-reveal><span aria-hidden="true">04</span>How it compares</h2>
-    <div class="lcd lcd--table" data-reveal tabindex="0" role="region" aria-label="Comparison table">
-      <table>
+    <div class="lcd lcd--table lcd--pairs" data-reveal tabindex="0" role="region" aria-label="Comparison table">
+      <!-- On a phone this table becomes one labelled pair per line, so the roles are spelled out:
+           CSS display takes a table's own semantics away. -->
+      <table role="table">
         <caption class="visually-hidden">Osmotic compared with other ways to get Osmo footage onto a Mac</caption>
-        <thead><tr><td></td><th scope="col">Osmotic</th><th scope="col">DJI Mimo</th><th scope="col">Card reader</th><th scope="col">Pro offload apps</th></tr></thead>
+        <thead><tr role="row"><td role="cell"></td><th role="columnheader" scope="col">Osmotic</th><th role="columnheader" scope="col">DJI Mimo</th><th role="columnheader" scope="col">Card reader</th><th role="columnheader" scope="col">Pro offload apps</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Wireless to Mac</th><td class="on">Yes</td><td>Phone only</td><td>No</td><td>No</td></tr>
-          <tr><th scope="row">Price</th><td class="on">Free</td><td>Free</td><td>A reader</td><td>$49/mo or $169+</td></tr>
-          <tr><th scope="row">Open source</th><td class="on">Yes</td><td>No</td><td>n/a</td><td>No</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">Wireless to Mac</th><td role="cell" class="on" data-label="Osmotic">Yes</td><td role="cell" data-label="DJI Mimo">Phone only</td><td role="cell" data-label="Card reader">No</td><td role="cell" data-label="Pro offload apps">No</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">Price</th><td role="cell" class="on" data-label="Osmotic">Free</td><td role="cell" data-label="DJI Mimo">Free</td><td role="cell" data-label="Card reader">A reader</td><td role="cell" data-label="Pro offload apps">$49/mo or $169+</td></tr>
+          <tr role="row"><th role="rowheader" scope="row">Open source</th><td role="cell" class="on" data-label="Osmotic">Yes</td><td role="cell" data-label="DJI Mimo">No</td><td role="cell" data-label="Card reader">n/a</td><td role="cell" data-label="Pro offload apps">No</td></tr>
         </tbody>
       </table>
     </div>
