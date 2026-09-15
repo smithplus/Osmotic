@@ -32,15 +32,28 @@
   for (const el of blocks) if (!el.classList.contains("is-in")) io.observe(el);
 })();
 
-// The nav keys follow the reader: once the sticky dock reaches the top of the window, it closes into
-// a pill. Read on a passive scroll listener, coalesced into one frame.
+const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
+
+// One scroll handler, coalesced into a frame: the docked keys, the progress meter across the top
+// edge, and a few pixels of parallax under the hero shot.
 (() => {
   const dock = document.querySelector(".navdock");
-  if (!dock) return;
+  const meter = document.querySelector(".scroll-meter");
+  const hero = document.querySelector(".shot--hero img");
   let queued = false;
   const update = () => {
     queued = false;
-    dock.classList.toggle("is-stuck", dock.getBoundingClientRect().top <= 0.5);
+    const y = window.scrollY;
+    if (dock) dock.classList.toggle("is-stuck", dock.getBoundingClientRect().top <= 0.5);
+    if (meter) {
+      const max = document.documentElement.scrollHeight - innerHeight;
+      meter.style.transform = `scaleX(${max > 0 ? Math.min(1, y / max) : 0})`;
+    }
+    // The hero image trails the page slightly, the way a part deeper in the case would.
+    if (hero && !reduceMotion.matches) {
+      const shift = Math.max(-14, Math.min(0, -y * 0.03));
+      hero.style.transform = `translateY(${shift}px)`;
+    }
   };
   const onScroll = () => {
     if (queued) return;
@@ -50,6 +63,58 @@
   addEventListener("scroll", onScroll, { passive: true });
   addEventListener("resize", onScroll, { passive: true });
   update();
+})();
+
+// The key for the section you're reading latches, like the app's tabs.
+(() => {
+  const keys = [...document.querySelectorAll('.navdock .key[href^="#"]')];
+  if (keys.length === 0 || !("IntersectionObserver" in window)) return;
+  const sections = keys
+    .map((key) => ({ key, section: document.querySelector(key.getAttribute("href")) }))
+    .filter((pair) => pair.section);
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        const hit = sections.find((pair) => pair.section === e.target);
+        for (const { key } of sections) key.classList.toggle("is-current", key === hit?.key);
+      }
+    },
+    // A band across the middle of the window: whichever section crosses it owns the key.
+    { rootMargin: "-45% 0px -45% 0px" },
+  );
+  for (const { section } of sections) io.observe(section);
+})();
+
+// Readouts count up when they come into view, the way a meter settles on its value.
+(() => {
+  const targets = [...document.querySelectorAll("[data-count]")];
+  if (targets.length === 0 || !("IntersectionObserver" in window)) return;
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        const end = Number(e.target.dataset.count);
+        if (!Number.isFinite(end)) continue;
+        if (reduceMotion.matches) {
+          e.target.textContent = String(end);
+          continue;
+        }
+        const started = performance.now();
+        const tick = (now) => {
+          const t = Math.min(1, (now - started) / 700);
+          const eased = 1 - Math.pow(1 - t, 3);  // ease-out, so it lands softly
+          e.target.textContent = String(Math.round(end * eased));
+          if (t < 1) requestAnimationFrame(tick);
+        };
+        e.target.textContent = "0";
+        requestAnimationFrame(tick);
+      }
+    },
+    { threshold: 0.6 },
+  );
+  for (const el of targets) io.observe(el);
 })();
 
 // iOS Safari applies :active (the key press) only when a touch listener exists.
