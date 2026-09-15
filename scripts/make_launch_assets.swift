@@ -1,6 +1,7 @@
 // Product Hunt gallery (1270×760, rendered at 2x) and the 240×240 thumbnail, from the README
 // screenshots and the icon. Copy lives in docs/LAUNCH.md; keep the two in step.
 // Run: swift scripts/make_icon.swift . && swift scripts/make_launch_assets.swift .   → build/launch/*.png
+// Slides 3 and 5 use the raw renders of make_shots.swift and make_demo_video.swift (build/), so run those first.
 import AppKit
 
 let root = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : ".")
@@ -153,14 +154,48 @@ try slide("02-how-it-works.png") {
     }
 }
 
-// 3. Connect
+/// The top of a window, wide: the app's own 2x render (demo mode), cut below its content, with the
+/// title band and buttons on top, rounded, with the shots' shadow. For screens whose content sits
+/// at the top (connecting, webcam), so they read large instead of as a mostly empty window.
+func windowTop(_ raw: URL, points: CGFloat, x: CGFloat, y: CGFloat, width: CGFloat) {
+    guard let img = NSImage(contentsOf: raw)?.cgImage(forProposedRect: nil, context: nil, hints: nil),
+        let crop = img.cropping(to: CGRect(x: 0, y: 0, width: img.width, height: Int(points * 2)))
+    else { print("missing \(raw.path): run make_shots.swift and make_demo_video.swift first"); return }
+    let k = width / 1120  // slide points per window point
+    let band = 32 * k
+    let rect = NSRect(x: x, y: H - y - band - points * k, width: width, height: band + points * k)
+    let path = NSBezierPath(roundedRect: rect, xRadius: 12, yRadius: 12)
+    NSGraphicsContext.saveGraphicsState()
+    let sh = NSShadow(); sh.shadowColor = NSColor.black.withAlphaComponent(0.45); sh.shadowBlurRadius = 30
+    sh.shadowOffset = NSSize(width: 0, height: -12); sh.set()
+    rgb(34, 34, 33).setFill()
+    path.fill()
+    NSGraphicsContext.restoreGraphicsState()
+    NSGraphicsContext.saveGraphicsState()
+    path.addClip()
+    NSImage(cgImage: crop, size: NSSize(width: width, height: points * k))
+        .draw(in: NSRect(x: x, y: rect.minY, width: width, height: points * k))
+    let plate = NSBitmapImageRep(cgImage: crop).colorAt(x: crop.width / 2, y: 2) ?? rgb(34, 34, 33)
+    plate.setFill()
+    NSBezierPath(rect: NSRect(x: x, y: rect.maxY - band, width: width, height: band)).fill()
+    for (i, c) in [rgb(255, 95, 87), rgb(254, 188, 46), rgb(40, 200, 64)].enumerated() {
+        c.setFill()
+        let d = 12 * k
+        NSBezierPath(ovalIn: NSRect(x: x + (10 + 23 * CGFloat(i)) * k, y: rect.maxY - band / 2 - d / 2, width: d, height: d)).fill()
+    }
+    NSGraphicsContext.restoreGraphicsState()
+    NSColor.white.withAlphaComponent(0.1).setStroke()
+    NSBezierPath(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), xRadius: 12, yRadius: 12).stroke()
+}
+
+// 3. Connect: the five lights, mid-connection, large.
 try slide("03-connect.png") {
     wordmark()
-    label("Tab: Files", x: 48, y: 150)
-    let h = text("One click to connect", sans(46, .bold), ink, x: 48, y: 182, width: 460, tracking: -1.2, line: 1.02)
-    text("Five lights show where it is. Only new files are downloaded, and a download that stops picks up where it left off.",
-         sans(19, .regular), muted, x: 48, y: 182 + h + 22, width: 430, line: 1.25)
-    shot("connecting.png", x: 540, y: 150, width: 690)
+    label("Connect", x: 48, y: 130)
+    text("One click to connect", sans(46, .bold), ink, x: 48, y: 160, width: 1100, tracking: -1.2)
+    text("Five lights show where it is. Only new files come down, and a download that stops picks up where it left off.",
+         sans(19, .regular), muted, x: 48, y: 226, width: 1100)
+    windowTop(root.appendingPathComponent("build/video/raw/c-wifi.png"), points: 340, x: 48, y: 292, width: W - 96)
 }
 
 // 4. Live
@@ -173,14 +208,14 @@ try slide("04-live.png") {
     shot("live.png", x: 540, y: 110, width: 700)
 }
 
-// 5. Webcam
+// 5. Webcam: the three steps, large.
 try slide("05-webcam.png") {
     wordmark()
-    label("Tab: Webcam", x: 48, y: 150)
-    let h = text("A USB webcam with a gimbal", sans(46, .bold), ink, x: 48, y: 182, width: 450, tracking: -1.2, line: 1.02)
+    label("Tab: Webcam", x: 48, y: 130)
+    text("A USB webcam with a gimbal", sans(46, .bold), ink, x: 48, y: 160, width: 1100, tracking: -1.2)
     text("Plug the camera in with USB-C and choose Webcam. Zoom, Meet, FaceTime and OBS see it, even with Osmotic closed.",
-         sans(19, .regular), muted, x: 48, y: 182 + h + 22, width: 430, line: 1.25)
-    shot("webcam.png", x: 540, y: 200, width: 690)
+         sans(19, .regular), muted, x: 48, y: 226, width: 1100)
+    windowTop(root.appendingPathComponent("build/shots/webcam-raw.png"), points: 340, x: 48, y: 292, width: W - 96)
 }
 
 // 6. Comparison

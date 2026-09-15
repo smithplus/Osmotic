@@ -1,6 +1,6 @@
 # Launch kit (Product Hunt)
 
-Research done 2026-09-15 from public pages (sources at the end). Prices and stats are as those pages stated them that day; anything unverified says so. Nothing here was posted anywhere.
+Research done 2026-09-15 from public pages (sources at the end). Prices and stats are as those pages stated them that day; anything unverified says so. A Product Hunt draft was filled in on 2026-09-15 with the copy below (tagline 1, the description, the maker's comment in its 864-character version, topics Mac, Open Source, Photography, pricing Free); it is launched or scheduled only by the owner.
 
 ## Positioning
 
@@ -59,7 +59,7 @@ What their pages do well, worth copying: a short concrete hero (Camo), social pr
 
 ## Assets
 
-`swift scripts/make_icon.swift . && swift scripts/make_launch_assets.swift .` renders the gallery and thumbnail into `build/launch/` (1270×760 at 2x, from the README screenshots): hero, how it works, connect, Live, Webcam, comparison, open and private. Still to make by hand: the Finder slide (needs real downloads) and the demo video.
+`swift scripts/make_icon.swift . && swift scripts/make_launch_assets.swift .` renders the gallery and thumbnail into `build/launch/` (1270×760 at 2x, from the README screenshots; slides 3 and 5 crop the raw renders of `make_shots.swift` and `make_demo_video.swift`, so run those first): hero, how it works, connect, Live, Webcam, comparison, open and private. The gallery that went into the Product Hunt draft (2026-09-15) is slides 1 to 6 as JPEG, kept on the `launch-assets` branch. For the video slot: `docs/images/demo.mp4` and `live.mp4` joined at 1080p (`build/launch/producthunt/osmotic-demo-1080p.mp4`), to upload to YouTube. Still to make by hand: the Finder slide (needs real downloads).
 
 The full list, for reference:
 
