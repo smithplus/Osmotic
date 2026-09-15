@@ -1,6 +1,6 @@
 # Launch kit (Product Hunt)
 
-Research done 2026-09-15 from public pages (sources at the end). Prices and stats are as those pages stated them that day; anything unverified says so. A Product Hunt draft was filled in on 2026-09-15 with the copy below (tagline 1, the description, the maker's comment in its 864-character version, topics Mac, Open Source, Photography, pricing Free); it is launched or scheduled only by the owner.
+Research done 2026-09-15 from public pages (sources at the end). Prices and stats are as those pages stated them that day; anything unverified says so. A Product Hunt draft was filled in on 2026-09-15 with the copy below (tagline 1, the description, the maker's comment below, topics Mac, Open Source, Photography, pricing Free); it is launched or scheduled only by the owner.
 
 ## Positioning
 
@@ -46,12 +46,12 @@ What their pages do well, worth copying: a short concrete hero (Camo), social pr
 **Description** (235 characters):
 > Free, open-source Mac app for DJI Osmo cameras. Pairs over Bluetooth, joins the camera's Wi-Fi and downloads clips into day folders, dated when shot and resumable. Plus remote record, live view and USB webcam. No phone app, no account.
 
-**Maker's first comment** (edit before posting; keep it honest):
-> Hi Product Hunt! I shoot on an Osmo Pocket 3 and got tired of the routine: cable or card reader on the Mac, or DJI Mimo on the phone and then AirDrop. Osmotic lets the Mac talk to the camera directly. It pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot, resuming if the link drops.
+**Maker's first comment** (as in the draft, 986 of Product Hunt's 1000 characters; the code credit lives here because Osmosis and Kaze for DJI aren't Product Hunt products, so they can't be shoutouts):
+> Hi Product Hunt! I shoot on an Osmo Pocket 3 and got tired of the routine: a cable or card reader on the Mac, or DJI Mimo on the phone and then AirDrop. Osmotic lets the Mac talk to the camera directly: it pairs over Bluetooth, joins the camera's Wi-Fi and pulls only what's new into a folder per day, dated when shot, resuming if the link drops. It also starts and stops recording, shows the live picture, and over USB-C the camera works as a webcam.
 >
-> It stands on the shoulders of Osmosis, Konrad Iturbe's open-source Android app that reverse-engineered the protocol; Osmotic is a native macOS port. Remote control and live view follow Kaze for DJI.
+> Credit where it's due: this stands on Osmosis by Konrad Iturbe, the open-source Android app that worked out the camera's protocol (Osmotic is its native macOS port), and on Kaze for DJI by Brian Merchant for live control. Thank you both, and everyone who documented the protocol before us.
 >
-> Honest status: tested on a real Pocket 3 (downloads, recording, live view); the webcam tab and other Osmo models aren't tested yet. Free, MIT, no analytics, no account.
+> Tested on a real Pocket 3. Free, MIT, no analytics, no account. It isn't notarized by Apple yet, so the first launch needs Privacy & Security › Open Anyway, once.
 >
 > Which Osmo do you shoot with, and what would make offloading painless for you?
 
