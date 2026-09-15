@@ -194,7 +194,6 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .panel {
   position: relative;
   background:
-    url("textures/scratches.webp") 0 0 / 256px 256px repeat,
     url("textures/grain.webp") 0 0 / 128px 128px repeat,
     linear-gradient(to bottom, rgb(255 255 255 / 0.03), transparent 30%),
     linear-gradient(var(--metal-top), var(--metal-bottom));
@@ -209,7 +208,6 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
     var(--screw) calc(100% - 10px) 10px / 6px 6px no-repeat,
     var(--screw) 10px calc(100% - 10px) / 6px 6px no-repeat,
     var(--screw) calc(100% - 10px) calc(100% - 10px) / 6px 6px no-repeat,
-    url("textures/scratches.webp") 0 0 / 256px 256px repeat,
     url("textures/grain.webp") 0 0 / 128px 128px repeat,
     linear-gradient(to bottom, rgb(255 255 255 / 0.03), transparent 30%),
     linear-gradient(var(--metal-top), var(--metal-bottom));
