@@ -10,6 +10,11 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones [
 - Navegación de la grilla con flechas; VoiceOver en celdas, filtros, LEDs y etapas; Reducir movimiento.
 - Binario universal (Apple silicon + Intel); licencias y créditos dentro de la app; scripts de firma Developer ID y notarización.
 
+### Rendimiento
+- En reposo la app ya casi no consume: los LEDs parpadean en dos pasos (no animación continua) y todo lo animado, el escaneo Bluetooth y la webcam se pausan con la ventana oculta (pantalla de cámaras: 13 % → ~0 % de CPU).
+- Miniaturas reducidas a 560 px al recibirlas (~40 KB en vez de ~460 KB) y en una caché con límite; ordenar y agrupar una tarjeta grande ya no congela la ventana; el progreso de descarga no redibuja toda la grilla.
+- Descargas largas con la ventana atrás: sin App Nap mientras hay conexión y sin reposo mientras se descarga.
+
 ### Corregido
 - **Seguridad**: un archivo de la cámara llamado `..` podía borrar la carpeta que contiene a la de descargas; un SSID falso podía borrar una red guardada del Mac; la contraseña Wi-Fi de la cámara quedaba en texto plano.
 - "Try Again" no hacía nada; conexiones y restauraciones de Wi-Fi podían pisarse; descargas podían darse por completas con bytes de menos o una página HTML.

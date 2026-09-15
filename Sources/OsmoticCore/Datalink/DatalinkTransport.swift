@@ -76,6 +76,8 @@ public final class DatalinkTransport {
     public var dropVideo = false
 
     private var fd: Int32 = -1
+    /// One receive buffer for the transport's life (the capture pump receives ~20–80 times a second).
+    private var rxBuffer = [UInt8](repeating: 0, count: 65536)
     /// Checked inside the blocking loops so a closing session doesn't wait out a handshake or a receive.
     public var shouldAbort: () -> Bool = { false }
     private var peer = sockaddr_in()
@@ -225,7 +227,6 @@ public final class DatalinkTransport {
         }
         var out: [[UInt8]] = []
         let deadline = DispatchTime.now().uptimeNanoseconds + UInt64(ms) * 1_000_000
-        var buf = [UInt8](repeating: 0, count: 65536)
         while DispatchTime.now().uptimeNanoseconds < deadline {
             if shouldAbort() { break }
             // `precise` (the control pump's 12 ms bursts) waits only as long as the call has left. The
@@ -238,7 +239,7 @@ public final class DatalinkTransport {
             }
             var from = sockaddr_in()
             var fromLen = socklen_t(MemoryLayout<sockaddr_in>.size)
-            let n = buf.withUnsafeMutableBytes { b in
+            let n = rxBuffer.withUnsafeMutableBytes { b in
                 withUnsafeMutablePointer(to: &from) {
                     $0.withMemoryRebound(to: sockaddr.self, capacity: 1) { recvfrom(fd, b.baseAddress, b.count, 0, $0, &fromLen) }
                 }
@@ -251,7 +252,7 @@ public final class DatalinkTransport {
             }
             // Only the camera speaks on this socket: anyone else on its network is ignored.
             guard from.sin_addr.s_addr == peer.sin_addr.s_addr else { continue }
-            let data = Array(buf[0..<n])
+            let data = Array(rxBuffer[0..<n])
             observe(data)
             if data.count >= 8 && data[6] == 0x02 {
                 if let onVideo { onVideo(data); continue }

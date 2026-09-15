@@ -14,7 +14,7 @@ struct MediaCell: View {
 
     private var selected: Bool { model.selection.contains(file.id) }
     private var downloaded: Bool { model.isDownloaded(file) }
-    private var isCurrentTransfer: Bool { model.transfer?.current?.id == file.id }
+    private var isCurrentTransfer: Bool { model.currentTransferId == file.id }
 
     var body: some View {
         VStack(alignment: .leading, spacing: Theme.s2) {

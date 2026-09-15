@@ -493,10 +493,12 @@ struct LED: View {
         HStack(spacing: 7) {
             // A blinking LED pulses its brightness (never reads as switched off). Driven by the clock,
             // so it starts and stops with `state` and nothing keeps animating afterwards.
-            if state == .blink && !reduceMotion {
-                TimelineView(.animation(minimumInterval: 1 / 30)) { t in
-                    let wave = (sin(t.date.timeIntervalSinceReferenceDate * 2 * .pi / 1.2) + 1) / 2
-                    lens(dim: wave * 0.55)
+            if state == .blink && !reduceMotion && AppVisibility.shared.visible {
+                // On/dim every 0.6 s, like a real LED — two redraws a second instead of a continuous
+                // animation; steady while the window isn't on screen (no timeline running at all).
+                TimelineView(.periodic(from: .now, by: 0.6)) { t in
+                    let dimmed = Int(t.date.timeIntervalSinceReferenceDate / 0.6) % 2 == 1
+                    lens(dim: dimmed ? 0.55 : 0)
                 }
             } else {
                 lens(dim: 0)

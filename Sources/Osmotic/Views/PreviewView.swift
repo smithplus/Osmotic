@@ -1,5 +1,6 @@
 import AVFoundation
 import AVKit
+import ImageIO
 import OsmoticCore
 import SwiftUI
 
@@ -126,10 +127,16 @@ struct PreviewView: View {
             if !Task.isCancelled { failed = true }
         } else {
             if let thumb = model.cachedThumbnail(for: f) { photo = thumb }
-            let data = onDisk ? try? Data(contentsOf: local) : await model.http.data(f.originalURLPath)
+            let data: Data? =
+                onDisk
+                ? await Task.detached { try? Data(contentsOf: local) }.value
+                : await model.http.data(f.originalURLPath)
             guard !Task.isCancelled else { return }
-            if let data, let img = NSImage(data: data) {
-                photo = img
+            // Decode off the main thread, at the sheet's size (a 48 MP still decoded whole is ~200 MB).
+            let scaled: CGImage? = await Task.detached { data.flatMap { previewImage($0, maxPixel: 2400) } }.value
+            guard !Task.isCancelled else { return }
+            if let scaled {
+                photo = NSImage(cgImage: scaled, size: NSSize(width: scaled.width, height: scaled.height))
                 source = onDisk ? String(localized: "on your Mac") : String(localized: "from the camera")
             } else if photo == nil {
                 failed = true
@@ -154,4 +161,15 @@ private struct PlayerView: NSViewRepresentable {
         return v
     }
     func updateNSView(_ v: AVPlayerView, context: Context) { v.player = player }
+}
+
+/// A still decoded no larger than `maxPixel` on its longer side, honouring EXIF orientation.
+nonisolated private func previewImage(_ data: Data, maxPixel: Int) -> CGImage? {
+    guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+    let options: [CFString: Any] = [
+        kCGImageSourceCreateThumbnailFromImageAlways: true,
+        kCGImageSourceThumbnailMaxPixelSize: maxPixel,
+        kCGImageSourceCreateThumbnailWithTransform: true,
+    ]
+    return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
 }

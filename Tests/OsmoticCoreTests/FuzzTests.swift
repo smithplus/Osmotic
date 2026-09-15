@@ -85,4 +85,22 @@ import Testing
             _ = EmbeddedJpeg.fromHeader(b)
         }
     }
+
+    @Test func `name stamps match the regex they replaced`() throws {
+        func regexStamp(_ n: String) -> String { n.firstMatch(of: /_(\d{14})_/).map { String($0.1) } ?? "" }
+        func regexSeq(_ n: String) -> Int { n.firstMatch(of: /_(\d{4})_D/).flatMap { Int($0.1) } ?? 0 }
+        var names = try ["op3_29.bin", "op3_15.bin", "oa4_45.bin"].flatMap {
+            try ManifestDecoder.decodeBlob(fixture($0)).map(\.name)
+        }
+        var rng = SplitMix(state: 7)
+        let alphabet = Array("_D0123456789.MPJGx")
+        for _ in 0..<2000 {
+            names.append(String((0..<Int.random(in: 0...40, using: &rng)).map { _ in alphabet.randomElement(using: &rng)! }))
+        }
+        for n in names {
+            let f = CameraFile(path: "DCIM/" + n, thumbPath: "")
+            #expect(f.timestamp == regexStamp(f.name), "\(n)")
+            #expect(f.seq == regexSeq(f.name), "\(n)")
+        }
+    }
 }

@@ -186,11 +186,14 @@ enum DownloadPaths {
         byDate: Bool = Preferences.organizeByDate
     ) -> URL {
         var dir = root
-        if byDate, let date = f.captureDate {
-            let fmt = DateFormatter()
-            fmt.dateFormat = "yyyy-MM-dd"
-            fmt.locale = Locale(identifier: "en_US_POSIX")
-            dir = dir.appendingPathComponent(fmt.string(from: date), isDirectory: true)
+        // `YYYY-MM-DD` straight from the name's stamp (the camera's local date): no formatter per call —
+        // this runs for every file whenever the history is refreshed.
+        let t = Array(f.timestamp.utf8)
+        if byDate, t.count == 14 {
+            let day =
+                String(decoding: t[0..<4], as: UTF8.self) + "-" + String(decoding: t[4..<6], as: UTF8.self) + "-"
+                + String(decoding: t[6..<8], as: UTF8.self)
+            dir = dir.appendingPathComponent(day, isDirectory: true)
         }
         return dir.appendingPathComponent(f.localName)
     }

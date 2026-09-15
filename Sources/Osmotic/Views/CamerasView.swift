@@ -33,6 +33,11 @@ struct CamerasView: View {
                 }
             }
         }
+        // Scanning costs radio and CPU: only while someone can see the list.
+        .onChange(of: AppVisibility.shared.visible) { _, visible in
+            guard model.screen == .cameras else { return }
+            if visible { model.ble.startScan() } else { model.ble.stopScan() }
+        }
         .task {
             // Keep the list honest: drop cameras that stopped advertising.
             while !Task.isCancelled {
@@ -157,9 +162,9 @@ private struct ScanBars: View {
     let active: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var body: some View {
-        // ~8 refreshes a second and heights snapped to 3 pt segments: an LCD bar graph, not a
+        // 4 refreshes a second and heights snapped to 3 pt segments: an LCD bar graph, not a
         // smooth animation.
-        TimelineView(.animation(minimumInterval: 0.12, paused: !active || reduceMotion)) { t in
+        TimelineView(.animation(minimumInterval: 0.25, paused: !active || reduceMotion || !AppVisibility.shared.visible)) { t in
             let phase = t.date.timeIntervalSinceReferenceDate
             HStack(alignment: .bottom, spacing: 3) {
                 ForEach(0..<9, id: \.self) { i in
@@ -221,7 +226,7 @@ private struct CameraModule: View {
         .raisedPanel(screws: true)
     }
 
-    static func level(_ rssi: Int) -> Int { min(4, max(1, (rssi + 100) / 11)) }
+    static func level(_ rssi: Int) -> Int { BluetoothService.signalLevel(rssi) }
 }
 
 /// Four small green LEDs for signal strength.

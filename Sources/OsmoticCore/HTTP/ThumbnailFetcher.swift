@@ -1,4 +1,5 @@
 import Foundation
+import ImageIO
 
 /// Fetches grid thumbnails with bounded concurrency and a disk cache.
 ///
@@ -31,8 +32,17 @@ public actor ThumbnailFetcher {
         try? Data(contentsOf: cacheURL(for: file))
     }
 
+    /// Grid thumbnails are drawn at most ~280 pt wide: 560 px covers Retina. A camera screennail is
+    /// 1280×720 (~460 KB, ~2.7 MB decoded); the downsampled JPEG is ~40 KB.
+    public static let maxPixel = 560
+
     public func thumbnail(for file: CameraFile) async -> Data? {
-        if let hit = cached(file) { return hit }
+        if let hit = cached(file) {
+            // Caches written before downsampling: shrink once, in place.
+            guard hit.count > 150_000, let small = Self.downsample(hit) else { return hit }
+            try? small.write(to: cacheURL(for: file), options: .atomic)
+            return small
+        }
         await acquire()
         defer { release() }
         if Task.isCancelled { return nil }
@@ -49,8 +59,25 @@ public actor ThumbnailFetcher {
             }
         }
         // Cache only real images: anything else (an error page from some other device) would stick.
-        if let data, Self.looksLikeImage(data) { try? data.write(to: cacheURL(for: file), options: .atomic) }
-        return data
+        guard let data, Self.looksLikeImage(data) else { return data }
+        let small = Self.downsample(data) ?? data
+        try? small.write(to: cacheURL(for: file), options: .atomic)
+        return small
+    }
+
+    /// A JPEG no wider or taller than `maxPixel`, or nil if the bytes aren't an image ImageIO reads.
+    static func downsample(_ data: Data, maxPixel: Int = maxPixel) -> Data? {
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil) else { return nil }
+        let options: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxPixel,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+        ]
+        guard let image = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) else { return nil }
+        let out = NSMutableData()
+        guard let dest = CGImageDestinationCreateWithData(out, "public.jpeg" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(dest, image, [kCGImageDestinationLossyCompressionQuality: 0.8] as CFDictionary)
+        return CGImageDestinationFinalize(dest) ? out as Data : nil
     }
 
     static func looksLikeImage(_ data: Data) -> Bool {

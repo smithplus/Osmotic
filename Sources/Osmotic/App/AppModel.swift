@@ -95,7 +95,17 @@ final class AppModel {
     @ObservationIgnored private var joinedCameraSSID: String?
     /// False when the camera's network was already among the Mac's saved networks before we joined.
     @ObservationIgnored private var forgetCameraNetwork = true
-    @ObservationIgnored private var thumbCache: [String: NSImage] = [:]
+    /// Decoded thumbnails, bounded (~150 MB): a big card scrolled end to end must not keep them all.
+    @ObservationIgnored private let thumbCache: NSCache<NSString, NSImage> = {
+        let c = NSCache<NSString, NSImage>()
+        c.totalCostLimit = 150 << 20
+        return c
+    }()
+
+    private func cacheThumbnail(_ image: NSImage, for id: String) {
+        let px = image.representations.first.map { $0.pixelsWide * $0.pixelsHigh } ?? 0
+        thumbCache.setObject(image, forKey: id as NSString, cost: max(1, px * 4))
+    }
     @ObservationIgnored private var connectGeneration = 0
     @ObservationIgnored private var cameraPassword: String?
     @ObservationIgnored private var recovering = false
@@ -121,6 +131,9 @@ final class AppModel {
     private(set) var controlBusy = false
     private(set) var controlError: String?
     let liveRenderer = LiveVideoRenderer()
+    /// While connected, App Nap would coalesce the ~1 Hz keep-alive (the camera then drops playback and
+    /// its AP); while downloading, idle sleep would cut the transfer.
+    @ObservationIgnored private var connectionActivity: NSObjectProtocol?
     /// The session is out of playback (Live): undo it (`leaveLive`) before the card can be listed or
     /// downloaded again.
     @ObservationIgnored var sessionInControl = false
@@ -173,7 +186,7 @@ final class AppModel {
             !names.isEmpty
         {
             for (i, f) in files.enumerated() {
-                thumbCache[f.id] = NSImage(contentsOfFile: dir + "/" + names[i % names.count])
+                if let img = NSImage(contentsOfFile: dir + "/" + names[i % names.count]) { cacheThumbnail(img, for: f.id) }
             }
         }
         switch demoScreen {
@@ -208,6 +221,8 @@ final class AppModel {
                 var t = TransferState(total: 4, bytesTotal: 2_070_000_000)
                 t.done = 1
                 t.current = clip
+                currentTransferId = clip.id
+                queuedIds = [clip.id]
                 t.currentSize = clip.sizeBytes
                 t.currentBytes = clip.sizeBytes / 3
                 t.bytesDone = 600_000_000
@@ -217,7 +232,9 @@ final class AppModel {
         }
     }
 
-    var savedCameras: [SavedCamera] { SavedCameraStore.all() }
+    /// Read once and refreshed when it changes (views read it on every render).
+    private(set) var savedCameras: [SavedCamera] = SavedCameraStore.all()
+    func refreshSavedCameras() { savedCameras = SavedCameraStore.all() }
 
     var isConnected: Bool { screen == .library }
 
@@ -243,6 +260,10 @@ final class AppModel {
         linkLost = false
         linkGaveUp = false
         wifiRestoreFailed = false
+        if connectionActivity == nil {
+            connectionActivity = ProcessInfo.processInfo.beginActivity(
+                options: [.userInitiated], reason: "Connected to a camera")
+        }
         lastTransferSummary = nil
         recoverTask?.cancel()
         stage = .bluetooth
@@ -345,6 +366,7 @@ final class AppModel {
                 SavedCamera(
                     id: t.id, bleName: t.name, modelId: t.modelId,
                     modelName: result.model.name, lastConnected: Date()))
+            refreshSavedCameras()
             screen = .library
             log("library: \(files.count) files on screen, more=\(moreAvailable)")
             Task { await loadOlderWhileNew() }
@@ -363,8 +385,13 @@ final class AppModel {
     private func makeSession(model: CameraModel, interface: String) -> CameraSession {
         let s = CameraSession(model: model, interfaceName: interface, log: { log($0) })
         s.onStatus = { st in Task { @MainActor [weak self] in self?.status = st } }
-        s.onLinkLost = { Task { @MainActor [weak self] in self?.handleLinkLost(from: s) } }
-        s.onLinkRestored = { Task { @MainActor [weak self] in self?.handleLinkRestored(from: s) } }
+        // Weak: the session keeps these closures, and they must not keep the session (one leak per connect).
+        s.onLinkLost = { [weak s] in
+            Task { @MainActor [weak self] in if let s { self?.handleLinkLost(from: s) } }
+        }
+        s.onLinkRestored = { [weak s] in
+            Task { @MainActor [weak self] in if let s { self?.handleLinkRestored(from: s) } }
+        }
         return s
     }
 
@@ -512,6 +539,8 @@ final class AppModel {
         recoverTask?.cancel()
         recoverTask = nil
         queue.removeAll()
+        queuedIds = []
+        currentTransferId = nil
         transfer = nil
         connectGeneration += 1
         files = []
@@ -525,7 +554,7 @@ final class AppModel {
         previewFile = nil
         if !keepSummary { lastTransferSummary = nil }
         retryCounts = [:]
-        thumbCache = [:]
+        thumbCache.removeAllObjects()
         moreAvailable = false
         status = CameraStatus()
         linkLost = false
@@ -544,6 +573,9 @@ final class AppModel {
     }
 
     private func teardown(restoreWifi: Bool) async {
+        defer {
+            if let a = connectionActivity { ProcessInfo.processInfo.endActivity(a); connectionActivity = nil }
+        }
         flow?.cancel()
         flow = nil
         ble.onDisconnect = nil
@@ -726,10 +758,11 @@ final class AppModel {
 
     /// Files waiting in the transfer queue or downloading now (read through `transfer`, which changes
     /// whenever the queue does, so views follow it).
-    var queuedIds: Set<String> {
-        guard let t = transfer else { return [] }
-        return Set(queue.map(\.id)).union(t.current.map { [$0.id] } ?? [])
-    }
+    /// Files waiting in the transfer queue or downloading now. Stored (not derived from `transfer`) so
+    /// the grid's cells don't re-render on every progress tick.
+    private(set) var queuedIds: Set<String> = []
+    /// The file downloading right now (only its cell follows the progress).
+    private(set) var currentTransferId: String?
 
     /// New files not already on their way.
     var newNotQueued: [CameraFile] {
@@ -788,13 +821,13 @@ final class AppModel {
     }
 
     func thumbnail(for f: CameraFile) async -> NSImage? {
-        if let img = thumbCache[f.id] { return img }
+        if let img = thumbCache.object(forKey: f.id as NSString) { return img }
         guard let data = await thumbnails.thumbnail(for: f), let img = NSImage(data: data) else { return nil }
-        thumbCache[f.id] = img
+        cacheThumbnail(img, for: f.id)
         return img
     }
 
-    func cachedThumbnail(for f: CameraFile) -> NSImage? { thumbCache[f.id] }
+    func cachedThumbnail(for f: CameraFile) -> NSImage? { thumbCache.object(forKey: f.id as NSString) }
 
     @ObservationIgnored private var selectionAnchor: String?
     /// The keyboard's place in the grid (arrow keys move it; it gets a focus outline).
@@ -914,11 +947,11 @@ final class AppModel {
     func downloadSelected() { enqueue(selectedFiles) }
 
     func enqueue(_ list: [CameraFile]) {
-        let queuedIds = Set(queue.map(\.id)).union(transfer?.current.map { [$0.id] } ?? [])
         let fresh = list.filter { !queuedIds.contains($0.id) }
         guard !fresh.isEmpty else { return }
         // Oldest first, so an interrupted run leaves a contiguous, dated set on disk.
         queue += fresh.sorted { $0.timestamp != $1.timestamp ? $0.timestamp < $1.timestamp : $0.seq < $1.seq }
+        queuedIds.formUnion(fresh.map(\.id))
         let bytes = fresh.reduce(0) { $0 + max(0, $1.sizeBytes) }
         if var t = transfer {
             t.total += fresh.count
@@ -932,8 +965,11 @@ final class AppModel {
         TransferNotifier.prepare()
         if transferTask == nil {
             let gen = transferGeneration
+            let activity = ProcessInfo.processInfo.beginActivity(
+                options: [.userInitiated, .idleSystemSleepDisabled], reason: "Downloading from the camera")
             transferTask = Task { [weak self] in
                 await self?.runQueue(generation: gen)
+                ProcessInfo.processInfo.endActivity(activity)
                 if self?.transferGeneration == gen { self?.transferTask = nil }
             }
         }
@@ -943,6 +979,8 @@ final class AppModel {
         log("transfer: cancelled by user")
         transferGeneration += 1
         queue.removeAll()
+        queuedIds = []
+        currentTransferId = nil
         transferTask?.cancel()
         transferTask = nil
         transfer = nil
@@ -956,6 +994,7 @@ final class AppModel {
         while current(), !queue.isEmpty {
             let f = queue.removeFirst()
             transfer?.current = f
+            currentTransferId = f.id
             transfer?.currentBytes = 0
             transfer?.currentSize = f.sizeBytes
             let dest = DownloadPaths.destination(for: f)
@@ -994,6 +1033,8 @@ final class AppModel {
                 log("transfer: \(f.name) cancelled (partial kept for resume)")
             }
             guard gen == transferGeneration else { return }
+            queuedIds.remove(f.id)
+            currentTransferId = nil
             if var t = transfer {
                 t.done += 1
                 t.bytesDone += max(0, f.sizeBytes)
@@ -1007,6 +1048,8 @@ final class AppModel {
         let failed = transfer?.failed ?? []
         let cancelled = Task.isCancelled
         transfer = nil
+        queuedIds = []
+        currentTransferId = nil
         let folderName = Preferences.downloadFolder.lastPathComponent
         lastTransferSummary =
             cancelled

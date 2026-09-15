@@ -53,6 +53,7 @@ struct SettingsView: View {
         .confirmationDialog("Forget the saved cameras?", isPresented: $confirmForget) {
             Button("Forget", role: .destructive) {
                 for c in model.savedCameras { SavedCameraStore.remove(c.id) }
+                model.refreshSavedCameras()
             }
         } message: {
             Text("Next time you’ll have to find them again. Your download history is kept.")

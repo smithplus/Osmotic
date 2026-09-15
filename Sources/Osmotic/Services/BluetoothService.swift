@@ -90,8 +90,15 @@ final class BluetoothService: NSObject {
     /// Drop cameras not heard from recently, so the list reflects what's in range.
     func pruneStale(olderThan seconds: TimeInterval = 12) {
         let cutoff = Date().addingTimeInterval(-seconds)
-        for (id, cam) in cameras where cam.lastSeen < cutoff && id != peripheral?.identifier { cameras[id] = nil }
+        for (id, cam) in cameras where (seenAt[id] ?? cam.lastSeen) < cutoff && id != peripheral?.identifier {
+            cameras[id] = nil
+        }
     }
+
+    /// When each camera was last heard. Not observed: advertisements arrive many times a second, and
+    /// only a change the list shows (name, model, signal bar) should redraw it.
+    @ObservationIgnored private var seenAt: [UUID: Date] = [:]
+    static func signalLevel(_ rssi: Int) -> Int { min(4, max(1, (rssi + 100) / 11)) }
 
     // ---- connection -----------------------------------------------------------------------------
 
@@ -214,9 +221,16 @@ extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
         if cameras[id] == nil {
             log("BLE: found \(name ?? "?") model=\(model.name)\(payload.map { " mfr=\($0.hexString)" } ?? "") rssi=\(rssi)")
         }
-        cameras[id] = DiscoveredCamera(
+        seenAt[id] = Date()
+        let seen = DiscoveredCamera(
             id: id, name: name ?? cameras[id]?.name ?? model.name, rssi: rssi,
             modelId: modelId ?? cameras[id]?.modelId, model: model, brand: brand, lastSeen: Date())
+        if let old = cameras[id], old.name == seen.name, old.model == seen.model,
+            Self.signalLevel(old.rssi) == Self.signalLevel(seen.rssi)
+        {
+            return
+        }
+        cameras[id] = seen
     }
 
     func centralManager(_ central: CBCentralManager, didConnect peripheral: CBPeripheral) {

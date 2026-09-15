@@ -673,11 +673,14 @@ public final class CameraSession: @unchecked Sendable {
     /// Receive a short burst, keep the windows acknowledged (≥ 40 Hz while anything flows) and the
     /// presence beat going. The pump every wait in capture mode goes through.
     private func pump() -> [[UInt8]] {
-        let dg = tx.recvAll(ms: 12, precise: true)
+        // Live video needs ≥ 40 Hz ACKs; capture without video only answers ~10 Hz status pushes, so it
+        // can breathe (fewer wakeups, jobs still start within ~50 ms).
+        let live = mode == .live
+        let dg = tx.recvAll(ms: live ? 12 : 50, precise: true)
         ingest(dg)
         let now = Date()
         if !dg.isEmpty { lastRxAt = now }
-        if !dg.isEmpty || now.timeIntervalSince(lastAckAt) >= 0.025 {
+        if !dg.isEmpty || now.timeIntervalSince(lastAckAt) >= (live ? 0.025 : 0.1) {
             tx.sendAck()
             lastAckAt = now
         }

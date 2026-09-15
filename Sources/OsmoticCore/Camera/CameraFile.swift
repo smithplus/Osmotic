@@ -78,13 +78,31 @@ public struct CameraFile: Sendable, Hashable, Identifiable {
         return String(name[name.index(after: dot)...]).uppercased()
     }
 
-    /// The 14-digit `YYYYMMDDhhmmss` stamp in the name, or "".
+    /// The 14-digit `YYYYMMDDhhmmss` stamp in the name (first `_<14 digits>_`), or "". A plain byte
+    /// scan: these run inside every sort comparator and grouping, where a regex cost seconds on a big card.
     public var timestamp: String {
-        name.firstMatch(of: /_(\d{14})_/).map { String($0.1) } ?? ""
+        let b = Array(name.utf8)
+        guard let i = Self.firstDigitRun(b, length: 14, followedBy: nil) else { return "" }
+        return String(decoding: b[i..<(i + 14)], as: UTF8.self)
     }
 
+    /// The 4-digit sequence number in `_<4 digits>_D`, or 0.
     public var seq: Int {
-        name.firstMatch(of: /_(\d{4})_D/).flatMap { Int($0.1) } ?? 0
+        let b = Array(name.utf8)
+        guard let i = Self.firstDigitRun(b, length: 4, followedBy: UInt8(ascii: "D")) else { return 0 }
+        return b[i..<(i + 4)].reduce(0) { $0 * 10 + Int($1 - 0x30) }
+    }
+
+    /// Start of the first `_` + `length` digits + `_` (+ `followedBy`, if given) in `b`.
+    private static func firstDigitRun(_ b: [UInt8], length: Int, followedBy tail: UInt8?) -> Int? {
+        let span = length + 2 + (tail == nil ? 0 : 1)
+        guard b.count >= span else { return nil }
+        let underscore = UInt8(ascii: "_")
+        for start in 0...(b.count - span) where b[start] == underscore && b[start + length + 1] == underscore {
+            if let tail, b[start + length + 2] != tail { continue }
+            if b[(start + 1)...(start + length)].allSatisfy({ (0x30...0x39).contains($0) }) { return start + 1 }
+        }
+        return nil
     }
 
     /// Capture date from the filename stamp (camera local time).

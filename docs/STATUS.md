@@ -37,6 +37,8 @@ Todo el flujo de Files funcionó a la primera: BLE armado (MTU 512), ya empareja
 
 ## Revisiones hechas (2026-09-14)
 
+Rendimiento medido (M4, demo): pantalla de conexión 7–15 % → 0,3 % de CPU; cámaras 13 % → ~0 %; Live 4 % → 0,2 %. Los logs de las corridas demo/snapshot van a una carpeta temporal (antes rotaban los logs reales: el de la prueba de hardware se perdió así).
+
 Seguridad, implementación, UI/accesibilidad, guías de Apple (distribución, privacidad, HIG), formato (`swift-format`). Lo aplicado está en `CHANGELOG.md`; lo que depende de una cuenta Apple Developer está abajo.
 
 ## Pendiente (en orden)

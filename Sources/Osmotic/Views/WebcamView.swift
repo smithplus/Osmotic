@@ -38,8 +38,11 @@ struct WebcamView: View {
         .padding(.horizontal, Theme.s3)
         .padding(.bottom, Theme.s3)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .task { await model.webcam.start() }
-        .onDisappear { model.webcam.stop() }
+        .task { await model.webcam.show() }
+        .onDisappear { model.webcam.hide() }
+        .onChange(of: AppVisibility.shared.visible) { _, visible in
+            if visible { Task { await model.webcam.show() } } else { model.webcam.hide() }
+        }
     }
 
     private func monitor(_ cam: WebcamService) -> some View {

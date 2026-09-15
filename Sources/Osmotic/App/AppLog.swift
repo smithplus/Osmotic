@@ -35,10 +35,18 @@ final class FileSink: @unchecked Sendable {
     private let logger = Logger(subsystem: "io.github.smithplus.osmotic", category: "app")
 
     nonisolated static func makeSessionLog() -> FileSink {
-        let dir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
-            .appendingPathComponent("Logs/Osmotic", isDirectory: true)
+        // Demo and snapshot runs log to a temporary folder: their launches must never rotate away the
+        // logs of real sessions with a camera.
+        let env = ProcessInfo.processInfo.environment
+        let rehearsal = env["OSMOTIC_DEMO_MANIFEST"] != nil || env["OSMOTIC_SNAPSHOT"] != nil
+        let dir =
+            rehearsal
+            ? FileManager.default.temporaryDirectory.appendingPathComponent("Osmotic-demo-logs", isDirectory: true)
+            : FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0]
+                .appendingPathComponent("Logs/Osmotic", isDirectory: true)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        prune(dir, keep: 20)
+        // Real sessions are what diagnoses a camera: keep plenty.
+        prune(dir, keep: rehearsal ? 5 : 50)
         let stamp = DateFormatter()
         stamp.dateFormat = "yyyyMMdd-HHmmss"
         stamp.locale = Locale(identifier: "en_US_POSIX")

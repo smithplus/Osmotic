@@ -49,11 +49,21 @@ final class WebcamService {
         if active { Task { await start() } }
     }
 
-    /// The tab is showing: ask for camera access if needed, then run the preview.
-    func start() async {
+    /// The tab is on screen: run the preview (asking for camera access first if needed).
+    func show() async {
         active = true
+        await start()
+    }
+
+    /// The tab went away or the window is hidden: release the camera so other apps get it cleanly.
+    func hide() {
+        active = false
+        stopSession()
+    }
+
+    private func start() async {
         // Only ask for camera access once there is a camera to show — never on an empty tab.
-        guard device != nil else { return }
+        guard active, device != nil else { return }
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized: access = .granted
         case .notDetermined: access = await AVCaptureDevice.requestAccess(for: .video) ? .granted : .denied
@@ -70,12 +80,6 @@ final class WebcamService {
         let running = SessionBox(s)
         Task.detached { running.session.startRunning() }  // blocking call: keep it off the main thread
         log("webcam: preview running")
-    }
-
-    /// The tab went away: release the camera so other apps get it cleanly.
-    func stop() {
-        active = false
-        stopSession()
     }
 
     private func stopSession() {
