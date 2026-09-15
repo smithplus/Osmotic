@@ -1,5 +1,6 @@
-// Renders Resources/AppIcon.icns and docs/images/icon.png: the wordmark's "o." — a lowercase o and the
-// orange dot — printed on a graphite squircle, the same plate as the app.
+// Renders Resources/AppIcon.icns and docs/images/icon.png: the wordmark with "smotic" removed, so
+// just "o." (the app's ink and orange), on the same dark graphite plate as the app and the landing
+// page, grain included.
 // Run: swift scripts/make_icon.swift [repo root]
 import AppKit
 
@@ -7,6 +8,8 @@ let root = URL(fileURLWithPath: CommandLine.arguments.count > 1 ? CommandLine.ar
 let iconset = root.appendingPathComponent("build/AppIcon.iconset")
 try? FileManager.default.removeItem(at: iconset)
 try FileManager.default.createDirectory(at: iconset, withIntermediateDirectories: true)
+
+struct RNG { var s: UInt64; mutating func next() -> Double { s = s &* 6364136223846793005 &+ 1442695040888963407; return Double(s >> 11) / Double(1 << 53) } }
 
 func rgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat, _ a: CGFloat = 1) -> NSColor {
     NSColor(srgbRed: r / 255, green: g / 255, blue: b / 255, alpha: a)
@@ -54,13 +57,24 @@ func render(_ size: Int) -> Data {
 
     NSGraphicsContext.saveGraphicsState()
     plate.addClip()
-    // The app's plate, lit from above: a quiet graphite gradient.
-    NSGradient(colors: [rgb(64, 64, 62), rgb(44, 44, 43), rgb(30, 30, 29)], atLocations: [0, 0.55, 1],
-               colorSpace: .sRGB)!.draw(in: rect, angle: -90)
-    // A soft pool of light in the upper half, like brushed metal under a lamp.
-    NSGradient(colors: [NSColor.white.withAlphaComponent(0.06), NSColor.white.withAlphaComponent(0)])!
-        .draw(fromCenter: NSPoint(x: rect.midX, y: rect.maxY), radius: 0,
-              toCenter: NSPoint(x: rect.midX, y: rect.maxY), radius: rect.width * 0.8, options: [])
+    // The same plate as the page: a dark graphite gradient with a fine grain over it.
+    NSGradient(colors: [rgb(38, 38, 37), rgb(25, 25, 24)], atLocations: [0, 1], colorSpace: .sRGB)!
+        .draw(in: rect, angle: -90)
+    var grain = RNG(s: 99)
+    let step = max(1, s / 400)  // fine specks: ~2.5 px at 1024, 1 px at Dock sizes
+    var y = rect.minY
+    while y < rect.maxY {
+        var x = rect.minX
+        while x < rect.maxX {
+            let v = grain.next() * 2 - 1
+            if abs(v) > 0.35 {
+                (v > 0 ? NSColor.white : NSColor.black).withAlphaComponent(abs(v) * 0.04).setFill()
+                NSBezierPath(rect: NSRect(x: x, y: y, width: step, height: step)).fill()
+            }
+            x += step
+        }
+        y += step
+    }
     NSGraphicsContext.restoreGraphicsState()
 
     // Edge: a lit lip on top, fading down the sides.
@@ -82,9 +96,9 @@ func render(_ size: Int) -> Data {
     NSGraphicsContext.current?.cgContext.restoreGState()
     NSGraphicsContext.restoreGraphicsState()
 
-    // The "o": bold rather than the wordmark's heavy, so the counter stays open at Dock sizes.
-    let font = NSFont.systemFont(ofSize: s * 0.52, weight: .bold)
-    let ink = rgb(236, 233, 226)
+    // The wordmark's own weight and ink, so the icon is literally "osmotic" minus "smotic".
+    let font = NSFont.systemFont(ofSize: s * 0.52, weight: .heavy)
+    let ink = rgb(232, 229, 222)
     let o = NSAttributedString(string: "o", attributes: [.font: font, .foregroundColor: ink])
     let line = CTLineCreateWithAttributedString(o)
     let glyph = CTLineGetImageBounds(line, NSGraphicsContext.current!.cgContext)
@@ -108,20 +122,17 @@ func render(_ size: Int) -> Data {
     CTLineDraw(line, cg)
     NSGraphicsContext.restoreGraphicsState()
 
+    // The dot: the wordmark's flat accent with the same soft glow, not a lit bead.
     let dotRect = NSRect(x: originX + glyph.maxX + gap, y: originY + glyph.minY, width: dotD, height: dotD)
     NSGraphicsContext.saveGraphicsState()
     let glow = NSShadow()
-    glow.shadowColor = rgb(238, 92, 36, 0.55)
-    glow.shadowBlurRadius = s * 0.03
+    glow.shadowColor = rgb(238, 92, 36, 0.45)
+    glow.shadowBlurRadius = s * 0.025
     glow.shadowOffset = .zero
     glow.set()
-    rgb(222, 78, 24).setFill()
+    rgb(238, 92, 36).setFill()
     NSBezierPath(ovalIn: dotRect).fill()
     NSGraphicsContext.restoreGraphicsState()
-    // Lit from above-left, like the app's LEDs.
-    NSGradient(colors: [rgb(255, 150, 90), rgb(236, 88, 30), rgb(190, 60, 14)], atLocations: [0, 0.5, 1],
-               colorSpace: .sRGB)!
-        .draw(in: NSBezierPath(ovalIn: dotRect), relativeCenterPosition: NSPoint(x: -0.35, y: 0.4))
 
     NSGraphicsContext.restoreGraphicsState()
     return rep.representation(using: .png, properties: [:])!
