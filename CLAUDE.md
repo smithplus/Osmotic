@@ -32,7 +32,7 @@ Una sola prueba con la Pocket 3 real (build `776be7d`, Files OK). **Todo lo post
 
 ```bash
 swift build                      # app + core
-swift test                       # 76 tests en 19 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
+swift test                       # 78 tests en 19 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
 swift test --filter Golden       # solo los snapshots del decodificador
 scripts/lint.sh [--fix]          # formato con swift-format (.swift-format: 4 espacios, 130 columnas); CI lo exige
 scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstrings; lista los que faltan traducir
