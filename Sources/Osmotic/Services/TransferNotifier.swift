@@ -25,7 +25,7 @@ enum TransferNotifier {
         content.body =
             failed == 0
             ? String(localized: "\(String(localized: "\(saved) files")) in \(folder.lastPathComponent)")
-            : String(localized: "\(saved) arrived, \(failed) didn’t — open Osmotic to try again")
+            : String(localized: "\(saved) arrived, \(failed) didn’t. Open Osmotic to try again.")
         let request = UNNotificationRequest(identifier: "transfer-\(UUID().uuidString)", content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
     }

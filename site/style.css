@@ -1,5 +1,7 @@
-/* Osmotic landing — the app's design tokens (Sources/Osmotic/Views/Theme.swift) in CSS.
-   Dark only, like the app. No web fonts: system UI and system mono. */
+/* Osmotic landing: the app's design tokens (Sources/Osmotic/Views/Theme.swift) in CSS.
+   Dark only, like the app. No web fonts: system UI and system mono.
+   Motion: transform and opacity only, ease-out entrances (never ease-in), 30–80 ms staggers,
+   hover only on devices that hover, and an opacity-only variant for Reduce Motion. */
 
 :root {
   --plate-top: rgb(36 36 35);
@@ -21,7 +23,7 @@
   --lcd-caption: rgb(236 228 214 / 0.55);
   --led-green: rgb(74 222 128);
 
-  --s1: 4px; --s2: 8px; --s3: 16px; --s4: 24px; --s5: 32px; --s6: 48px;
+  --s1: 4px; --s2: 8px; --s3: 16px; --s4: 24px; --s5: 32px; --s6: 48px; --s7: 72px;
   --radius-s: 5px; --radius-m: 9px; --radius-l: 14px;
 
   /* Depth tokens */
@@ -29,10 +31,13 @@
   --ambient: 0 6px 14px rgb(0 0 0 / 0.14);
   --inset-deep: inset 0 2px 4px rgb(0 0 0 / 0.75);
 
+  /* Motion tokens */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --press: 90ms var(--ease-out);
+  --release: 160ms var(--ease-out);
+
   --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
-
-  --press: 80ms cubic-bezier(0.3, 0.7, 0.4, 1);
   color-scheme: dark;
 }
 
@@ -48,8 +53,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 img { max-width: 100%; height: auto; display: block; }
-a { color: var(--ink); text-decoration-color: rgb(238 92 36 / 0.6); text-underline-offset: 3px; }
-a:hover { text-decoration-color: var(--accent); }
+a { color: var(--ink); text-decoration-color: rgb(238 92 36 / 0.6); text-underline-offset: 3px; transition: text-decoration-color 150ms ease; }
 :focus-visible { outline: 2px solid var(--lcd-text); outline-offset: 3px; border-radius: 3px; }
 code, kbd { font-family: var(--mono); font-size: 0.88em; }
 kbd { padding: 0 5px; border-radius: 3px; background: var(--slot); box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.08); }
@@ -65,10 +69,14 @@ strong { color: #fff; font-weight: 600; }
   display: flex; align-items: center; justify-content: space-between; gap: var(--s3); flex-wrap: wrap;
 }
 .wordmark { font-weight: 800; font-size: 22px; letter-spacing: -0.02em; text-decoration: none; display: inline-flex; align-items: baseline; gap: 3px; }
-/* "osmotic." — the dot on the baseline, like a period (the app icon's "o."). */
+/* "osmotic." : the dot on the baseline, like a period (the app icon's "o."). */
 .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 5px rgb(238 92 36 / 0.5); }
 .status { margin: 0; display: inline-flex; align-items: center; gap: var(--s2); font-size: 11px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase; }
-.led { width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #b8f5cf, var(--led-green) 45%, #1d7a41); box-shadow: 0 0 5px rgb(74 222 128 / 0.55); }
+
+/* LEDs: an unlit lens, and a lit layer that fades in over it (opacity only). */
+.led { position: relative; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgb(70 70 68), rgb(24 24 23) 70%); box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.6), 0 1px 0 var(--lip); flex: none; }
+.led::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #c8f7da, var(--led-green) 45%, #1d7a41); box-shadow: 0 0 6px rgb(74 222 128 / 0.6); opacity: 0; }
+.led--on::after { opacity: 1; }
 
 /* ---- Keys (CassetteKeyStyle) ----------------------------------------------------------------- */
 .bank {
@@ -80,11 +88,12 @@ strong { color: #fff; font-weight: 600; }
 .key {
   --skirt: rgb(36 36 36);
   --travel: 6px;
+  --face-top: var(--grey-top);
   position: relative; display: inline-flex; align-items: center; justify-content: center;
   min-width: 44px; height: 40px; padding: 0 20px; margin-bottom: calc(var(--travel) + 4px);
   font: 600 11.5px/1 var(--sans); letter-spacing: 0.11em; text-transform: uppercase; text-decoration: none;
   color: var(--ink);
-  background: linear-gradient(var(--grey-top), var(--grey-bottom));
+  background: linear-gradient(var(--face-top), var(--grey-bottom));
   border-radius: 2.5px;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.12),
@@ -92,12 +101,13 @@ strong { color: #fff; font-weight: 600; }
     inset -1px 0 0 rgb(0 0 0 / 0.3),
     0 var(--travel) 0 var(--skirt),
     0 calc(var(--travel) + 1px) 2px rgb(0 0 0 / 0.35);
-  transition: transform var(--press), box-shadow var(--press), background var(--press);
+  transition: transform var(--release), box-shadow var(--release);
 }
-.key:hover { background: linear-gradient(rgb(72 72 71), var(--grey-bottom)); }
+/* Pressed: the face drops into the slot (the app's Motion.press / .release). */
 .key:active {
   transform: translateY(calc(var(--travel) - 1.5px));
   box-shadow: inset 0 3px 5px rgb(0 0 0 / 0.38), 0 1.5px 0 var(--skirt);
+  transition: transform var(--press), box-shadow var(--press);
 }
 .key--primary {
   --skirt: rgb(133 51 13);
@@ -111,8 +121,12 @@ strong { color: #fff; font-weight: 600; }
     0 calc(var(--travel) + 1px) 2px rgb(0 0 0 / 0.35),
     0 0 18px rgb(238 92 36 / 0.18);
 }
-.key--primary:hover { background: linear-gradient(rgb(240 94 36), var(--accent-bottom)); }
 .key--compact { --travel: 4px; height: 28px; padding: 0 12px; font-size: 10px; }
+
+@media (hover: hover) and (pointer: fine) {
+  a:hover { text-decoration-color: var(--accent); }
+  .key:hover { filter: brightness(1.08); }
+}
 
 /* ---- LCD ----------------------------------------------------------------------------------- */
 .lcd {
@@ -124,6 +138,7 @@ strong { color: #fff; font-weight: 600; }
   text-transform: uppercase; letter-spacing: 0.14em;
   text-shadow: 0 0 6px rgb(255 146 52 / 0.35);
 }
+.lcd .label { color: var(--lcd-caption); text-shadow: none; }
 .lcd-line { margin: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s3); font-size: 14px; }
 .lcd-line--big { font-size: clamp(22px, 4vw, 30px); margin-bottom: var(--s2); }
 .readout { margin: 0 0 var(--s2); font: 500 13px/1 var(--mono); letter-spacing: 0.14em; text-transform: uppercase; color: var(--lcd-text); text-shadow: 0 0 6px rgb(255 146 52 / 0.3); }
@@ -132,31 +147,41 @@ strong { color: #fff; font-weight: 600; }
 /* ---- Hero ---------------------------------------------------------------------------------- */
 main { max-width: 1120px; margin: 0 auto; }
 .hero { padding-block: var(--s5) var(--s4); text-align: center; }
-.lcd--hero { display: inline-block; text-align: left; padding: var(--s4) var(--s5); margin-bottom: var(--s5); max-width: 100%; }
+/* Centered block, centered content: the hero is one axis, so the LCD's lines sit on it too. */
+.lcd--hero { display: inline-block; text-align: center; padding: var(--s4) var(--s6); margin-bottom: var(--s5); max-width: 100%; }
+.lcd--hero .lcd-line { justify-content: center; }
 h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.035em; margin: 0 0 var(--s3); font-weight: 700; }
 .lede { max-width: 640px; margin: 0 auto var(--s5); color: var(--muted); font-size: clamp(16px, 2vw, 19px); }
 .actions { display: flex; flex-direction: column; align-items: center; gap: var(--s2); margin-bottom: var(--s6); }
 .fine { margin: 0; font-size: 13px; color: var(--muted); }
+.fine--left { text-align: left; margin-top: var(--s3); }
+.fine--proof { margin-top: var(--s2); }
 
 .shot { margin: 0; }
 .shot img { width: 100%; }
 .shot--hero { margin-inline: calc(-1 * var(--s3)); }
 
+.lcd--proof {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s2) var(--s5);
+  margin: var(--s5) auto 0; padding: var(--s3) var(--s5); max-width: 860px; font-size: 14px;
+}
+.lcd--proof p { margin: 0; }
+
 /* ---- Sections ------------------------------------------------------------------------------ */
-.section { padding-block: var(--s6); }
+.section { padding-block: var(--s7) 0; }
 .index {
   display: flex; align-items: center; gap: var(--s2);
   margin: 0 0 var(--s5);
   font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
 }
 .index span { font-family: var(--mono); color: var(--accent); letter-spacing: 0.05em; }
-.index::after { content: ""; flex: 1; height: 1px; background: rgb(255 255 255 / 0.1); box-shadow: 0 1px 0 rgb(0 0 0 / 0.4); }
+.index::after { content: ""; flex: 1; height: 1px; background: rgb(255 255 255 / 0.1); box-shadow: 0 1px 0 rgb(0 0 0 / 0.4); transform-origin: left center; }
+.intro { max-width: 720px; margin: 0 0 var(--s5); color: var(--muted); font-size: 18px; }
 
 h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 var(--s3); }
 .feature { display: grid; grid-template-columns: 5fr 7fr; gap: var(--s5); align-items: center; margin-bottom: var(--s6); }
 .feature--flip .feature-text { order: 2; }
 .feature p { color: var(--muted); margin: 0 0 var(--s3); }
-.feature .readout { color: var(--lcd-text); }
 
 /* Raised panel (raisedPanel) with corner screws */
 .panel {
@@ -177,6 +202,13 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
   padding: var(--s5);
 }
 
+/* How it works: the connecting screen's stage lights */
+.stages { list-style: none; margin: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--s4); }
+.stages li { display: grid; justify-items: center; text-align: center; gap: var(--s2); }
+.stages .led { width: 13px; height: 13px; }
+.stage-name { font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
+.stages p { margin: 0; color: var(--muted); font-size: 15px; }
+
 .grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); }
 .grid h3 { font-size: 15px; letter-spacing: 0; margin-bottom: var(--s2); }
 .grid p { margin: 0; color: var(--muted); font-size: 15px; }
@@ -185,22 +217,29 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .steps li { display: grid; grid-template-columns: 40px 1fr; gap: var(--s2); align-items: baseline; }
 .steps p { margin: 0; font-size: 17px; }
 .n { font: 700 15px/1 var(--mono); color: var(--accent); }
-.note { margin: var(--s4) 0 0; padding-top: var(--s3); border-top: 1px solid rgb(255 255 255 / 0.08); color: var(--muted); font-size: 14px; }
 
 .lcd--table { padding: var(--s3) var(--s4); overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th, td { text-align: left; padding: 12px var(--s3) 12px 0; white-space: nowrap; font-weight: 400; }
-thead th { color: var(--lcd-caption); text-shadow: none; font-size: 11px; }
+th, td { text-align: left; padding: 12px var(--s3) 12px 0; font-weight: 400; vertical-align: top; }
+thead th { color: var(--lcd-caption); text-shadow: none; font-size: 11px; white-space: nowrap; }
 tbody tr + tr th, tbody tr + tr td { border-top: 1px solid rgb(255 146 52 / 0.1); }
-tbody th { color: var(--lcd-text); }
-td { color: rgb(255 146 52 / 0.75); }
+tbody th { color: var(--lcd-text); white-space: nowrap; }
+td { color: rgb(255 146 52 / 0.72); }
 td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
+
+.faq { display: grid; gap: var(--s2); }
+.faq details { background: linear-gradient(var(--metal-top), var(--metal-bottom)); border-radius: var(--radius-m); box-shadow: inset 0 1px 0 var(--edge-light), var(--contact); }
+.faq summary { cursor: pointer; list-style: none; padding: var(--s3) var(--s4); font-weight: 600; display: flex; justify-content: space-between; gap: var(--s3); }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-family: var(--mono); color: var(--accent); transition: transform 200ms var(--ease-out); }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { margin: 0; padding: 0 var(--s4) var(--s3); color: var(--muted); }
 
 .credits p { margin: 0 0 var(--s3); color: var(--muted); }
 .credits p:last-child { margin: 0; }
-.credits a { color: var(--ink); }
 
-.cta { text-align: center; padding-block: var(--s5) var(--s6); }
+.cta { text-align: center; padding-block: var(--s7) var(--s6); }
+.cta-line { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--s4); }
 
 .footer {
   max-width: 1120px; margin: 0 auto; padding-block: var(--s4) var(--s6);
@@ -210,21 +249,85 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 .footer p { margin: 0 0 var(--s2); }
 .footer a { color: var(--muted); }
 
+/* ---- Motion -------------------------------------------------------------------------------- */
+
+/* Page load, like the app switching on: the LCD warms up in steps, then the rest rises in. */
+@keyframes lcd-boot {
+  0% { opacity: 0; }
+  20% { opacity: 0.55; }
+  32% { opacity: 0.12; }
+  50% { opacity: 0.8; }
+  62% { opacity: 0.35; }
+  100% { opacity: 1; }
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes tray {
+  from { opacity: 0; transform: translateY(32px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+.lcd--hero .lcd-line { animation: lcd-boot 520ms steps(1, end) both; }
+.lcd--hero .lcd-line + .lcd-line { animation-delay: 90ms; }
+.hero h1 { animation: rise 700ms var(--ease-out) 140ms both; }
+.hero .lede { animation: rise 700ms var(--ease-out) 210ms both; }
+.hero .actions { animation: rise 700ms var(--ease-out) 280ms both; }
+.shot--hero { animation: tray 900ms var(--ease-out) 360ms both; }
+.status .led::after { opacity: 0; animation: led-on 1ms linear 600ms forwards; }
+@keyframes led-on { to { opacity: 1; } }
+
+/* Scroll reveals (main.js adds .reveal-ready, then .is-in as each block comes into view). */
+.reveal-ready [data-reveal] { opacity: 0; transform: translateY(18px); }
+.reveal-ready [data-reveal="tray"] { transform: translateY(32px) scale(0.98); }
+.reveal-ready [data-reveal].is-in {
+  opacity: 1; transform: none;
+  transition: opacity 600ms var(--ease-out), transform 750ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 70ms);
+}
+/* Section rules draw from the left, like a printed line. */
+.reveal-ready .index::after { transform: scaleX(0); }
+.reveal-ready .index.is-in::after { transform: scaleX(1); transition: transform 900ms var(--ease-out) 120ms; }
+/* Order for staggered items, in CSS so the strict CSP (no inline styles) holds. */
+.stages li:nth-child(2), .lcd--table tbody tr:nth-child(2) { --i: 1; }
+.stages li:nth-child(3), .lcd--table tbody tr:nth-child(3) { --i: 2; }
+.stages li:nth-child(4), .lcd--table tbody tr:nth-child(4) { --i: 3; }
+.lcd--table tbody tr:nth-child(5) { --i: 4; }
+.lcd--table tbody tr:nth-child(6) { --i: 5; }
+/* Stage lights come on one after another, as they do while connecting. */
+.reveal-ready .stages.is-in .led::after { opacity: 1; transition: opacity 120ms steps(2, end); transition-delay: calc(350ms + var(--i, 0) * 320ms); }
+.stages .led::after { opacity: 1; }  /* lit without JS */
+.reveal-ready .stages:not(.is-in) .led::after { opacity: 0; }
+/* LCD rows light up in order, like segments. */
+.reveal-ready .lcd--table tbody tr { opacity: 0; }
+.reveal-ready .lcd--table.is-in tbody tr { opacity: 1; transition: opacity 160ms steps(2, end); transition-delay: calc(200ms + var(--i, 0) * 70ms); }
+
 /* ---- Narrow screens ------------------------------------------------------------------------ */
 @media (max-width: 860px) {
   .feature { grid-template-columns: 1fr; gap: var(--s3); }
   .feature--flip .feature-text { order: 0; }
   .grid { grid-template-columns: 1fr 1fr; }
+  .stages { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 560px) {
   .topbar nav { order: 3; width: 100%; }
-  .grid { grid-template-columns: 1fr; }
+  .grid, .stages { grid-template-columns: 1fr; }
   .panel--screws { padding: var(--s4); }
   .lcd--hero { padding: var(--s3) var(--s4); }
+  .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
   .shot--hero { margin-inline: calc(-1 * var(--s2)); }
+  .section { padding-block: var(--s6) 0; }
 }
 
+/* Reduce Motion: keep the fades (they carry meaning), drop every movement. */
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
-  .key { transition: none; }
+  .key, .key:active { transition: none; }
+  .key:active { transform: none; }
+  .lcd--hero .lcd-line, .hero h1, .hero .lede, .hero .actions, .shot--hero { animation: fade 300ms linear both; }
+  @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+  .reveal-ready [data-reveal], .reveal-ready [data-reveal="tray"] { transform: none; }
+  .reveal-ready [data-reveal].is-in { transition: opacity 300ms linear; transition-delay: 0ms; }
+  .reveal-ready .index::after { transform: none; }
+  .reveal-ready .stages .led::after, .reveal-ready .lcd--table tbody tr { transition-delay: 0ms !important; }
 }

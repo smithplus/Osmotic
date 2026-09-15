@@ -1,4 +1,4 @@
-# Osmotic — guide for agents (and people)
+# Osmotic: guide for agents (and people)
 
 Single entry point: read this first. It tells you where everything is and how to make the usual changes without walking the code. `AGENTS.md` is a link to this file.
 
@@ -11,7 +11,7 @@ Native macOS app (Swift 6.2, SwiftUI, macOS 15+) for DJI Osmo cameras (target: *
 
 Port of [KonradIT/osmosis](https://github.com/KonradIT/osmosis) (Android/Kotlin); control and live view follow [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) (MIT). Repo `github.com/smithplus/Osmotic`, branch `main`; releases on GitHub Releases (v0.2.0 is the first with a DMG).
 
-Languages: the UI is **English, localized to Rioplatense Spanish** (String Catalog); code, comments, commits and docs are in English.
+Languages: the UI is **English, localized to Rioplatense Spanish** (String Catalog); code, comments, commits and docs are in English. No em dashes in anything people read (the owner finds they read as machine-written); see the writing skill.
 
 ## Status in one line
 
@@ -28,6 +28,8 @@ Tested with a real Pocket 3: Files (2026-09-14) and Files + Live (2026-09-15: li
 | security and privacy | `SECURITY.md` |
 | user-facing history | `CHANGELOG.md` |
 | credits (shown in Settings › Credits) | `Sources/Osmotic/App/Credits.swift` |
+| writing anything people read (README, docs, landing, UI strings, release notes) | `.claude/skills/osmotic-writing/SKILL.md` (voice, checks, microcopy rules) |
+| Product Hunt launch: competitors, positioning, copy, assets | `docs/LAUNCH.md` |
 | landing page (GitHub Pages) | `site/` (static HTML/CSS/JS, the app's tokens in CSS), `.github/workflows/pages.yml` |
 
 ## Commands
@@ -49,7 +51,7 @@ swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png
 - CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`. `pages.yml` publishes the landing page on pushes to `main` that touch `site/` or `docs/images/`.
 - Every run writes a log to `~/Library/Logs/Osmotic/osmotic-*.log` (Window › Technical Log, ⌥⌘L). It is the source of truth for diagnosing tests with the real camera; the key lines are in `docs/STATUS.md` and `docs/CONTROL.md`.
 - Demo mode: `OSMOTIC_DEMO_MANIFEST=<fixture.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<folder of .jpg>] [OSMOTIC_LANG=es]`. No screen: library with a download half done; `camera` = Live tab recording.
-- No screen-recording permission: `screencapture` doesn't work; `scripts/snapshot.sh` uses `ImageRenderer` (AppKit controls and the live view aren't drawn; `ScrollView`s come out blank — that's why views take `scrolls: false`).
+- No screen-recording permission: `screencapture` doesn't work; `scripts/snapshot.sh` uses `ImageRenderer` (AppKit controls and the live view aren't drawn; `ScrollView`s come out blank, which is why views take `scrolls: false`).
 - Permissions: launching from Terminal hides Local Network problems (they don't apply to Terminal's processes); test them by opening the app with `open build/Osmotic.app` or from Finder.
 
 ## Recipes
@@ -62,13 +64,13 @@ swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png
 
 **New screen or tab.** `AppModel.Workspace` + `setWorkspace` + `WorkspaceTabs`; a view with `TopPlate` and `Theme` parts; a case in `SnapshotView`/`loadDemo` so `snapshot.sh` can render it.
 
-**Release (and auto-update).** A `## [X.Y.Z]` section in `CHANGELOG.md`, commit, `scripts/release.sh X.Y.Z` (dry run: local tag, universal app, `build/Osmotic-X.Y.Z.dmg` for manual installs — with `scripts/dmg_readme.txt` as "Read Me First" — and `build/Osmotic-X.Y.Z.zip` + `.sig` signed with the Keychain key, for the updater) and, **only with the user's explicit permission**, `scripts/release.sh X.Y.Z --publish` (pushes the tag and creates the release with `gh`; `NOTES_FILE=…` for notes other than the CHANGELOG section). The installed app finds it through `UpdateService` (`api.github.com/.../releases/latest`) and installs it if the signature matches `OsmoticUpdatePublicKey` (Info.plist). The private key: `swift scripts/update_key.swift` (Keychain, service `io.github.smithplus.osmotic.update-signing`); if it's lost, generate another and change the public one — users then install that version by hand once. For Developer ID + notarization: `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`.
+**Release (and auto-update).** A `## [X.Y.Z]` section in `CHANGELOG.md`, commit, `scripts/release.sh X.Y.Z` (dry run: local tag, universal app, `build/Osmotic-X.Y.Z.dmg` for manual installs (with `scripts/dmg_readme.txt` as "Read Me First") and `build/Osmotic-X.Y.Z.zip` + `.sig` signed with the Keychain key, for the updater) and, **only with the user's explicit permission**, `scripts/release.sh X.Y.Z --publish` (pushes the tag and creates the release with `gh`; `NOTES_FILE=…` for notes other than the CHANGELOG section). The installed app finds it through `UpdateService` (`api.github.com/.../releases/latest`) and installs it if the signature matches `OsmoticUpdatePublicKey` (Info.plist). The private key: `swift scripts/update_key.swift` (Keychain, service `io.github.smithplus.osmotic.update-signing`); if it's lost, generate another and change the public one; users then install that version by hand once. For Developer ID + notarization: `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`.
 
 ## Project rules
 
 - `OsmoticCore` is **nonisolated** and has no UI; `Osmotic` (the app) uses `defaultIsolation(MainActor)`. Exception: `LiveVideoRenderer` is `nonisolated` (it receives H.264 on the session's thread and decodes on its own queue). Every `@unchecked Sendable` carries a comment justifying why it's safe.
 - The decoder (`ManifestDecoder`) must match upstream's golden files **byte for byte** (`Tests/OsmoticCoreTests/Fixtures/golden`). Improvements go in a later step (e.g. `inferMissingExtensions`) or in what it's fed (`CameraSession.collect` builds the blob only from `0x00/0x27` frames), never in the decode itself.
-- `CameraSession`: **one thread** owns the socket; every protocol step is a job on its queue. Modes `.media` (playback, list, downloads — the tested path, `.legacy` ACK) and `.capture`/`.live` (`.mimo` ACK). Don't change `.media` behavior without testing it on hardware again.
+- `CameraSession`: **one thread** owns the socket; every protocol step is a job on its queue. Modes `.media` (playback, list, downloads; the tested path, `.legacy` ACK) and `.capture`/`.live` (`.mimo` ACK). Don't change `.media` behavior without testing it on hardware again.
 - The camera is an **untrusted** peer: validate everything it sends (names → `CameraFile.localName`, sizes, frames, HTTP). The manifest's file size is a u32 (wraps above 4 GiB): only the server's `Content-Length`/`Content-Range` counts (`FileDownloader`, `AppModel.probeRealSizes`). Robustness tests: `FuzzTests`, `PathSafetyTests`, `DownloaderTests`.
 - Restoring Wi-Fi must finish even if the task that asked for it was cancelled: `WiFiService.pause` (not cancellable) and `AppModel.cleanup` (its own task, kept in `teardownTask`; a new connection waits for it).
 - Logs never carry the user's SSID (`redactedSSID`, also inside `networksetup` output) or passwords (length only).
@@ -83,7 +85,7 @@ swift scripts/make_icon.swift .  # Resources/AppIcon.icns + docs/images/icon.png
 - Motion only through `Motion` via `.motion(_:value:)` (respects Reduce Motion): key down `press`, up `release`, panels `panel` with `.panelFromTop`/`.trayFromBottom`, lights `bloom`, state `quick`. LCD screens don't fade (`LCDGlass` already applies `LCDBoot` and `.transaction { $0.animation = nil }`). No `scaleEffect` on hover.
 - Accessibility: every control has a VoiceOver label and state (`.isSelected` in groups, value on LEDs); contrast ≥ 4.5:1 (`Theme.muted` meets it).
 - Visual references the user approved: Teenage Engineering's EP-133 and the "BASSBOI" VST (Dribbble). Check with `snapshot.sh` before showing anything.
-- Window chrome: `.hiddenTitleBar`; the window buttons sit in a 32-pt band above the content (x 9…69, y 9…23 pt — `snapshot.sh` logs it), so `TopPlate` keeps no room for them and the wordmark lines up with the panels. Wordmark: "osmotic." with the dot on the baseline; the icon is its "o.".
+- Window chrome: `.hiddenTitleBar`; the window buttons sit in a 32-pt band above the content (x 9…69, y 9…23 pt; `snapshot.sh` logs it), so `TopPlate` keeps no room for them and the wordmark lines up with the panels. Wordmark: "osmotic." with the dot on the baseline; the icon is its "o.".
 - Landing page (`site/`): same tokens as `Theme` in CSS (keys, LCD, panels with screws), no web fonts, no dependencies, strict CSP (no inline script/style). Keep its copy in step with the README.
 - README screenshots (`docs/images/`): `snapshot.sh` with `OSMOTIC_LANG=en OSMOTIC_LOCALE=en_US`, fixture `op3_15.bin` and `OSMOTIC_DEMO_THUMBS` pointing at synthetic scenes (never the user's footage or saved cameras: demo mode doesn't read them), cropped and framed (title-bar band with the window buttons, rounded corners, shadow) at 1280–1400 px. Regenerate them when the UI changes; the landing page uses the same files.
 

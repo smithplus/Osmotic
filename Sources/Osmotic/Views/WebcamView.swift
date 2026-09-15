@@ -27,7 +27,7 @@ struct WebcamView: View {
 
             if cam.device != nil {
                 monitor(cam)
-                Text("Pick it as the camera in Zoom, Meet, FaceTime, OBS or any other app — Osmotic doesn’t need to stay open.")
+                Text("Pick it as the camera in Zoom, Meet, FaceTime, OBS or any other app. Osmotic doesn’t need to stay open.")
                     .font(.callout)
                     .foregroundStyle(Theme.muted)
                     .fixedSize(horizontal: false, vertical: true)

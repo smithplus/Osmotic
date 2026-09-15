@@ -1,4 +1,4 @@
-OSMOTIC — INSTALL
+OSMOTIC: INSTALL
 =================
 
 1. Drag Osmotic onto the Applications folder.

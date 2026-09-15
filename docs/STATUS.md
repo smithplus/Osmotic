@@ -4,9 +4,9 @@ _Last updated: 2026-09-15. Two tests with a real Pocket 3: Files (build `776be7d
 
 ## Next hardware test (in this order)
 
-1. **Progress bar with clips > 4 GiB** — download a long clip (the manifest size is u32): the total and the time remaining must be correct from the start (log: `library: … is N MB (listed as M MB)`).
+1. **Progress bar with clips > 4 GiB:** download a long clip (the manifest size is u32): the total and the time remaining must be correct from the start (log: `library: … is N MB (listed as M MB)`).
 2. **Photo** in Photo mode (Live); pagination with > 45 files; first pairing if possible (reset the camera).
-3. **Webcam** — plug in over USB-C, choose Webcam on the camera, check the picture; camera permission.
+3. **Webcam:** plug in over USB-C, choose Webcam on the camera, check the picture; camera permission.
 4. **Permissions with the app opened from Finder** (not Terminal): Bluetooth, Location (grant and deny), Local Network (deny, then allow), Downloads, Camera, Notifications.
 
 Ask for the log `~/Library/Logs/Osmotic/osmotic-*.log` from each test.
@@ -15,7 +15,7 @@ Ask for the log `~/Library/Logs/Osmotic/osmotic-*.log` from each test.
 
 Files + Live, everything worked on the first try: BLE (already paired), Wi-Fi via CoreWLAN on the first attempt, playback via `0x01/0x01`, 11 files. **Live**: leaving playback (`0x02/0x0c` → `e0`, then START), live view 17 ms after the request, 0 fragments lost; record → `camera recording: YES`, stop → `no`; Photo, Slow-mo and Low light modes confirmed by the camera status; back to the card with a relist (1 new clip). Downloads at ~33 MB/s, backup `.WAV`, resume at 3685 MB of a clip over 4 GiB, cancel and disconnect; back on the home network in 4 s (again `-3900 tmpErr` from `networksetup`, but macOS rejoins on its own).
 
-Fixed after this test: (1) the manifest size is u32, and a clip over 4 GiB showed a "wrapped-around" size — the bar reached 100% with 00:00 remaining. Now the real size is requested via HEAD for videos longer than 2 min, and the downloader reports the server's size (`onTotal`). (2) The `networksetup` error repeated the home network name in the log: it is now masked. (3) Free space was logged every 400 ms while recording: now once per GB.
+Fixed after this test: (1) the manifest size is u32, and a clip over 4 GiB showed a "wrapped-around" size: the bar reached 100% with 00:00 remaining. Now the real size is requested via HEAD for videos longer than 2 min, and the downloader reports the server's size (`onTotal`). (2) The `networksetup` error repeated the home network name in the log: it is now masked. (3) Free space was logged every 400 ms while recording: now once per GB.
 
 ## Verified with a real Pocket 3 (2026-09-14, build `776be7d`, log `osmotic-20260914-175922.log`)
 
@@ -33,7 +33,7 @@ The whole Files flow worked on the first try: BLE armed (MTU 512), already paire
 
 ## Changes to the Files path since the first test (tested with hardware on 2026-09-15)
 
-- Manifest built only from `0x00/0x27` frames, per datagram (before: concatenated datagrams; a stray `0x55` with a valid CRC could swallow fragments — short list).
+- Manifest built only from `0x00/0x27` frames, per datagram (before: concatenated datagrams; a stray `0x55` with a valid CRC could swallow fragments, giving a short list).
 - Datalink: drops packets that don't come from the camera's IP; 8 MB cap on the manifest; pktType 0x02 is diverted away from the status parser only in capture mode.
 - Downloads: complete only if the bytes match Content-Length/Content-Range (the manifest size is a hint); 416 with a complete `.part` finishes; HTML and redirects are rejected; local names sanitized; never deletes at the destination; `.part` never follows a symlink.
 - Wi-Fi: only forgets the camera's network if the app added it; doesn't join an open network with the camera's name; `networksetup` with the password only from the 4th attempt; notice if it doesn't rejoin your network on its own.
@@ -55,7 +55,7 @@ Security, implementation, UI/accessibility, Apple guidelines (distribution, priv
 4. Move the app's testable logic (network decisions, download queue) into a library with tests.
 5. Accessibility: visible focus ring on `CassetteKeyStyle` with full keyboard access; Increase Contrast variants.
 6. Expand bursts/intervals (`_001` → frames) with the group-expand `0x00/0x26` mode `0x10` (today only the first one is downloaded).
-7. Favorites and deletion on the camera (`0x02/0xbf`, `0x00/0x28`) — ported in Kotlin, not in Swift.
+7. Favorites and deletion on the camera (`0x02/0xbf`, `0x00/0x28`): ported in Kotlin, not in Swift.
 8. Clip trimming with `AVAssetExportSession` passthrough; updates with Sparkle 2.
 9. Two files with the same name in different folders/cards go to the same destination (the Pocket 3 uses date-and-time names; it doesn't happen in practice).
 

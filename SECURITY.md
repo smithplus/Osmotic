@@ -6,7 +6,7 @@ Open an [issue](https://github.com/smithplus/Osmotic/issues) labeled **security*
 
 ## What the app does with your Mac and your data
 
-- **Nothing leaves your Mac**: no accounts, no analytics, no servers of our own. The app talks to the camera (Bluetooth and its Wi-Fi network `192.168.2.1`) and, at most once a day, asks GitHub (`api.github.com`) for the latest version — without sending any of your data; it can be turned off in Settings › Updates.
+- **Nothing leaves your Mac**: no accounts, no analytics, no servers of our own. The app talks to the camera (Bluetooth and its Wi-Fi network `192.168.2.1`) and, at most once a day, asks GitHub (`api.github.com`) for the latest version, without sending any of your data; it can be turned off in Settings › Updates.
 - **Updates**: only a zip whose Ed25519 signature matches the public key included in the app (`OsmoticUpdatePublicKey`) is installed; downloads come only from GitHub over HTTPS; the bundle is verified (identifier, version, `codesign`) before the app is replaced. The private key is in the publisher's Keychain, never in the repo.
 - **Permissions** and what they are for: Bluetooth (find the camera), Local Network (talk to it), Location (macOS only shows your Wi-Fi name with this permission; used to return to your network), Downloads (save to `~/Downloads/DJI`), Camera (Webcam tab, only with a USB camera plugged in), Notifications (alert when finished).
 - **Changes the Mac's Wi-Fi network** while connected (CoreWLAN and `/usr/sbin/networksetup`) and restores it when done. It only forgets the camera's network if the app added it.

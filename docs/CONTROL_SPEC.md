@@ -1,4 +1,4 @@
-# Osmotic — camera control + live view spec (Pocket 3, Wi-Fi datalink)
+# Osmotic: camera control + live view spec (Pocket 3, Wi-Fi datalink)
 
 Implementation-ready spec, written 2026-09-14 from source reading only. Implemented in `19ecd04`
 (see `docs/CONTROL.md`); not yet hardware-tested. `ours …:N` line references are from before the
@@ -13,7 +13,7 @@ scratchpad and are not in the repo (clone the upstream projects to follow the ci
 | **P3D** | `research/brianmerchant_Pocket3Direct-Android` (same author, Kotlin transport) | `f30c364` | MIT |
 | **OPC** | `research/erik-sutton95_OpenPocketCine` (iOS/Android, Pocket 3/4/Nano tested) | `9b30b93` | Apache-2.0 (+NOTICE) |
 | **OSM** | `osmosis` (upstream KonradIT/osmosis, `MEDIA_PROTOCOL.md`) | local clone | MIT |
-| ours | `/Users/martinsmith/projects/personal/osmosis mac/…` | `30f1546` | — |
+| ours | `/Users/martinsmith/projects/personal/osmosis mac/…` | `30f1546` | n/a |
 
 Citations are `KEY path:line`. Evidence tags: **HW** = a source says physically confirmed on a
 Pocket 3; **SRC** = present in a working implementation; **UNVERIFIED** = conflicting or not
@@ -23,7 +23,7 @@ Every DUML frame quoted in §3/§4 was re-encoded with our CRC/packing (same alg
 `Sources/OsmoticCore/DUML/DjiMessage.swift:5-62` + `DatalinkTransport.sendDuml` `:153-162`) and
 matches OSM's published examples byte-for-byte (script: `scratchpad/duml_check.py`).
 
-**Attribution if code is ported:** Kaze is MIT — keep its copyright line (add to `LICENSE`/README
+**Attribution if code is ported:** Kaze is MIT: keep its copyright line (add to `LICENSE`/README
 credits next to Osmosis, and a header comment in ported files, e.g. `// Adapted from Kaze for DJI
 (MIT, © 2026 Brian Merchant), ios/Pocket3Controller/Pocket3VideoOutput.swift`). OPC is Apache-2.0:
 prefer re-implementing from its docs; if code is copied, carry its `NOTICE` and mark modifications.
@@ -39,7 +39,7 @@ prefer re-implementing from its docs; if code is copied, carry its `NOTICE` and 
 | `0x00` | both | handshake (our 40-byte SYN; camera echoes a `0x00`) | K docs/POCKET3_DUML_PROTOCOL.md:72-80; ours DatalinkTransport.swift:25-30,109-117 |
 | `0x01` | cam→app | (a) **34-byte window status** (no DUML); (b) unsolicited DUML pushes: `02/80`, `02/DC`, `0D/02`, `04/05`, `00/99` pushes | K docs:79; OPC docs/live-session.md:43-46 |
 | `0x02` | cam→app | **live-view media fragments** (H.264 on Pocket 3) | K docs:76, 785-833; OPC handbook/.../live-view.md:21-23 |
-| `0x03` | cam→app | "ackedData": **replies to our commands** (record/stop, `0x8E` GET/SET, `04/50`, zoom ACK…) — a separate reliable window | OPC docs/live-session.md:43-53; OPC handbook/.../duml-transport.md:38; K docs:77 |
+| `0x03` | cam→app | "ackedData": **replies to our commands** (record/stop, `0x8E` GET/SET, `04/50`, zoom ACK…); a separate reliable window | OPC docs/live-session.md:43-53; OPC handbook/.../duml-transport.md:38; K docs:77 |
 | `0x04` | app→cam | our window ACK (transport seq always 0) | K DumlTransport.swift:130-146; P3D DumlTransport.kt:214-228 |
 | `0x05` | app→cam | our DUML commands (`[12B routing][DUML]`) | K docs:75; ours DatalinkTransport.swift:153-162 |
 
@@ -104,7 +104,7 @@ Seq/cursor fields summary:
 - DUML id (frame bytes 6-7): `dumlSeq` from `0xA000`, +1 per frame (ours :42, 159).
 - Health metric: `txLagSlots = ((lastTx − peerAckedTx) & 0xFFFF) / 8`; Kaze warns > 24
   (K Pocket3GimbalSession.swift:1657-1663). Handshake proposes window **100** (`0x64`) / MTU 1472
-  (OPC DumlTransport.swift:74-76) — so > ~100 un-ACKed slots stalls the camera (INFERRED).
+  (OPC DumlTransport.swift:74-76), so > ~100 un-ACKed slots stalls the camera (INFERRED).
 
 ### 1.4 State machine to add to `DatalinkTransport` (port of K DumlTransport.swift:250-311)
 
@@ -139,11 +139,11 @@ seq 0. Minor; follow Kaze (proven on Pocket 3).
 - Kaze additionally sends `0x04/0x50` payload `01 04 05` to rcv type 4 id 0, cmdType 2, every 1 s
   and treats a missing reply > 3 s as a command-path health warning (K docs:297-313;
   Pocket3GimbalSession.swift:1469-1478, 1665-1669). Its reply rides pktType `0x03`, so it also
-  keeps that window exercised. It is a gimbal-params GET (OPC handbook/.../commands.md:48) — read-only.
+  keeps that window exercised. It is a read-only gimbal-params GET (OPC handbook/.../commands.md:48).
 - **The "re-register after > 40 s" note** comes from OSM MEDIA_PROTOCOL.md:642-644 ("A registered
   session stops accepting writes after ~40–70 s … Re-register before a write once the session is
   older than 40 s"), written for the `ackSeq = ownSeq − 8` model (OSM :629-637). P3D explains that
-  exact signature — reads/telemetry flowing, writes silently dropped — as caused by `r0 = seq−8`
+  exact signature (reads/telemetry flowing, writes silently dropped) as caused by `r0 = seq−8`
   and pinned ACK groups (P3D DumlTransport.kt:16-21, 64-74, 378-386). Kaze/OPC hold control and
   video for minutes on one session with the corrected windows (OPC docs/feed-watchdog.md:26:
   "A session-preserving UDP rebuild does not reset the camera's `0x03` window — only echoing that
@@ -182,13 +182,13 @@ Facts:
    handbook/.../media.md:26), whereas OSM says a Pocket 3 "serves an incomplete first page when
    listed while still in capture" (OSM :135). Keep our playback-based listing.
 
-**Recommended procedure — leave playback (job `enterCaptureMode`)**, stop at the first step that
+**Recommended procedure to leave playback (job `enterCaptureMode`).** Stop at the first step that
 clears bit 30 of `02/80` (`StatusTracker.playbackReported == false`):
 1. Stop the keep-alive's playback re-assert (ours CameraSession.swift:539) and set `playbackHeld = false`.
 2. `0x02/0x0C 01 01 00 00` (our `playbackLeave`, ours :57) to rcv 0x01; wait ≤ 450 ms, up to 2×.
    On a `E0` reply skip to 3. (Pocket 3 behaviour for *leave*: **UNVERIFIED**.)
-3. Send the Kaze live START sequence (§4.1). **UNVERIFIED** that it exits playback — INFERRED
-   from the `0x01/0x01` semantics above. Wait ≤ 1.5 s for bit 30 clear.
+3. Send the Kaze live START sequence (§4.1). **UNVERIFIED** that it exits playback (INFERRED
+   from the `0x01/0x01` semantics above). Wait ≤ 1.5 s for bit 30 clear.
 4. Fallback: fresh session (close socket, new handshake + register **without** playback entry),
    then wait ≤ ~5 s for bit 30 to clear in `02/80` (OSM :787; duration UNVERIFIED).
 
@@ -207,7 +207,7 @@ Routing for all: sender App `0x02`, receiver Camera type 1 id 0 (target `0x0102`
 DUML flags `0x40` (request). Our call: `send(0x02, cmd, payload, rType: 0x01, rId: 0)` (ours :188-190).
 Reply: same set/cmd, flags `0xC0`, payload[0] = status, arrives on **pktType 0x03** (OPC
 docs/live-session.md:46-49). The camera may first send an empty-payload transport ACK with the same
-set/cmd — skip empty payloads (OSM :639-640; ours `DumlScanner.findReply` already does, DjiMessage.swift:138-147).
+set/cmd; skip empty payloads (OSM :639-640; ours `DumlScanner.findReply` already does, DjiMessage.swift:138-147).
 
 ### 3.1 Frames (hex = full DUML frame with id `0x0402`, verified against OSM examples)
 
@@ -216,11 +216,11 @@ set/cmd — skip empty payloads (OSM :639-640; ours `DumlScanner.findReply` alre
 | Record start | `02/02` | `01` | `550e046602010204400202014e61` | K docs:524-541 (HW); OSM :736-742; K Pocket3CameraDomain.swift:56-63 |
 | Record stop | `02/02` | `00` | `550e04660201020440020200c770` | same; OSM :744-749 |
 | Photo (shutter) | `02/01` | `01` | `550e04660201020440020101264b` | K Pocket3CameraSettings.swift:536-542; OSM :729-734; OPC Commands.swift:217 |
-| Panorama start | `02/01` | `07` | — | K Pocket3CameraSettings.swift:668-675; K docs/CAMERA_SETTINGS_PROTOCOL.md:39 |
+| Panorama start | `02/01` | `07` | n/a | K Pocket3CameraSettings.swift:668-675; K docs/CAMERA_SETTINGS_PROTOCOL.md:39 |
 | Set mode | `02/E1` | `[mode]` | `550e0466020102044002e1` + `mm` + crc (e.g. Video `…e101bfa2`, Photo `…e1059be4`) | OSM :759-773; K Pocket3CameraSettings.swift:414-419 |
-| Video format | `02/18` | `[res][fps] 00 [slowmo] 00` | — | K Pocket3CameraSettings.swift:429-443; K docs/CAMERA_SETTINGS_PROTOCOL.md:45-72 |
+| Video format | `02/18` | `[res][fps] 00 [slowmo] 00` | n/a | K Pocket3CameraSettings.swift:429-443; K docs/CAMERA_SETTINGS_PROTOCOL.md:45-72 |
 
-Mode codes (`02/E1` writer = `02/80`@57 readback; sparse, **table it, never enumerate** — sweeping
+Mode codes (`02/E1` writer = `02/80`@57 readback; sparse, **table it, never enumerate**: sweeping
 `02/E1` froze a Nano, OSM :687-688; OPC Commands.swift:224-235):
 `00` Slow Motion · `01` Video · `02` Timelapse · `05` Photo · `0A` Hyperlapse · `0C` Panorama ·
 `18` Motionlapse · `28` Low-Light (SuperNight) (K Pocket3CameraReadback.swift:19-28; K docs:581-592).
@@ -233,7 +233,7 @@ UNVERIFIED-writer. `0x17` is Photo on Pocket 4, not Pocket 3 (OPC Commands.swift
 
 Do **not** send `02/02` with any other value: `02/02` is also DJI's 0–3 "work mode" (OSM :751-757).
 
-### 3.2 Reply codes (payload[0]) — OSM :717-727; OPC CameraControl.swift:229-265
+### 3.2 Reply codes (payload[0]), per OSM :717-727 and OPC CameraControl.swift:229-265
 
 `00` ok · `D8` resource not ready · `D9` wrong state (photo in a video mode, OSM :734) · `DF` wrong
 parameter (OSM :749 and OPC Commands.swift:210: `[01]` while recording → `df`)
@@ -241,7 +241,7 @@ parameter (OSM :749 and OPC Commands.swift:210: `[01]` while recording → `df`)
 Kaze: `02/02` reply `00` = accepted, "command acceptance is not proof that recording actually
 reached the requested state" (K docs:536-539).
 
-### 3.3 `0x02/0x80` status push (~10 Hz, 60 B, pktType 0x01) — confirmation source
+### 3.3 `0x02/0x80` status push (~10 Hz, 60 B, pktType 0x01): confirmation source
 
 | Offset | Type | Meaning | Source |
 |---|---|---|---|
@@ -251,7 +251,7 @@ reached the requested state" (K docs:536-539).
 | @5 | u32 LE | active-store total MiB | K :68; OSM :848 |
 | @9 | u32 LE | active-store free MiB | K :69; OSM :849 |
 | @13 | u16 LE | photos remaining (Photo only) | OSM :850, 862-863 |
-| @17 | u16 LE | remaining record seconds (0 in Photo) | K :70; OSM :851 (OPC reads u32 @17, CameraStatus.swift:157-160 — use u16) |
+| @17 | u16 LE | remaining record seconds (0 in Photo) | K :70; OSM :851 (OPC reads u32 @17, CameraStatus.swift:157-160; use u16) |
 | @29 | u16 LE | **elapsed record seconds** | K :71; OSM :852 |
 | @57 | u8 | current shooting mode (codes above) | K :72; OSM :853 |
 
@@ -275,7 +275,7 @@ Parse the extended fields only when `payload.count >= 58` (K :65-66). Render @17
 - **Retransmit policy** (OPC CameraSession.swift:3164-3167): retransmit once after 300 ms of silence
   (not photo), settle/fail at 2 s. With the §1.2 windows, Kaze does no retransmits at all. V1: no
   retransmit for photo; record may resend once at 300 ms only if no reply **and** @0 unchanged.
-- **One in flight per opcode**; SETs can pause live video briefly — OPC holds stall-repair 4 s
+- **One in flight per opcode**; SETs can pause live video briefly: OPC holds stall-repair 4 s
   after any SET (OPC docs/feed-watchdog.md:45).
 - **Timelapse/Hyperlapse start**: OPC's Pocket 3 survey saw Timelapse start/stop as `02/01 [01]/[00]`,
   not `02/02` (OPC handbook/.../pocket3.md:398-400); Kaze uses `02/02` for every non-Photo mode
@@ -286,10 +286,10 @@ Parse the extended fields only when `payload.count >= 58` (K :65-66). Render @17
 
 ## 4. Live view (Q4)
 
-### 4.1 Start request — two proven variants
+### 4.1 Start request: two proven variants
 
-**Variant A (Kaze, HW on Pocket 3)** — K Pocket3GimbalSession.swift:43-46, 999-1039;
-K android/.../Pocket3LiveViewCommands.kt:17-29; K docs:725-783:
+**Variant A (Kaze, HW on Pocket 3)** (K Pocket3GimbalSession.swift:43-46, 999-1039;
+K android/.../Pocket3LiveViewCommands.kt:17-29; K docs:725-783):
 ```
 START = 01/01  payload 01 00 00 00 00 04 00 00 00 05 01   rcv type1 id0, cmdType 0 (flags 0x00)
 A8    = 09/A8  payload 00 04 02 00 00 00 00 00 00 00      rcv type1 id2 (=0x41), cmdType 2
@@ -301,7 +301,7 @@ A8→0x41 `55170438024100a04009a800040200000000000000b20a`,
 IDLE `55180420020100a000010100000000000400000004018a6d`.
 Kaze sends it only after the `04/50` reply gate (K :805-809) and before queuing subscriptions.
 
-**Variant B (OPC)** — `0x02/0x68 [08]` then `0x09/0xA8` same payload to **rcv `0x08`** (type 8 id 0)
+**Variant B (OPC):** `0x02/0x68 [08]` then `0x09/0xA8` same payload to **rcv `0x08`** (type 8 id 0)
 (OPC Commands.swift:184-200, 290-304; CameraModel.swift:53-55; handbook/.../live-view.md:36, 50-57).
 A8→0x08 frame (id 0xA000): `55170438020800a04009a8000402000000000000006442`. OPC used `0x41` only
 for Nano ("Pocket `0x08` to Nano ACKs E0"). OPC: register + subscribe **before** enable ("Enable
@@ -311,7 +311,7 @@ Which receiver Pocket 3 strictly needs: **UNVERIFIED** (both projects report Poc
 their own variant). Plan: Variant A first (full sequence); if no pktType `0x02` within 8 s,
 Variant B once (§4.5 ladder).
 
-Do **not** wait for a DUML reply to `09/A8` before ingesting — OPC lost the IDR with a 200 ms wait
+Do **not** wait for a DUML reply to `09/A8` before ingesting: OPC lost the IDR with a 200 ms wait
 (OPC docs/live-session.md:88-97). Arm `0x02` ingest before sending.
 
 ### 4.2 Fragment format (pktType `0x02`)
@@ -370,23 +370,23 @@ there is **no periodic GOP**, so later P-frames stay damaged until the next IDR 
 
 ### 4.4 Decode/display (port of K :641-890, 1130-1301)
 
-1. **NAL split** — Annex-B, 3- and 4-byte start codes (K :1266-1301). Type = `byte & 0x1F`.
-2. **SPS (7)/PPS (8)** — keep latest; on change build
+1. **NAL split:** Annex-B, 3- and 4-byte start codes (K :1266-1301). Type = `byte & 0x1F`.
+2. **SPS (7)/PPS (8):** keep latest; on change build
    `CMVideoFormatDescriptionCreateFromH264ParameterSets(…, parameterSetCount: 2, nalUnitHeaderLength: 4, …)`
    (K :1130-1168), then `waitingForIDR = true` and flush the layer (K :674-690).
-3. **Sample NALs** — drop 7, 8, 9 (AUD); require a VCL NAL (1…5); `isIDR` = contains type 5
-   (K :694-710). While `waitingForIDR`, discard until an IDR (K :721-725) — handles leftover GOP
+3. **Sample NALs:** drop 7, 8, 9 (AUD); require a VCL NAL (1…5); `isIDR` = contains type 5
+   (K :694-710). While `waitingForIDR`, discard until an IDR (K :721-725), which handles leftover GOP
    P-frames after reconnect (OPC live-view.md:36, 41-42; docs/live-session.md:130-131).
-4. **AVCC** — each NAL → 4-byte big-endian length + bytes, one contiguous buffer; `CMBlockBufferCreateWithMemoryBlock`
+4. **AVCC:** each NAL → 4-byte big-endian length + bytes, one contiguous buffer; `CMBlockBufferCreateWithMemoryBlock`
    + `CMBlockBufferReplaceDataBytes` (Kaze: writing via `CMBlockBufferGetDataPointer` produced no
    renderable samples on device, K :1182-1186), `CMSampleBufferCreateReady` with timing
    `{duration: 1/fps, pts: host clock, dts: .invalid}` (K :1170-1241).
-5. **Attachments** — `kCMSampleAttachmentKey_DisplayImmediately = true` (V1: always; Kaze does it
+5. **Attachments:** `kCMSampleAttachmentKey_DisplayImmediately = true` (V1: always; Kaze does it
    until its cadence detector locks, K :727-763, 1249-1255) and `kCMSampleAttachmentKey_NotSync = !isIDR` (K :1256-1260).
-6. **Display** — `AVSampleBufferDisplayLayer` hosted in an `NSView` (`makeBackingLayer`) via
+6. **Display:** `AVSampleBufferDisplayLayer` hosted in an `NSView` (`makeBackingLayer`) via
    `NSViewRepresentable`; black background; if `status == .failed` → `flush()`, wait for IDR
    (K :846-853). Kaze enqueues on the main queue (K :831-889). On the macOS 15 SDK prefer
-   `layer.sampleBufferRenderer` (AVSampleBufferVideoRenderer) — layer-level `enqueue/flush` are
+   `layer.sampleBufferRenderer` (AVSampleBufferVideoRenderer); layer-level `enqueue/flush` are
    deprecated there (verify at compile time). `CMSampleBuffer` Sendability under Swift 6.2: wrap
    in an `@unchecked Sendable` box for the hop (verify).
 7. `ImageRenderer` snapshots can't show this layer (CLAUDE.md) → demo mode shows a still.
@@ -397,7 +397,7 @@ smooths jitter; not needed for a preview.
 ### 4.5 Keyframes, stalls, recovery (ordering matters)
 
 - `09/A8` **is** the IDR request; there is no separate PLI and no periodic keyframe; a 30 s run of
-  P-frames is normal (OPC live-view.md:59; docs/feed-watchdog.md:11). **Never loop `09/A8`** —
+  P-frames is normal (OPC live-view.md:59; docs/feed-watchdog.md:11). **Never loop `09/A8`**:
   resending every second resets the encoder GOP and the IDR never lands (OPC live-view.md:72-74;
   Commands.swift:190-192; docs/protocol-notes.md:54-59).
 - Stall = no new AU for 2 s, **except** 8 s after a `09/A8`, 4 s after any SET (OPC feed-watchdog.md:37, 45).
@@ -411,14 +411,14 @@ smooths jitter; not needed for a preview.
   the current format (`cam_video_param_v2` `[res][fps]`), SET the other of 1080p/4K at the same fps
   (`02/18 [0A|10][fps] 00 00 00`), restore the original, then one `09/A8` (OPC live-view.md:61-70;
   docs/live-session.md:117-128; CameraControl.swift:1135-1156; CameraModel.swift:68). Needs a
-  `cam_video_param_v2` subscription — **not** in our `paramSubs` today (ours CameraSession.swift:49-52).
+  `cam_video_param_v2` subscription, which is **not** in our `paramSubs` today (ours CameraSession.swift:49-52).
 
 ### 4.6 Stopping
 
 There is **no live-stop command** (OPC live-view.md:36; docs/live-session.md:130). Kaze's teardown
 for a non-user session replacement: final neutral, `01/01 IDLE` ×8 (3 ms apart), then drain+ACK
 750 ms, close (K :366-431). For a user disconnect Kaze sends nothing and closes promptly (K :373-374).
-Never use `01/01 03…07 01` as a stop — it enters playback (K docs:898-914). So "stop live view" =
+Never use `01/01 03…07 01` as a stop: it enters playback (K docs:898-914). So "stop live view" =
 stop decoding locally; keep ACKing group 1 with the latest `0x02` seq while any arrive.
 
 ### 4.7 Socket caveats
@@ -442,7 +442,7 @@ stop decoding locally; keep ACKing group 1 with the latest `0x02` seq while any 
    (OPC DumlTransport.swift:90-94; docs/live-session.md:46-53). Status `0x01` must not rewind groups 1/2
    after the real seq was seen (OPC :114-146).
 3. ACK at ≥ 40 Hz once video flows; 1 Hz is not enough (OPC live-view.md:108).
-4. Every UDP write (commands, ACKs, beats) must be serialized on the one owner — interleaving
+4. Every UDP write (commands, ACKs, beats) must be serialized on the one owner; interleaving
    starved window ACKs in OPC (docs/live-session.md:55-58). Matches our single-thread rule.
 5. Register + subscribe before `09/A8` (OPC DatalinkDriver.swift:229, 284-287). Kaze: `04/50` reply
    gate before live START (K :795-809).
@@ -452,18 +452,18 @@ stop decoding locally; keep ACKing group 1 with the latest `0x02` seq while any 
 9. Leftover GOP after reconnect: gate on IDR (§4.4).
 10. Record is not a toggle: `[01]` while recording → `DF`; photo in video mode → `D9`; empty photo
     payload → `E3` (OSM :734, 749). Never enumerate `02/E1`.
-11. Pocket 3 passes through `0x41` before `0x81` and `0xC1` before `0x01` — wait on the bit, not a delay (OSM :738-746).
+11. Pocket 3 passes through `0x41` before `0x81` and `0xC1` before `0x01`: wait on the bit, not a delay (OSM :738-746).
 12. **Our scanner false positive:** `DumlScanner.walk` checks only CRC8 (ours DjiMessage.swift:123-134);
     running `StatusTracker.ingest` over H.264 fragments could decode a bogus `02/80` and flip playback/record
     state. Exclude pktType `0x02` from status ingest and from manifest blobs (ours CameraSession.swift:192-200, 386, 412, 458, 488).
 13. Don't re-sync `udpSeq` from `cameraChannel` mid-session: video datagrams also overwrite bytes 8-9
     (OPC tools/extract_liveview.py:10). OPC flags channel/ACK-state ordering at startup as a candidate
     stall seam (OPC docs/pocket3-startup-investigation.md:62-73).
-14. "Do not poll `0x02/0x8E` while playback is held" — it drops playback on some bodies (OSM :606-609;
+14. "Do not poll `0x02/0x8E` while playback is held": it drops playback on some bodies (OSM :606-609;
     OPC handbook/.../commands.md:17).
 15. WB/sliders: one in flight, coalesce ~100 ms, don't flood (OPC commands.md:40).
 16. Mimo sends `02/68 [08]` right before the first enable after a SoftAP join or gallery (OPC live-view.md:36).
-17. Kaze's `04/14` "recenter" drove the gimbal toward a mechanical limit — never send (K docs:880-896). (Out of scope, listed because it is the one known-dangerous opcode.)
+17. Kaze's `04/14` "recenter" drove the gimbal toward a mechanical limit: never send (K docs:880-896). (Out of scope, listed because it is the one known-dangerous opcode.)
 
 ---
 
@@ -477,11 +477,11 @@ stop decoding locally; keep ACKing group 1 with the latest `0x02` seq while any 
    passes `peerAckedTxSeq`; `sendDuml`/`sendRaw(≠0x00)` set `lastTxSeq = seqSent` on success.
 3. `sendAck()` builds the §1.3 layout from the four cursors.
 4. `syncSeqToPeerChannel()` also sets `lastTxSeq = peerAckedTxSeq = cameraChannel`; `open()` seeds all to `baseSeq`.
-5. `var onVideo: (([UInt8]) -> Void)?` — pktType `0x02` datagrams go here (synchronously, on the
+5. `var onVideo: (([UInt8]) -> Void)?`: pktType `0x02` datagrams go here (synchronously, on the
    session thread) and are **not** returned from `recvAll`/`recvBurst`.
 6. `recvBurst(ms:)` using `poll()`; `txLagSlots`.
 7. Temporary A/B switch `windowModel: .mimo | .legacy` (default `.mimo`) so the first hardware run can
-   fall back if listing regresses — our listing is proven only with the legacy ACK (ours docs/STATUS.md).
+   fall back if listing regresses; our listing is proven only with the legacy ACK (ours docs/STATUS.md).
 8. Update `ProtocolTests` `the ack trails our own seq…` (Tests/…/ProtocolTests.swift:74-78) to the
    Kaze vectors.
 
@@ -516,16 +516,16 @@ Jobs (each via `submit`, same as `connect`/`nextPage`):
 
 Reply wait helper: loop `recvBurst(12)` → `observe`, route video, `ingest` non-video, ACK if
 ≥ 25 ms since last ACK or anything arrived, until a frame with the same set/cmd, response flags and
-non-empty payload is seen (our `DumlScanner.Frame` has no flags field — add `flags` (byte 8)).
-Optionally also match DUML id (OSM MEDIA_PROTOCOL.md:11 says the camera echoes it — stated for
+non-empty payload is seen (our `DumlScanner.Frame` has no flags field; add `flags` (byte 8)).
+Optionally also match DUML id (OSM MEDIA_PROTOCOL.md:11 says the camera echoes it, but that is stated for
 BLE; UNVERIFIED on the datalink, Kaze matches set/cmd only, K DumlFraming.swift:67-89).
 
 Keep-alive split (ours :160-177, 520-542):
 - `.media`: today's tick unchanged (recv 200 ms, ACK, beat /3 ticks, playback re-assert /33).
-- `.capture`/`.live`: **pump tick** — `recvBurst(12)`; ACK when anything arrived or ≥ 25 ms elapsed
+- `.capture`/`.live`: **pump tick** with `recvBurst(12)`; ACK when anything arrived or ≥ 25 ms elapsed
   (40 Hz floor); `00/88` every 1 s; `04/50` every 1 s; stall watchdog (§4.5) in `.live`; record
-  deadline check; **no** playback re-assert; no `pause()` — check `jobs` non-blockingly each loop so
-  jobs start within ~12 ms. Link-lost logic reuses `silentTicks` scaled to time (8 s).
+  deadline check; **no** playback re-assert; no `pause()` (check `jobs` non-blockingly each loop so
+  jobs start within ~12 ms). Link-lost logic reuses `silentTicks` scaled to time (8 s).
 
 Video path: `onVideo` → `reassembler.feed` on the session thread (cheap byte copies) → completed
 message + `liveGeneration` dispatched to a serial `DispatchQueue("osmotic-video")` owning
@@ -543,7 +543,7 @@ display layer; UI copy in Spanish rioplatense ("Grabar", "Detener", "Foto", "Mod
 ### 6.3 Teardown
 
 `teardown()` (ours :544-553): if `.live`/`.capture`, send nothing special (Kaze user-disconnect
-behaviour, K :373-374) — or `01/01 IDLE` ×8 + 750 ms drain for a session replacement (K :382-401);
+behaviour, K :373-374), or `01/01 IDLE` ×8 + 750 ms drain for a session replacement (K :382-401);
 only send the playback leave when `mode == .media`. Wi-Fi restore rules unchanged (CLAUDE.md).
 
 ### 6.4 Fallback re-registration
@@ -572,13 +572,13 @@ FakeCamera extensions:
    status every 100 ms (@10 last `0x02` seq, @18 last `0x03` seq, @24/@26 last client TX seq seen).
 3. Window enforcement (the regression that matters): keep `0x03` replies/`0x02` fragments only while
    `(sent − clientAckGroup) / 8 ≤ W` (W small, e.g. 16); otherwise stop sending. Test: 200 control
-   commands over > 60 s simulated all get replies (fails with the legacy ACK — proves §1.2).
+   commands over > 60 s simulated all get replies (fails with the legacy ACK, which proves §1.2).
 4. Record state machine: `02/02 [01]` → reply `00`, @0 `41` for 300 ms then `81`, @29 counts up;
    `[00]` → `C1` for 300 ms then `01`; `[01]` while recording → `DF`; `02/01` when @57 ≠ 05 → `D9`;
    `02/E1 [m]` → `00`, @57 = m, @4 = (m != 05). While in playback: `02/02`, `02/01`, `02/E1` → `D9`,
    `09/A8` → `E0` (behaviour chosen for the fake; real Pocket 3 UNVERIFIED).
 5. Playback exit modes (parameter): leave via `0x02/0x0C 01010000`, or only via `01/01 START`, or
-   only after the link drops — to exercise all three §2 steps.
+   only after the link drops, to exercise all three §2 steps.
 6. Live: on `09/A8` to a configurable receiver (`0x41`/`0x08`) outside playback, stream the fixture
    GOP at 25 fps as `00 00 01 FF`+len+8 B meta, fragmented at ~1400 B, `+8` seqs; option to start
    with leftover P-frames before the IDR; option to drop one fragment; option "black until `02/18`

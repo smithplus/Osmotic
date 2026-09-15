@@ -21,12 +21,12 @@
         }
       }
     },
-    "%lld arrived, %lld didn’t — open Osmotic to try again": {
+    "%lld arrived, %lld didn’t. Open Osmotic to try again.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "%lld descargados, %lld no — abrí Osmotic para reintentar"
+            "value": "%lld descargados, %lld no. Abrí Osmotic para reintentar."
           }
         }
       }
@@ -111,7 +111,7 @@
         }
       }
     },
-    "%lld files couldn’t be downloaded — try again to resume": {
+    "%lld files couldn’t be downloaded. Try again to resume.": {
       "localizations": {
         "en": {
           "variations": {
@@ -137,13 +137,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld archivo no se pudo descargar — reintentá para reanudar"
+                  "value": "%lld archivo no se pudo descargar. Reintentá para reanudar."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld archivos no se pudieron descargar — reintentá para reanudar"
+                  "value": "%lld archivos no se pudieron descargar. Reintentá para reanudar."
                 }
               }
             }
@@ -814,12 +814,12 @@
         }
       }
     },
-    "Download cancelled — what already arrived is saved": {
+    "Download cancelled. What already arrived is saved.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Descarga cancelada — lo ya descargado quedó guardado"
+            "value": "Descarga cancelada. Lo que ya llegó quedó guardado."
           }
         }
       }
@@ -1537,12 +1537,12 @@
         }
       }
     },
-    "Osmo › Mac  ·  No cables  ·  No app": {
+    "Osmo › Mac  ·  No cables  ·  No phone": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Osmo › Mac  ·  Sin cables  ·  Sin app"
+            "value": "Osmo › Mac  ·  Sin cables  ·  Sin teléfono"
           }
         }
       }
@@ -1700,12 +1700,12 @@
         }
       }
     },
-    "Pick it as the camera in Zoom, Meet, FaceTime, OBS or any other app — Osmotic doesn’t need to stay open.": {
+    "Pick it as the camera in Zoom, Meet, FaceTime, OBS or any other app. Osmotic doesn’t need to stay open.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Elegila como cámara en Zoom, Meet, FaceTime, OBS o cualquier otra app — Osmotic no necesita quedar abierta."
+            "value": "Elegila como cámara en Zoom, Meet, FaceTime, OBS o cualquier otra app. Osmotic no necesita quedar abierta."
           }
         }
       }

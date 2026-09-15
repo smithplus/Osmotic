@@ -1061,7 +1061,7 @@ final class AppModel {
         transferTask = nil
         transfer = nil
         lastTransferSummary = TransferSummary(
-            ok: false, text: String(localized: "Download cancelled — what already arrived is saved"))
+            ok: false, text: String(localized: "Download cancelled. What already arrived is saved."))
     }
 
     private func runQueue(generation gen: Int) async {
@@ -1142,7 +1142,7 @@ final class AppModel {
                 ? TransferSummary(
                     ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
                 : TransferSummary(
-                    ok: false, text: String(localized: "\(failed.count) files couldn’t be downloaded — try again to resume"))
+                    ok: false, text: String(localized: "\(failed.count) files couldn’t be downloaded. Try again to resume."))
         log("transfer: finished — \(lastTransferSummary?.text ?? "")")
         if !cancelled { TransferNotifier.finished(saved: saved, failed: failed.count, folder: Preferences.downloadFolder) }
         if !cancelled && failed.isEmpty && Preferences.disconnectWhenDone && screen == .library {

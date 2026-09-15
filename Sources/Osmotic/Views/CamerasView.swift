@@ -121,7 +121,7 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     LCDText(text: headline, size: 16, weight: .medium)
                     LCDText(
-                        text: String(localized: "Osmo › Mac  ·  No cables  ·  No app").uppercased(), size: 10.5,
+                        text: String(localized: "Osmo › Mac  ·  No cables  ·  No phone").uppercased(), size: 10.5,
                         weight: .medium, color: Theme.lcdText.opacity(0.75))
                 }
                 Spacer()

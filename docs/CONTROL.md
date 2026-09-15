@@ -1,4 +1,4 @@
-# Control panel and live view — research (2026-09-14)
+# Control panel and live view: research (2026-09-14)
 
 Summary of a survey of repos (commits: Moblin `58d400e`, Kaze `341a35d`, OpenPocketCine `9b30b93`).
 
@@ -6,7 +6,7 @@ Summary of a survey of repos (commits: Moblin `58d400e`, Kaze `341a35d`, OpenPoc
 
 Implemented and tested against `FakeCamera` (`ControlTests`), **not yet tested with the Pocket 3**:
 - **Live** tab (`AppModel.Workspace.camera`, `CameraControlView`): leaves playback, records/stops, photo, mode (Video, Photo, Slow-mo, Low light), live view; on returning to **Files** it re-enters playback and rereads the card.
-- `DatalinkTransport.windowModel`: `.legacy` (listing/downloads, tested) and `.mimo` (the official app's ACK: video/responses/TX groups, routing with the camera's ack) — capture mode only.
+- `DatalinkTransport.windowModel`: `.legacy` (listing/downloads, tested) and `.mimo` (the official app's ACK: video/responses/TX groups, routing with the camera's ack), capture mode only.
 - `CameraSession` modes `.media/.capture/.live`; 12 ms pump (`recvAll(precise:)`) with ACK ≥ 40 Hz while there is video (50 ms / 10 Hz in capture without video); `drainStale()` before each command (a stale `E0` reply to the playback re-assert was mistaken for the command's reply).
 - Leaving playback: `0x02/0x0C 01010000` ×2 → START of `0x01/0x01` without `09/A8` (so the keyframe isn't lost) → otherwise, error.
 - Live view: Kaze's burst (receiver `0x41`); after 8 s without video, once, the OpenPocketCine variant (`0x02/0x68 [08]` + `09/A8` to `0x08`); `LiveReassembler` → `LiveVideoRenderer` (`AVSampleBufferDisplayLayer`); the monitor takes the stream's aspect ratio (portrait if the camera shoots portrait).
@@ -14,7 +14,7 @@ Implemented and tested against `FakeCamera` (`ControlTests`), **not yet tested w
 - Tabs: leaving Live always returns to playback (`leaveLive`); you can't leave while recording or with a command in progress; Live only for Pocket models and with no downloads in progress.
 - Status `0x02/0x80`: recording (bit 7 of @0), transition (bit 6), seconds @29, mode @57.
 
-First hardware test — look in the log for: `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. If leaving playback fails or the picture stays black, see `docs/CONTROL_SPEC.md` (full specification with sources; §7 = unverified points).
+First hardware test: look in the log for `control: 0x02/0x0c leave → …`, `control: out of playback (…)`, `control: record start → 0x00`, `camera recording: YES`, `live: first picture data … ms`, `live: no video 8 s … alternate`. If leaving playback fails or the picture stays black, see `docs/CONTROL_SPEC.md` (full specification with sources; §7 = unverified points).
 
 To do: Timelapse/Hyperlapse (trigger via `02/01` or `02/02`?), "black first picture" trick (`02/18` round trip), fallback re-registration if writes are lost (`txLagSlots`), downloads in capture mode (today, entering Live with downloads in progress is blocked).
 
@@ -32,7 +32,7 @@ To do: Timelapse/Hyperlapse (trigger via `02/01` or `02/02`?), "black first pict
 
 - Record: `0x02/0x02` `[01]` start / `[00]` stop (not a toggle: `[01]` while recording → `df`). Confirm via `0x02/0x80` byte 0 bit 7 (Pocket 3: `01→41→81`, stop `c1→01`).
 - Photo: `0x02/0x01 [01]` (`d9` in video mode). Panorama `[07]`.
-- Mode: `0x02/0xE1 [m]` — `00` SlowMo, `01` Video, `02` Timelapse, `05` Photo, `0A` Hyperlapse, `0C` Panorama, `18` Motionlapse, `28` Low-Light. Read back in `0x02/0x80` byte 57.
+- Mode: `0x02/0xE1 [m]`: `00` SlowMo, `01` Video, `02` Timelapse, `05` Photo, `0A` Hyperlapse, `0C` Panorama, `18` Motionlapse, `28` Low-Light. Read back in `0x02/0x80` byte 57.
 - Resolution/fps: `0x02/0x18` `[res][fps] 00 00 00`. Parameters: `0x02/0x8E` GET/SET.
 - Before writing: widen the ACK (the pktType `0x03` group) and re-register if the session is >40 s old.
 
