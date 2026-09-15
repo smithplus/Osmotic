@@ -4,26 +4,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-09-15
+
+Safer around the camera, easier to find your way, and a new look for the lights. Updating from 0.2.0 happens inside the app; macOS asks for its permissions once more because this build is not notarized yet.
+
 ### Added
-- A landing page at https://smithplus.github.io/Osmotic/: static HTML and CSS in the app's style, published by GitHub Pages, with install steps, a comparison, an FAQ and an illustration of each step of the install.
-- A user guide (`docs/GUIDE.md`), which the Help menu now opens: every screen, the keyboard shortcuts and what to try when something fails.
-- Settings › Credits now names the maker and links a way to support the work.
 - A Settings key on the top plate, next to Bluetooth and in the library beside Disconnect.
-- The landing page opens with a short looping video of a whole session, drawn by the app itself; the Live section has its own (record, stop, change mode), and the first install step shows the drag to Applications.
+- A user guide (`docs/GUIDE.md`), which the Help menu now opens: every screen, the keyboard shortcuts and what to try when something fails.
+- Settings › Credits names the maker and links a way to support the work.
 
 ### Security
 - Sizes stated by the camera's web server are bounded, and small reads (thumbnails, preview stills) are capped: a device answering at the camera's address could otherwise crash the app or make it buffer without end.
 - Quitting waits for Wi-Fi work still running (a Cancel or Disconnect handing the network back), and downloads can't start while Live is starting.
 
 ### Changed
+- New app icon: the wordmark's "o." (a lowercase o and the orange dot) on a graphite plate.
+- LEDs look like panel lamps: a domed lens in its bezel, with a halo on the plate when lit.
 - Day folders are on by default.
 - Orange keys are a shade darker so their white text stays readable (WCAG AA).
 - VoiceOver: the LCD readouts read as one, progress meters report their value, and Connect and Download Day keys say which camera or day.
 - Notices say what to do next; Spanish follows Latin American macOS ("la Mac", "Configuración del Sistema").
-- New app icon: the wordmark's "o." (a lowercase o and the orange dot) on a graphite plate.
-- LEDs look like panel lamps: a domed lens in its bezel, with a halo on the plate when lit.
+- The wordmark lines up with the panels below it, its dot on the baseline like a period.
 - Thumbnails already decoded show at once when the grid redraws, instead of blinking in again.
-- The wordmark lines up with the panels below it. The window buttons sit in the title-bar band above, so no gap is kept for them. Its dot sits on the baseline like a period.
+
+### Website and docs
+- A landing page at https://smithplus.github.io/Osmotic/: static HTML and CSS in the app's style, with a looping video of a whole session drawn by the app itself, a Live video, install steps, a comparison and an FAQ.
 - README and project docs are in English only (the app itself stays in English and Spanish).
 
 ## [0.2.0] - 2026-09-15

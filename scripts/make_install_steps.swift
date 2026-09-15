@@ -181,8 +181,8 @@ func iconItem(centerX: CGFloat, top: CGFloat, size: CGFloat, labelY: CGFloat, la
 // rest; the clip (step-1.mp4, played once on the page) is the same window with the drag happening.
 let dmg = NSRect(x: 58, y: 66, width: W - 116, height: 388)
 let iconRow = dmg.minY + 122
-let appCenter = NSPoint(x: dmg.minX + 150, y: iconRow + 62)
-let folderCenter = NSPoint(x: dmg.midX + 20, y: iconRow + 70)
+let appCenter = NSPoint(x: dmg.minX + 122, y: iconRow + 62)
+let folderCenter = NSPoint(x: dmg.minX + 342, y: iconRow + 70)
 let appIcon = NSImage(contentsOf: root.appendingPathComponent("build/icon-1024.png"))
 
 /// `t` is the clip's time in seconds; nil draws the still (no pointer, the guide showing).
@@ -201,16 +201,19 @@ func step1(_ t: Double?) {
     iconItem(centerX: folderCenter.x, top: row, size: 124, labelY: labelY, label: "Applications") { r in
         folder(NSRect(x: r.minX, y: r.minY + 16, width: r.width, height: r.height - 26))
     }
-    iconItem(centerX: dmg.maxX - 130, top: row, size: 124, labelY: labelY, label: "Read Me First.txt") { r in
-        document(NSRect(x: r.minX + 18, y: r.minY + 4, width: r.width - 36, height: r.height - 8))
+    // What release.sh puts in the disk image besides the app: the first-launch note and the license.
+    for (centerX, label) in [(dmg.minX + 542, "Read Me First.txt"), (dmg.minX + 682, "LICENSE.txt")] {
+        iconItem(centerX: centerX, top: row, size: 124, labelY: labelY, label: label) { r in
+            document(NSRect(x: r.minX + 18, y: r.minY + 4, width: r.width - 36, height: r.height - 8))
+        }
     }
 
     // The page's own pointer: the drag, as a run of LEDs from the app to the folder. In the clip
     // they light one after another ahead of the icon.
     let dotY = H - row - 62
-    var x = win.minX + 226
+    var x = appCenter.x + 76
     var i = 0.0
-    while x < win.midX - 62 {
+    while x < folderCenter.x - 82 {
         let lit = t.map { smooth(($0 - 0.7 - i * 0.07) / 0.15) } ?? 1
         amber.withAlphaComponent(0.25 + 0.55 * lit).setFill()
         NSBezierPath(ovalIn: NSRect(x: x, y: dotY, width: 7, height: 7)).fill()
@@ -218,9 +221,9 @@ func step1(_ t: Double?) {
         i += 1
     }
     let head = NSBezierPath()
-    head.move(to: NSPoint(x: win.midX - 48, y: dotY + 3.5))
-    head.line(to: NSPoint(x: win.midX - 62, y: dotY + 13))
-    head.line(to: NSPoint(x: win.midX - 62, y: dotY - 6))
+    head.move(to: NSPoint(x: folderCenter.x - 68, y: dotY + 3.5))
+    head.line(to: NSPoint(x: folderCenter.x - 82, y: dotY + 13))
+    head.line(to: NSPoint(x: folderCenter.x - 82, y: dotY - 6))
     head.close()
     amber.setFill()
     head.fill()

@@ -9,7 +9,7 @@ Native macOS app (Swift 6.2, SwiftUI, macOS 15+) for DJI Osmo cameras (target: *
 - **Live**: capture control (record, photo, mode) and live view over the same datalink.
 - **Webcam**: the camera plugged in over USB-C as a UVC webcam (Zoom, Meet and OBS see it too).
 
-Port of [KonradIT/osmosis](https://github.com/KonradIT/osmosis) (Android/Kotlin); control and live view follow [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) (MIT). Repo `github.com/smithplus/Osmotic`, branch `main`; releases on GitHub Releases (v0.2.0 is the first with a DMG).
+Port of [KonradIT/osmosis](https://github.com/KonradIT/osmosis) (Android/Kotlin); control and live view follow [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) (MIT). Repo `github.com/smithplus/Osmotic`, branch `main`; releases on GitHub Releases (v0.2.0 was the first with a DMG; latest v0.3.0).
 
 Languages: the UI is **English, localized to Rioplatense Spanish** (String Catalog); code, comments, commits and docs are in English. No em dashes in anything people read (the owner finds they read as machine-written); see the writing skill.
 
