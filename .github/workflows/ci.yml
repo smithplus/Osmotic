@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "ui/**"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build-test:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # package_app.sh numbers the build by commit count
+      - name: Toolchain
+        run: |
+          if [ -d /Applications/Xcode_26.6.app ]; then sudo xcode-select -s /Applications/Xcode_26.6.app; fi
+          swift --version
+      - name: Format
+        run: scripts/lint.sh
+      - name: Build
+        run: swift build
+      - name: Test
+        run: swift test
+      - name: Package (debug, ad-hoc)
+        run: scripts/package_app.sh debug

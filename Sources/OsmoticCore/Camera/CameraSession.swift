@@ -8,6 +8,9 @@ import Foundation
 /// methods enqueue a job and await its result — so sequence numbers can never interleave (the reason
 /// the Android original needed its keep-alive thread to send everything). Between jobs the thread runs
 /// keep-alive ticks.
+///
+/// `@unchecked Sendable`: worker state is only touched on the session thread; the job queue and the
+/// closed/stop flags are guarded by `cond`; the public callbacks are set before `connect()`.
 public final class CameraSession: @unchecked Sendable {
     public struct ConnectResult: Sendable {
         public let handshakeOk: Bool

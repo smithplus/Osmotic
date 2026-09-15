@@ -107,8 +107,10 @@ enum WiFiService {
                 log("wifi: \(ssid) not in scan yet (attempt \(attempt))")
             }
             try Task.checkCancellation()
-            // networksetup needs no scan, so it covers SSIDs the scan hides from us.
-            if !associated && attempt >= 2 {
+            // networksetup needs no scan, so it covers SSIDs the scan hides from us. It takes the password
+            // as an argument, briefly visible to other local users in `ps` (CWE-214) — so only after
+            // CoreWLAN has had a few tries (on the Pocket 3 it joins on the first).
+            if !associated && attempt >= 4 {
                 let out = runNetworksetup(["-setairportnetwork", name, ssid, password])
                 log("wifi: networksetup join → \(out.isEmpty ? "ok" : out)")
             }
@@ -175,9 +177,10 @@ enum WiFiService {
     /// unknown, disassociate, let macOS auto-join, and if it doesn't, walk the preferred-networks list.
     /// The camera network is forgotten first so the Mac doesn't jump straight back onto it.
     /// Uses cancellation-proof pauses — this must run to the end.
-    @concurrent
-    static func restore(previous: String?, cameraSSID: String?, cameraSideIP: String?, forgetCamera: Bool) async {
-        guard let iface = CWWiFiClient.shared().interface(), let name = iface.interfaceName else { return }
+    /// Returns false when no network could be rejoined (the user has to pick one).
+    @concurrent @discardableResult
+    static func restore(previous: String?, cameraSSID: String?, cameraSideIP: String?, forgetCamera: Bool) async -> Bool {
+        guard let iface = CWWiFiClient.shared().interface(), let name = iface.interfaceName else { return false }
         // Only forget a network this app added: the name came from the camera, and a network the user
         // had already saved (their own, if the camera lied) must survive.
         if forgetCamera, let cameraSSID, !cameraSSID.isEmpty {
@@ -191,7 +194,7 @@ enum WiFiService {
             for attempt in 1...3 {
                 let out = runNetworksetup(["-setairportnetwork", name, previous])
                 log("wifi: rejoin \(redactedSSID(previous)) (attempt \(attempt)) → \(out.isEmpty ? "ok" : out)")
-                if await home() { log("wifi: back on \(redactedSSID(previous))"); return }
+                if await home() { log("wifi: back on \(redactedSSID(previous))"); return true }
             }
             log("wifi: could not rejoin \(redactedSSID(previous)) — falling back to auto-join")
         }
@@ -199,7 +202,7 @@ enum WiFiService {
         log("wifi: disassociated from the camera; waiting for macOS to auto-join")
         if await waitForHomeNetwork(iface, name, cameraSSID: cameraSSID, cameraSideIP: cameraSideIP, seconds: 10) {
             log("wifi: macOS rejoined a known network")
-            return
+            return true
         }
         // No auto-join: try the preferred networks, in the system's order, that are in range.
         let visible = Set(((try? iface.scanForNetworks(withSSID: nil)) ?? []).compactMap(\.ssid))
@@ -208,9 +211,10 @@ enum WiFiService {
         for ssid in candidates {
             let out = runNetworksetup(["-setairportnetwork", name, ssid])
             log("wifi: trying preferred \(redactedSSID(ssid)) → \(out.isEmpty ? "ok" : out)")
-            if await home() { log("wifi: joined \(redactedSSID(ssid))"); return }
+            if await home() { log("wifi: joined \(redactedSSID(ssid))"); return true }
         }
         log("wifi: could not rejoin a network automatically — pick one from the menu bar")
+        return false
     }
 
     /// Back on a network that isn't the camera's: by name when macOS lets us read it, otherwise by an

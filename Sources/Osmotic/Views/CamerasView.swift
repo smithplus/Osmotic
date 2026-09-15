@@ -47,6 +47,10 @@ struct CamerasView: View {
             display
             if let error = model.connectError { ErrorBanner(message: error) }
             if model.restoringWifi { Notice(text: "Going back to your Wi-Fi…").transition(.panelFromTop) }
+            if model.wifiRestoreFailed && !model.restoringWifi {
+                Notice(text: "Couldn’t get back to your Wi-Fi on its own. Pick your network in the menu bar.")
+                    .transition(.panelFromTop)
+            }
             // The automatic disconnect after downloads lands here: say how it went.
             if let summary = model.lastTransferSummary, !model.restoringWifi {
                 Notice(verbatim: summary.text, color: summary.ok ? Theme.success : Theme.warning)

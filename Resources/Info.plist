@@ -34,11 +34,13 @@
 	<key>NSHighResolutionCapable</key>
 	<true/>
 	<key>NSHumanReadableCopyright</key>
-	<string>MIT. Protocol by KonradIT/osmosis and contributors. Not affiliated with DJI.</string>
+	<string>Copyright © 2026 Osmotic contributors. MIT License. Not affiliated with DJI.</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Osmotic uses Bluetooth to find your DJI camera and ask it to turn on its Wi-Fi.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Osmotic talks to your camera on its own Wi-Fi network (192.168.2.1) to list and download your files.</string>
+	<key>NSDownloadsFolderUsageDescription</key>
+	<string>Osmotic saves your camera’s videos and photos to the DJI folder in Downloads.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Osmotic shows your DJI camera’s picture when it’s plugged in by USB as a webcam.</string>
 	<key>NSBonjourServices</key>

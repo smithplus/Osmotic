@@ -6,6 +6,8 @@ import SwiftUI
 /// Turns the camera's H.264 Annex-B access units into frames on an `AVSampleBufferDisplayLayer`.
 /// Fed from the session's worker thread; decoding setup and enqueueing happen on one serial queue.
 /// Pattern after Kaze-for-DJI's `Pocket3VideoOutput` (MIT).
+/// `@unchecked Sendable`: decoder state is only touched on `queue`; the callbacks are set on the main
+/// actor before a stream starts and only read on `queue` afterwards.
 nonisolated final class LiveVideoRenderer: @unchecked Sendable {
     let layer = AVSampleBufferDisplayLayer()
     private let queue = DispatchQueue(label: "osmotic.liveview")

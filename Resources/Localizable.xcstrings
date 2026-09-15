@@ -494,6 +494,16 @@
         }
       }
     },
+    "Couldn’t get back to your Wi-Fi on its own. Pick your network in the menu bar.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo volver solo a tu Wi-Fi. Elegí tu red en la barra de menús."
+          }
+        }
+      }
+    },
     "Couldn’t join the camera’s Wi-Fi network (%@).": {
       "localizations": {
         "es": {
@@ -1350,6 +1360,16 @@
     "Osmotic": {
       "shouldTranslate": false
     },
+    "Osmotic Help": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayuda de Osmotic"
+          }
+        }
+      }
+    },
     "Osmotic doesn’t have Bluetooth permission. Turn it on in System Settings › Privacy & Security › Bluetooth.": {
       "localizations": {
         "es": {
@@ -1629,6 +1649,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Quitar de la selección"
+          }
+        }
+      }
+    },
+    "Report an Issue…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reportar un problema…"
           }
         }
       }

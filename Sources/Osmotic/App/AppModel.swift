@@ -236,6 +236,7 @@ final class AppModel {
         passwordPromptSSID = nil
         linkLost = false
         linkGaveUp = false
+        wifiRestoreFailed = false
         lastTransferSummary = nil
         recoverTask?.cancel()
         stage = .bluetooth
@@ -492,6 +493,8 @@ final class AppModel {
 
     /// Returning the Wi-Fi is in progress (shown on the cameras screen).
     private(set) var restoringWifi = false
+    /// The automatic return to the user's network failed; they have to pick one in the menu bar.
+    private(set) var wifiRestoreFailed = false
 
     /// `keepSummary`: leave the "Done: …" line up (the automatic disconnect after downloads shows it
     /// on the cameras screen).
@@ -549,9 +552,10 @@ final class AppModel {
             if restoreWifi {
                 restoringWifi = true
                 stageDetail = String(localized: "Going back to your Wi-Fi…")
-                await WiFiService.restore(
+                let back = await WiFiService.restore(
                     previous: previousSSID, cameraSSID: cam, cameraSideIP: cameraSideIP,
                     forgetCamera: forgetCameraNetwork)
+                wifiRestoreFailed = !back
                 restoringWifi = false
             }
         }
@@ -678,9 +682,10 @@ final class AppModel {
         if onCamera {
             log("wifi: recovering from an interrupted session on \(cam)")
             restoringWifi = true
-            await WiFiService.restore(
+            let back = await WiFiService.restore(
                 previous: Preferences.pendingRestoreSSID, cameraSSID: cam, cameraSideIP: nil,
                 forgetCamera: Preferences.pendingForgetCamera)
+            wifiRestoreFailed = !back
             restoringWifi = false
         }
         Preferences.pendingRestoreSSID = nil

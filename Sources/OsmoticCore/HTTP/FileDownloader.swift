@@ -6,6 +6,9 @@ import Foundation
 /// download is a loop of Range requests with backoff, ended only by a run of attempts that moved no
 /// bytes at all — the policy Osmosis arrived at on real hardware (a 1.14 GB clip off a Nano's dock SD
 /// took six attempts). Bytes land in `<name>.part` and are renamed into place only when complete.
+///
+/// `@unchecked Sendable`: `handlers` and `completedEarly` are guarded by `lock`; each `TaskState` is
+/// only touched on the URLSession's serial delegate queue.
 public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked Sendable {
     public enum Result: Sendable, Equatable {
         case saved(URL)
@@ -96,6 +99,10 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             try fm.createDirectory(at: destination.deletingLastPathComponent(), withIntermediateDirectories: true)
         } catch {
             return .failed("could not create the folder: \(error.localizedDescription)")
+        }
+        // A `.part` must be a plain file we made: never follow a symlink someone left in its place.
+        if (try? fm.attributesOfItem(atPath: part.path)[.type] as? FileAttributeType) == .typeSymbolicLink {
+            try? fm.removeItem(at: part)
         }
         if !fm.fileExists(atPath: part.path) { fm.createFile(atPath: part.path, contents: nil) }
 

@@ -7,7 +7,8 @@ import os
 ///
 /// `log(_:)` is callable from any thread; the datalink thread logs through it.
 nonisolated func log(_ message: String) {
-    let line = logSink.append(message)
+    // Logs get sent around for diagnosis: no user name in paths.
+    let line = logSink.append(message.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
     Task { @MainActor in LogStore.shared.append(line) }
 }
 
@@ -25,6 +26,7 @@ final class LogStore {
 }
 
 /// Serialised, timestamped file writer.
+/// `@unchecked Sendable`: the file handle and formatter are only touched inside `queue.sync`.
 final class FileSink: @unchecked Sendable {
     let url: URL
     private let queue = DispatchQueue(label: "osmotic.log")
@@ -56,7 +58,7 @@ final class FileSink: @unchecked Sendable {
 
     nonisolated func append(_ message: String) -> String {
         let line = queue.sync { "\(formatter.string(from: Date())) \(message)" }
-        logger.debug("\(line, privacy: .public)")
+        logger.debug("\(line, privacy: .private)")
         queue.async { [handle] in
             if let data = (line + "\n").data(using: .utf8) { try? handle?.write(contentsOf: data) }
         }

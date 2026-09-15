@@ -169,6 +169,8 @@ final class BluetoothService: NSObject {
     }
 }
 
+// `@preconcurrency`: the central is created with `queue: .main`, so every delegate call already arrives
+// on the main actor this class is isolated to.
 extension BluetoothService: @preconcurrency CBCentralManagerDelegate {
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
         switch central.state {

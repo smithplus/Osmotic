@@ -7,7 +7,8 @@ struct OsmoticApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        WindowGroup("Osmotic", id: "main") {
+        // One window, one camera session: a Window, not a WindowGroup (no duplicate windows or tabs).
+        Window("Osmotic", id: "main") {
             RootView()
                 .environment(model)
                 .frame(minWidth: 820, minHeight: 560)
@@ -44,6 +45,12 @@ struct OsmoticApp: App {
             CommandGroup(after: .windowList) {
                 OpenLogButton()
             }
+            CommandGroup(replacing: .help) {
+                Link("Osmotic Help", destination: URL(string: "https://github.com/smithplus/Osmotic#readme")!)
+                Link("Report an Issue…", destination: URL(string: "https://github.com/smithplus/Osmotic/issues")!)
+                Divider()
+                OpenLogButton(shortcut: false)  // ⌥⌘L lives on the Window menu item
+            }
         }
 
         Settings {
@@ -58,15 +65,21 @@ struct OsmoticApp: App {
                 .preferredColorScheme(.dark)
                 .tint(Theme.accent)
         }
+        .restorationBehavior(.disabled)
         .defaultSize(width: 820, height: 520)
     }
 }
 
 private struct OpenLogButton: View {
     @Environment(\.openWindow) private var openWindow
+    var shortcut = true
     var body: some View {
-        Button("Technical Log") { openWindow(id: "log") }
-            .keyboardShortcut("l", modifiers: [.command, .option])
+        if shortcut {
+            Button("Technical Log") { openWindow(id: "log") }
+                .keyboardShortcut("l", modifiers: [.command, .option])
+        } else {
+            Button("Technical Log") { openWindow(id: "log") }
+        }
     }
 }
 
