@@ -227,6 +227,35 @@ final class Totals: @unchecked Sendable {
         try? FileManager.default.removeItem(at: dir)
     }
 
+    @Test func `implausible sizes from the camera are refused`() {
+        // A bogus Content-Length summed into a transfer total would overflow and crash the app.
+        #expect(CameraHTTP.plausibleSize("1000") == 1000)
+        #expect(CameraHTTP.plausibleSize(" 4831838208 ") == 4_831_838_208)
+        #expect(CameraHTTP.plausibleSize("9223372036854775807") == nil)
+        #expect(CameraHTTP.plausibleSize("0") == nil)
+        #expect(CameraHTTP.plausibleSize("-5") == nil)
+        #expect(CameraHTTP.plausibleSize("12abc") == nil)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `a small-file read stops at its limit`() async throws {
+        let server = try FakeHTTPServer(body: body, script: [])
+        let http = CameraHTTP(ip: "127.0.0.1", port: Int(server.port))
+        #expect(await http.data("/x", limit: 1_000) == nil)
+        #expect(await http.data("/x", limit: body.count).map { [UInt8]($0) } == body)
+        server.stop()
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `byte ranges are cut to length and an ignored Range only counts from byte 0`()
+        async throws
+    {
+        let server = try FakeHTTPServer(body: body, script: [.serve, .ignoreRange, .ignoreRange])
+        let http = CameraHTTP(ip: "127.0.0.1", port: Int(server.port))
+        #expect(await http.range("/x", from: 100, to: 199).map { [UInt8]($0) } == Array(body[100..<200]))
+        #expect(await http.range("/x", from: 100, to: 199) == nil)
+        #expect(await http.range("/x", from: 0, to: 99).map { [UInt8]($0) } == Array(body[0..<100]))
+        server.stop()
+    }
+
     @Test(.timeLimit(.minutes(1))) func `an existing file is skipped`() async throws {
         let server = try FakeHTTPServer(body: body, script: [])
         let dl = FileDownloader(http: CameraHTTP(ip: "127.0.0.1", port: Int(server.port)), log: { _ in })

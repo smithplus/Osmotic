@@ -26,6 +26,7 @@ struct PreviewView: View {
                     PlayerView(player: player)
                 } else if let photo {
                     Image(nsImage: photo).resizable().scaledToFit()
+                        .accessibilityLabel(Text(verbatim: current.name))
                 } else if failed {
                     ContentUnavailableView(
                         "Couldn’t open the preview", systemImage: "eye.slash",
@@ -86,7 +87,7 @@ struct PreviewView: View {
 
     private func info(_ f: CameraFile) -> String {
         var parts: [String] = []
-        if let d = f.captureDate { parts.append(Format.dayHeader.string(from: d) + " " + Format.time.string(from: d)) }
+        if let d = f.captureDate { parts.append(Format.dayAndTime.string(from: d)) }
         if let r = f.resolution { parts.append(r) }
         if let fps = f.resLabel { parts.append(fps) }
         if f.durationSec > 0 { parts.append(Format.duration(f.durationSec)) }
@@ -131,7 +132,7 @@ struct PreviewView: View {
             let data: Data? =
                 onDisk
                 ? await Task.detached { try? Data(contentsOf: local) }.value
-                : await model.http.data(f.originalURLPath)
+                : await model.http.data(f.originalURLPath, limit: 128 << 20)  // a 48 MP JPEG or RAW-size still
             guard !Task.isCancelled else { return }
             // Decode off the main thread, at the sheet's size (a 48 MP still decoded whole is ~200 MB).
             let scaled: CGImage? = await Task.detached { data.flatMap { previewImage($0, maxPixel: 2400) } }.value

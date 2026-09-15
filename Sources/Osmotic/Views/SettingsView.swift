@@ -42,7 +42,7 @@ struct SettingsView: View {
                     .onChange(of: notifyWhenDone) { Preferences.notifyWhenDone = notifyWhenDone }
             }
             Section("Connection") {
-                Toggle("Go back to my Wi-Fi when disconnecting", isOn: $restoreWifi)
+                Toggle("Go back to your Wi-Fi when disconnecting", isOn: $restoreWifi)
                     .onChange(of: restoreWifi) { Preferences.restoreWifi = restoreWifi }
                 Toggle("Disconnect automatically when downloads finish", isOn: $disconnectWhenDone)
                     .onChange(of: disconnectWhenDone) { Preferences.disconnectWhenDone = disconnectWhenDone }

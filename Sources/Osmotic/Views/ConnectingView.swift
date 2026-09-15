@@ -227,6 +227,7 @@ private struct ApprovalCallout: View {
     var body: some View {
         HStack(spacing: Theme.s3) {
             Image(systemName: "hand.tap.fill")
+                .accessibilityHidden(true)
                 .font(.system(size: 20, weight: .medium))
                 .foregroundStyle(.white)
                 .frame(width: 44, height: 44)

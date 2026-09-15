@@ -9,6 +9,11 @@
 # release notes other than the CHANGELOG section.
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# A relative NOTES_FILE means relative to where the script was run; check it before anything is built or pushed.
+if [ -n "${NOTES_FILE:-}" ]; then
+  case "$NOTES_FILE" in /*) ;; *) NOTES_FILE="$PWD/$NOTES_FILE" ;; esac
+  [ -r "$NOTES_FILE" ] || { echo "NOTES_FILE not readable: $NOTES_FILE"; exit 1; }
+fi
 cd "$ROOT_DIR"
 VERSION="${1:?usage: scripts/release.sh X.Y.Z [--publish]}"
 PUBLISH="${2:-}"
@@ -20,6 +25,9 @@ PUBKEY="$(/usr/libexec/PlistBuddy -c 'Print :OsmoticUpdatePublicKey' Resources/I
 [ "$(swift scripts/update_key.swift public)" = "$PUBKEY" ] || { echo "the Keychain key doesn't match Info.plist"; exit 1; }
 
 git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null || git tag -a "v$VERSION" -m "Osmotic $VERSION"
+# A tag left by an earlier dry run on an older commit would publish this build under the wrong commit.
+[ "$(git rev-parse "v$VERSION^{commit}")" = "$(git rev-parse HEAD)" ] || {
+  echo "tag v$VERSION points at another commit; delete it (git tag -d v$VERSION) or check out that commit"; exit 1; }
 scripts/package_app.sh release
 BUILT="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' build/Osmotic.app/Contents/Info.plist)"
 [ "$BUILT" = "$VERSION" ] || { echo "built version $BUILT != $VERSION (is v$VERSION the latest tag?)"; exit 1; }

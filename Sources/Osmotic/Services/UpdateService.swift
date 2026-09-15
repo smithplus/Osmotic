@@ -64,7 +64,7 @@ final class UpdateService {
             }
         } catch {
             // Offline, or on the camera's Wi-Fi: say so only when the user asked.
-            state = userInitiated ? .failed(String(localized: "Couldn’t reach GitHub. Check your internet connection.")) : .idle
+            state = userInitiated ? .failed(String(localized: "Couldn’t reach GitHub. Check your Internet connection.")) : .idle
         }
     }
 
@@ -111,9 +111,9 @@ final class UpdateService {
         case download, signature, bundle
         var errorDescription: String? {
             switch self {
-            case .download: String(localized: "The download didn’t complete.")
+            case .download: String(localized: "The update didn’t finish downloading. Nothing was installed; try again later.")
             case .signature: String(localized: "The update’s signature doesn’t match. Nothing was installed.")
-            case .bundle: String(localized: "The update doesn’t contain a valid Osmotic. Nothing was installed.")
+            case .bundle: String(localized: "The update doesn’t contain a valid copy of Osmotic. Nothing was installed.")
             }
         }
     }

@@ -73,7 +73,11 @@ final class AppModel {
     @ObservationIgnored private var sizeProbed: Set<String> = []
 
     // ---- transfers ----------------------------------------------------------------------------
-    private(set) var transfer: TransferState?
+    private(set) var transfer: TransferState? {
+        didSet { if (transfer != nil) != isTransferring { isTransferring = transfer != nil } }
+    }
+    /// Whether a transfer runs, for views that don't need its progress (it changes many times a second).
+    private(set) var isTransferring = false
     struct TransferSummary: Equatable {
         let ok: Bool
         let text: String
@@ -639,6 +643,13 @@ final class AppModel {
 
     /// Wait for any Wi-Fi restore still running (quitting), including the cleanup of a connect
     /// attempt that was just cancelled — it runs in that attempt's task.
+    /// Wi-Fi work that must finish before the app quits: a connect, a recovery or a teardown still
+    /// running, or a camera network joined and not yet handed back.
+    var hasWifiWorkPending: Bool {
+        [connectTask, recoverTask, teardownTask, startupRecovery].contains { $0 != nil }
+            || Preferences.pendingCameraSSID != nil
+    }
+
     func finishWifiWork() async {
         for work in [connectTask, recoverTask, teardownTask, startupRecovery] { await work?.value }
         await teardownTask?.value  // the cancelled attempt's cleanup may have replaced it meanwhile
@@ -732,10 +743,11 @@ final class AppModel {
                     files = (fresh + files).sorted {
                         $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq
                     }
-                    refreshDownloaded()
+                    refreshDownloaded(adding: fresh)
                 }
                 moreAvailable = moreAvailable || result.moreAvailable
                 log("recover: session re-established (\(fresh.count) new file(s))")
+                probeRealSizes()
                 return
             }
             session = nil
@@ -819,12 +831,19 @@ final class AppModel {
 
     func isOnDisk(_ f: CameraFile) -> Bool { FileManager.default.fileExists(atPath: DownloadPaths.destination(for: f).path) }
 
-    private func refreshDownloaded() {
+    /// Which files are already on the Mac. `adding` checks only newly listed files (a page of 45 on a
+    /// card of thousands shouldn't re-check the disk for every file already known).
+    private func refreshDownloaded(adding added: [CameraFile]? = nil) {
         let fm = FileManager.default
-        downloaded = Set(
-            files.filter { f in
-                history.contains(f) || fm.fileExists(atPath: DownloadPaths.destination(for: f).path)
-            }.map(\.id))
+        let onMac: (CameraFile) -> Bool = { f in
+            self.history.contains(f) || fm.fileExists(atPath: DownloadPaths.destination(for: f).path)
+        }
+        if let added {
+            let hits = added.filter(onMac).map(\.id)
+            if !hits.isEmpty { downloaded.formUnion(hits) }
+        } else {
+            downloaded = Set(files.filter(onMac).map(\.id))
+        }
         probeRealSizes()
     }
 
@@ -840,17 +859,26 @@ final class AppModel {
         guard !candidates.isEmpty, let s = session else { return }
         sizeProbed.formUnion(candidates.map(\.id))
         Task { [weak self] in
-            for f in candidates {
-                guard let self, self.session === s, !self.sessionInControl else { return }
+            for (i, f) in candidates.enumerated() {
+                guard let self else { return }
+                guard self.session === s, !self.sessionInControl else {
+                    // Left for Live or lost the session: the rest get probed on the next refresh.
+                    self.sizeProbed.subtract(candidates[i...].map(\.id))
+                    return
+                }
                 guard let head = await self.http.headStatus(f.originalURLPath), head.status == 200, head.length > 0
                 else { self.sizeProbed.remove(f.id); continue }
                 guard self.session === s, head.length != self.size(of: f) else { continue }
                 let before = self.size(of: f)
                 self.realSizes[f.id] = head.length
-                // Queued but not started: fix the total now. The file downloading now is fixed by the
-                // downloader's own report of the size (`transferRealSize`).
-                if self.queue.contains(where: { $0.id == f.id }), var t = self.transfer {
-                    t.bytesTotal += head.length - max(0, before)
+                if var t = self.transfer {
+                    if t.current?.id == f.id {
+                        // Downloading now: move both, so `transferRealSize` sees no difference later.
+                        t.bytesTotal += head.length - t.currentSize
+                        t.currentSize = head.length
+                    } else if self.queue.contains(where: { $0.id == f.id }) {
+                        t.bytesTotal += head.length - max(0, before)  // queued, not started
+                    }
                     self.transfer = t
                 }
                 log("library: \(f.name) is \(head.length / 1_000_000) MB (listed as \(f.sizeBytes / 1_000_000) MB)")
@@ -878,7 +906,7 @@ final class AppModel {
         files += added
         files.sort { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
         moreAvailable = page.moreAvailable
-        refreshDownloaded()
+        refreshDownloaded(adding: added)
         let fresh = added.filter { !downloaded.contains($0.id) }.count
         log("library: +\(added.count) older files (\(fresh) not downloaded), more=\(moreAvailable)")
         return fresh
@@ -1023,6 +1051,8 @@ final class AppModel {
     func downloadSelected() { enqueue(selectedFiles) }
 
     func enqueue(_ list: [CameraFile]) {
+        // Downloads need the camera in playback: never while Live is starting or running.
+        guard !switchingWorkspace, !sessionInControl, workspace == .files else { return }
         let fresh = list.filter { !queuedIds.contains($0.id) }
         guard !fresh.isEmpty else { return }
         // Oldest first, so an interrupted run leaves a contiguous, dated set on disk.
@@ -1061,7 +1091,7 @@ final class AppModel {
         transferTask = nil
         transfer = nil
         lastTransferSummary = TransferSummary(
-            ok: false, text: String(localized: "Download cancelled. What already arrived is saved."))
+            ok: false, text: String(localized: "Download canceled. What already arrived is saved."))
     }
 
     private func runQueue(generation gen: Int) async {
@@ -1137,7 +1167,7 @@ final class AppModel {
         let folderName = Preferences.downloadFolder.lastPathComponent
         lastTransferSummary =
             cancelled
-            ? TransferSummary(ok: false, text: String(localized: "Download cancelled"))
+            ? TransferSummary(ok: false, text: String(localized: "Download canceled"))
             : failed.isEmpty
                 ? TransferSummary(
                     ok: true, text: String(localized: "Done: \(String(localized: "\(saved) files")) in \(folderName)"))
@@ -1268,10 +1298,11 @@ extension AppModel {
         let fresh = resolved.filter { !known.contains($0.id) }
         if !fresh.isEmpty {
             files = (fresh + files).sorted { $0.timestamp != $1.timestamp ? $0.timestamp > $1.timestamp : $0.seq > $1.seq }
-            refreshDownloaded()
+            refreshDownloaded(adding: fresh)
         }
         moreAvailable = moreAvailable || page.moreAvailable
         log("control: card relisted, \(fresh.count) new file(s), more=\(moreAvailable)")
+        probeRealSizes()  // clips the probe skipped while Live was on
         Task { await loadOlderWhileNew() }
     }
 
@@ -1328,7 +1359,7 @@ extension AppModel {
             defer { controlBusy = false }
             let ok = clip ? await s.setRecording(!recording) : await s.takePhoto()
             log("control: shutter (\(clip ? (recording ? "stop" : "record") : "photo")) → \(ok ? "ok" : "refused")")
-            if !ok { controlError = String(localized: "The camera didn’t accept the command.") }
+            if !ok { controlError = String(localized: "The camera didn’t accept the command. Try again.") }
         }
     }
 
@@ -1340,7 +1371,7 @@ extension AppModel {
             defer { controlBusy = false }
             let ok = await s.setMode(mode)
             log("control: mode \(mode) → \(ok ? "ok" : "refused")")
-            if !ok { controlError = String(localized: "The camera didn’t change mode.") }
+            if !ok { controlError = String(localized: "The camera didn’t change mode. Try again, or change it on the camera.") }
         }
     }
 }

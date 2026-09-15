@@ -21,7 +21,7 @@ struct LogView: View {
                     NSPasteboard.general.clearContents()
                     NSPasteboard.general.setString(store.lines.joined(separator: "\n"), forType: .string)
                 }
-                Button("Show File") { NSWorkspace.shared.activateFileViewerSelecting([logSink.url]) }
+                Button("Show in Finder") { NSWorkspace.shared.activateFileViewerSelecting([logSink.url]) }
             }
             .padding(Theme.s2)
             Divider()

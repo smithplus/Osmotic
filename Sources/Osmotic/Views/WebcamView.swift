@@ -79,7 +79,7 @@ struct WebcamView: View {
             step(3, "It shows up here, and as a camera in Zoom, Meet, FaceTime or OBS.")
             EngravedRule().padding(.vertical, Theme.s1)
             Text(
-                "As a webcam the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality."
+                "As a webcam, the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality."
             )
             .font(.callout)
             .foregroundStyle(Theme.muted)

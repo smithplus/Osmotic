@@ -33,7 +33,9 @@ struct TransferBar: View {
                                 text: String(localized: "Waiting for the camera…").uppercased(), size: 12,
                                 color: Theme.warning)
                         } else {
-                            if t.speed > 0 { LCDPair(label: "Speed", value: Format.bytes(Int(t.speed)).uppercased() + "/S") }
+                            if t.speed > 0 {
+                                LCDPair(label: "Speed", value: String(localized: "\(Format.bytes(Int(t.speed)))/s").uppercased())
+                            }
                             if let eta = t.eta { LCDPair(label: "Left", value: Format.clock(eta)) }
                         }
                         LCDText(text: "\(Int((t.fraction * 100).rounded()))%", size: 12, weight: .medium)

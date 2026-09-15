@@ -10,6 +10,16 @@ private final class RefuseRedirects: NSObject, URLSessionTaskDelegate, Sendable 
 
 /// Thin async client for the camera's lighttpd `/v2` file API at `http://192.168.2.1`.
 public final class CameraHTTP: Sendable {
+    /// The largest file a camera card can plausibly hold. A bigger stated size is a bogus header, and
+    /// summing it into a transfer total would overflow.
+    public static let maxFileSize = 1 << 40  // 1 TiB
+
+    /// A size the server stated, or nil when it's missing or implausible.
+    public static func plausibleSize(_ text: some StringProtocol) -> Int? {
+        guard let n = Int(text.trimmingCharacters(in: .whitespaces)), n > 0, n <= maxFileSize else { return nil }
+        return n
+    }
+
     public let baseURL: URL
     let session: URLSession
 
@@ -42,30 +52,41 @@ public final class CameraHTTP: Sendable {
         do {
             let (_, resp) = try await session.data(for: request(urlPath, method: "HEAD"))
             guard let http = resp as? HTTPURLResponse else { return nil }
-            return (http.statusCode, Int(http.value(forHTTPHeaderField: "Content-Length") ?? "") ?? -1)
+            return (http.statusCode, http.value(forHTTPHeaderField: "Content-Length").flatMap(Self.plausibleSize) ?? -1)
         } catch {
             return nil
         }
     }
 
-    /// A whole small file (thumbnails). Nil on any non-2xx or error.
-    public func data(_ urlPath: String) async -> Data? {
-        do {
-            let (data, resp) = try await session.data(for: request(urlPath))
-            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return nil }
-            return data
-        } catch {
-            return nil
-        }
+    /// A whole small file (thumbnails, a photo for the preview). Nil on any non-2xx, error, or a body
+    /// over `limit`: whatever answers at the camera's address can't make the app buffer without end.
+    public func data(_ urlPath: String, limit: Int = 8 << 20) async -> Data? {
+        await capped(request(urlPath), limit: limit) { (200...299).contains($0) }
     }
 
-    /// An inclusive byte range.
+    /// An inclusive byte range, cut at its length. A 206 counts; so does a 200 from byte 0 (a server
+    /// that ignores `Range` still starts at the right byte), never past it.
     public func range(_ urlPath: String, from start: Int, to end: Int) async -> Data? {
         var r = request(urlPath)
         r.setValue("bytes=\(start)-\(end)", forHTTPHeaderField: "Range")
+        return await capped(r, limit: end - start + 1, truncate: true) { $0 == 206 || (start == 0 && $0 == 200) }
+    }
+
+    /// Reads a response body up to `limit` bytes. Past the limit: nil, or the first `limit` bytes when
+    /// `truncate` is set.
+    private func capped(
+        _ request: URLRequest, limit: Int, truncate: Bool = false, accept: (Int) -> Bool
+    ) async -> Data? {
         do {
-            let (data, resp) = try await session.data(for: r)
-            guard let http = resp as? HTTPURLResponse, (200...299).contains(http.statusCode) else { return nil }
+            let (bytes, resp) = try await session.bytes(for: request)
+            guard let http = resp as? HTTPURLResponse, accept(http.statusCode) else { return nil }
+            if !truncate, http.expectedContentLength > Int64(limit) { return nil }
+            var data = Data()
+            data.reserveCapacity(min(limit, max(0, Int(clamping: http.expectedContentLength))))
+            for try await byte in bytes {
+                if data.count == limit { return truncate ? data : nil }
+                data.append(byte)
+            }
             return data
         } catch {
             return nil

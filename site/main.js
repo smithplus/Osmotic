@@ -10,7 +10,7 @@
   for (const el of blocks) {
     if (el.style.getPropertyValue("--i")) continue;
     const peers = [...el.parentElement.children].filter((c) => c.hasAttribute("data-reveal"));
-    if (peers.length > 1) el.style.setProperty("--i", String(Math.min(peers.indexOf(el), 6)));
+    if (peers.length > 1) el.style.setProperty("--i", String(Math.min(peers.indexOf(el), 4)));
   }
   const fold = window.innerHeight;
   for (const el of blocks) {
@@ -29,6 +29,9 @@
   );
   for (const el of blocks) if (!el.classList.contains("is-in")) io.observe(el);
 })();
+
+// iOS Safari applies :active (the key press) only when a touch listener exists.
+document.addEventListener("touchstart", () => {}, { passive: true });
 
 // Point the download keys at the latest release's .dmg and show its version.
 (async () => {

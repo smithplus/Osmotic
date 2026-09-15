@@ -8,5 +8,6 @@ OUT="$ROOT_DIR/build/site"
 rm -rf "$OUT"
 mkdir -p "$OUT/images"
 cp -R "$ROOT_DIR/site/." "$OUT/"
-cp "$ROOT_DIR"/docs/images/*.png "$OUT/images/"
+cp "$ROOT_DIR"/docs/images/*.png "$ROOT_DIR"/docs/images/*.webp "$OUT/images/"
+# The social card (1200×630), made by scripts/make_launch_assets.swift; committed with the screenshots.
 echo "$OUT"

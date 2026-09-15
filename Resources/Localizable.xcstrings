@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@/s": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@/s"
+          }
+        }
+      }
+    },
     "%lld arrived, %lld didn’t. Open Osmotic to try again.": {
       "localizations": {
         "es": {
@@ -119,13 +129,13 @@
               "one": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld file couldn’t be downloaded — try again to resume"
+                  "value": "%lld file couldn’t be downloaded. Try again to resume."
                 }
               },
               "other": {
                 "stringUnit": {
                   "state": "translated",
-                  "value": "%lld files couldn’t be downloaded — try again to resume"
+                  "value": "%lld files couldn’t be downloaded. Try again to resume."
                 }
               }
             }
@@ -166,7 +176,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "En su pantalla aparece un pedido de emparejamiento: tocá el visto. Solo la primera vez."
+            "value": "En su pantalla aparece un pedido de emparejamiento: tocá la tilde. Solo la primera vez."
           }
         }
       }
@@ -251,7 +261,7 @@
         }
       }
     },
-    "As a webcam the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality.": {
+    "As a webcam, the picture goes over the cable in full quality and the camera charges. The Live tab works without the cable, over Wi-Fi, at preview quality.": {
       "localizations": {
         "es": {
           "stringUnit": {
@@ -389,7 +399,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se encuentra la cámara. Encendela y acercala al Mac."
+            "value": "No se encuentra la cámara. Encendela y acercala a la Mac."
           }
         }
       }
@@ -484,6 +494,16 @@
         }
       }
     },
+    "Connect to %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectar a %@"
+          }
+        }
+      }
+    },
     "Connected before": {
       "localizations": {
         "es": {
@@ -554,12 +574,12 @@
         }
       }
     },
-    "Couldn’t join the camera’s Wi-Fi network (%@).": {
+    "Couldn’t join the camera’s Wi-Fi network (%@). Bring the Mac closer to the camera and try again.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se pudo conectar a la red Wi-Fi de la cámara (%@)."
+            "value": "No se pudo entrar a la red Wi-Fi de la cámara (%@). Acercá la Mac a la cámara y probá de nuevo."
           }
         }
       }
@@ -574,7 +594,7 @@
         }
       }
     },
-    "Couldn’t reach GitHub. Check your internet connection.": {
+    "Couldn’t reach GitHub. Check your Internet connection.": {
       "localizations": {
         "es": {
           "stringUnit": {
@@ -704,7 +724,17 @@
         }
       }
     },
-    "Download %lld new": {
+    "Download %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar %@"
+          }
+        }
+      }
+    },
+    "Download %lld New": {
       "localizations": {
         "en": {
           "variations": {
@@ -784,6 +814,16 @@
         }
       }
     },
+    "Download Day": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargar día"
+          }
+        }
+      }
+    },
     "Download New": {
       "localizations": {
         "es": {
@@ -804,7 +844,7 @@
         }
       }
     },
-    "Download cancelled": {
+    "Download canceled": {
       "localizations": {
         "es": {
           "stringUnit": {
@@ -814,22 +854,12 @@
         }
       }
     },
-    "Download cancelled. What already arrived is saved.": {
+    "Download canceled. What already arrived is saved.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Descarga cancelada. Lo que ya llegó quedó guardado."
-          }
-        }
-      }
-    },
-    "Download day": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Descargar día"
           }
         }
       }
@@ -1037,7 +1067,7 @@
         }
       }
     },
-    "Go back to my Wi-Fi when disconnecting": {
+    "Go back to your Wi-Fi when disconnecting": {
       "localizations": {
         "es": {
           "stringUnit": {
@@ -1142,7 +1172,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Resta"
+            "value": "Falta"
           }
         }
       }
@@ -1247,7 +1277,7 @@
         }
       }
     },
-    "Low light": {
+    "Low Light": {
       "localizations": {
         "es": {
           "stringUnit": {
@@ -1537,12 +1567,12 @@
         }
       }
     },
-    "Osmo › Mac  ·  No cables  ·  No phone": {
+    "Osmo › Mac  ·  Wireless  ·  No phone": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Osmo › Mac  ·  Sin cables  ·  Sin teléfono"
+            "value": "Osmo › Mac  ·  Inalámbrico  ·  Sin teléfono"
           }
         }
       }
@@ -1585,7 +1615,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Osmotic no tiene permiso de Bluetooth. Activalo en Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
+            "value": "Osmotic no tiene permiso de Bluetooth. Activalo en Configuración del Sistema › Privacidad y seguridad › Bluetooth."
           }
         }
       }
@@ -1605,7 +1635,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Osmotic necesita permiso de Bluetooth: Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
+            "value": "Osmotic necesita permiso de Bluetooth: Configuración del Sistema › Privacidad y seguridad › Bluetooth."
           }
         }
       }
@@ -1745,7 +1775,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Enchufá la cámara a este Mac con un cable USB-C."
+            "value": "Enchufá la cámara a esta Mac con un cable USB-C."
           }
         }
       }
@@ -1793,6 +1823,16 @@
         }
       }
     },
+    "Progress": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Progreso"
+          }
+        }
+      }
+    },
     "Protocol research": {
       "localizations": {
         "es": {
@@ -1829,6 +1869,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "¿Salir mientras se descargan archivos?"
+          }
+        }
+      }
+    },
+    "REC": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "REC"
           }
         }
       }
@@ -1908,7 +1958,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Libera la cámara y devuelve el Mac a tu Wi-Fi"
+            "value": "Liberar la cámara y volver a tu Wi-Fi"
           }
         }
       }
@@ -2013,16 +2063,6 @@
         }
       }
     },
-    "Show File": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mostrar archivo"
-          }
-        }
-      }
-    },
     "Show in Finder": {
       "localizations": {
         "es": {
@@ -2088,7 +2128,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Veloc"
+            "value": "Vel"
           }
         }
       }
@@ -2183,22 +2223,22 @@
         }
       }
     },
+    "Take Photo": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sacar foto"
+          }
+        }
+      }
+    },
     "Take a photo (↩)": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Sacar una foto (↩)"
-          }
-        }
-      }
-    },
-    "Take photo": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sacar foto"
           }
         }
       }
@@ -2228,7 +2268,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Testers"
+            "value": "Pruebas"
           }
         }
       }
@@ -2238,7 +2278,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El Bluetooth del Mac está apagado."
+            "value": "El Bluetooth de la Mac está apagado."
           }
         }
       }
@@ -2253,12 +2293,12 @@
         }
       }
     },
-    "The camera didn’t accept the command.": {
+    "The camera didn’t accept the command. Try again.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La cámara no aceptó el comando."
+            "value": "La cámara no aceptó el comando. Probá de nuevo."
           }
         }
       }
@@ -2273,12 +2313,12 @@
         }
       }
     },
-    "The camera didn’t change mode.": {
+    "The camera didn’t change mode. Try again, or change it on the camera.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La cámara no cambió de modo."
+            "value": "La cámara no cambió de modo. Probá de nuevo o cambialo en la cámara."
           }
         }
       }
@@ -2333,22 +2373,22 @@
         }
       }
     },
-    "The download didn’t complete.": {
+    "The update didn’t finish downloading. Nothing was installed; try again later.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La descarga no terminó."
+            "value": "La actualización no terminó de descargarse. No se instaló nada; probá más tarde."
           }
         }
       }
     },
-    "The update doesn’t contain a valid Osmotic. Nothing was installed.": {
+    "The update doesn’t contain a valid copy of Osmotic. Nothing was installed.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "La actualización no contiene un Osmotic válido. No se instaló nada."
+            "value": "La actualización no contiene una copia válida de Osmotic. No se instaló nada."
           }
         }
       }
@@ -2378,7 +2418,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este Mac no tiene Bluetooth LE."
+            "value": "Esta Mac no tiene Bluetooth LE."
           }
         }
       }
@@ -2388,7 +2428,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este Mac no tiene una interfaz Wi-Fi disponible."
+            "value": "Esta Mac no tiene una interfaz Wi-Fi disponible."
           }
         }
       }
@@ -2458,7 +2498,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Encendé tu cámara y acercala al Mac"
+            "value": "Encendé tu cámara y acercala a la Mac"
           }
         }
       }
@@ -2618,7 +2658,7 @@
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá el Mac por Ethernet o el iPhone por cable con Compartir Internet."
+            "value": "Mientras dure la conexión, tu Mac usa el Wi-Fi de la cámara y queda sin Internet por Wi-Fi; al desconectar vuelve a tu red. Para seguir con Internet, conectá la Mac por Ethernet o el iPhone por cable con Compartir Internet."
           }
         }
       }

@@ -252,7 +252,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         st.total =
             code == 206
             ? Self.contentRangeTotal(http)
-            : (response.expectedContentLength > 0 ? Int(response.expectedContentLength) : nil)
+            : CameraHTTP.plausibleSize(String(response.expectedContentLength))
         if let total = st.total { st.onTotal?(total) }
         completionHandler(.allow)
     }
@@ -262,7 +262,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         guard let value = response?.value(forHTTPHeaderField: "Content-Range"),
             let slash = value.lastIndex(of: "/")
         else { return nil }
-        return Int(value[value.index(after: slash)...].trimmingCharacters(in: .whitespaces))
+        return CameraHTTP.plausibleSize(value[value.index(after: slash)...])
     }
 
     /// Never follow a redirect: the camera doesn't send them, and following one could fetch from any

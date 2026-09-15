@@ -46,7 +46,8 @@ struct CameraControlView: View {
                 HStack(spacing: 7) {
                     LED(color: Theme.danger, state: .blink, spokenState: "Recording")
                     LCDText(
-                        text: "REC " + Format.clock(TimeInterval(model.status.recordingSeconds)), size: 12, weight: .medium,
+                        text: String(localized: "REC") + " " + Format.clock(TimeInterval(model.status.recordingSeconds)),
+                        size: 12, weight: .medium,
                         color: .white)
                 }
                 .padding(.horizontal, 10).padding(.vertical, 6)
@@ -98,7 +99,7 @@ struct CameraControlView: View {
                     } else if records {
                         Label("Record", systemImage: "record.circle")
                     } else {
-                        Label("Take photo", systemImage: "camera.fill")
+                        Label("Take Photo", systemImage: "camera.fill")
                     }
                 }
                 .buttonStyle(CassetteKeyStyle(finish: .primary, width: 132))
@@ -147,7 +148,7 @@ extension CaptureMode {
         case .slowMotion: "Slow-mo"
         case .timelapse: "Timelapse"
         case .hyperlapse: "Hyperlapse"
-        case .lowLight: "Low light"
+        case .lowLight: "Low Light"
         case .panorama: "Pano"
         case .motionlapse: "Motionlapse"
         }
@@ -160,7 +161,7 @@ extension CaptureMode {
         case .slowMotion: String(localized: "Slow-mo")
         case .timelapse: String(localized: "Timelapse")
         case .hyperlapse: String(localized: "Hyperlapse")
-        case .lowLight: String(localized: "Low light")
+        case .lowLight: String(localized: "Low Light")
         case .panorama: String(localized: "Pano")
         case .motionlapse: String(localized: "Motionlapse")
         }

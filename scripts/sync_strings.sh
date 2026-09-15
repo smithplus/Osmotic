@@ -12,6 +12,8 @@ xcrun xcstringstool sync "$ROOT_DIR/Resources/Localizable.xcstrings" --stringsda
 python3 - "$ROOT_DIR/Resources/Localizable.xcstrings" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
+# Keep the repo's formatting (xcstringstool writes " : "), so a sync only diffs what changed.
+open(sys.argv[1], "w").write(json.dumps(d, ensure_ascii=False, indent=2, separators=(",", ": ")))
 todo = [k for k, v in d["strings"].items()
         if v.get("shouldTranslate", True) and "es" not in v.get("localizations", {})]
 print(f"{len(d['strings'])} strings, {len(todo)} without Spanish:")

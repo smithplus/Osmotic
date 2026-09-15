@@ -91,6 +91,7 @@ struct LibraryView: View {
             TransferBar()
         }
         .motion(Motion.panel, value: model.linkGaveUp)
+        .motion(Motion.panel, value: model.controlError)
         // One sheet that stays up while ← / → change the file (sheet(item:) would re-present on each).
         .sheet(
             isPresented: Binding(
@@ -214,7 +215,7 @@ struct WorkspaceTabs: View {
             key("Files", .files, help: "The camera’s card")
             key("Live", .camera, help: "Record, take photos and see what the camera sees (over Wi-Fi)")
                 .disabled(
-                    model.screen != .library || model.linkLost || model.transfer != nil
+                    model.screen != .library || model.linkLost || model.isTransferring
                         || model.target?.model.supportsLive != true)
             key("Webcam", .webcam, help: "Use the camera as a webcam over USB")
         }
@@ -229,7 +230,7 @@ struct WorkspaceTabs: View {
     }
 }
 
-/// The library's top strip: the Files / Camera switch in the middle, link LED and Disconnect on the right.
+/// The library's top strip: the wordmark, the Files · Live · Webcam tabs in the middle, link LED and Disconnect on the right.
 struct LibraryTopPlate: View {
     @Environment(AppModel.self) private var model
 
@@ -290,7 +291,7 @@ struct ControlDeck: View {
                         model.downloadNew()
                     } label: {
                         if pending > 0 {
-                            Text("Download \(pending) new")
+                            Text("Download \(pending) New")
                         } else if !model.queuedIds.isEmpty {
                             Text("All queued")
                         } else {
@@ -372,9 +373,10 @@ struct SectionHeader: View {
             EngravedRule()
             if !pending.isEmpty {
                 CassetteKeyBank(compact: true) {
-                    Button("Download day") { model.enqueue(pending) }
+                    Button("Download Day") { model.enqueue(pending) }
                         .buttonStyle(.compactKey)
                         .disabled(model.linkLost)
+                        .accessibilityLabel(Text("Download \(title)"))
                 }
             }
         }

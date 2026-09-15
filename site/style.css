@@ -16,8 +16,8 @@
   --ink: rgb(232 229 222);
   --muted: rgb(160 157 150);
   --accent: rgb(238 92 36);
-  --accent-top: rgb(230 84 28);
-  --accent-bottom: rgb(196 64 16);
+  --accent-top: rgb(206 70 20);
+  --accent-bottom: rgb(180 58 14);
   --lcd: rgb(16 16 15);
   --lcd-text: rgb(255 146 52);
   --lcd-caption: rgb(236 228 214 / 0.55);
@@ -216,9 +216,10 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
 .steps li { display: grid; grid-template-columns: 40px 1fr; gap: var(--s2); align-items: baseline; }
 .steps p { margin: 0; font-size: 17px; }
-.n { font: 700 15px/1 var(--mono); color: var(--accent); }
+.n { font: 700 15px/1 var(--mono); color: var(--lcd-text); }
 
 .lcd--table { padding: var(--s3) var(--s4); overflow-x: auto; }
+.lcd--table:focus-visible { border-radius: var(--radius-l); }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 12px var(--s3) 12px 0; font-weight: 400; vertical-align: top; }
 thead th { color: var(--lcd-caption); text-shadow: none; font-size: 11px; white-space: nowrap; }
@@ -231,7 +232,7 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 .faq details { background: linear-gradient(var(--metal-top), var(--metal-bottom)); border-radius: var(--radius-m); box-shadow: inset 0 1px 0 var(--edge-light), var(--contact); }
 .faq summary { cursor: pointer; list-style: none; padding: var(--s3) var(--s4); font-weight: 600; display: flex; justify-content: space-between; gap: var(--s3); }
 .faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: "+"; font-family: var(--mono); color: var(--accent); transition: transform 200ms var(--ease-out); }
+.faq summary::after { content: "+" / ""; font-family: var(--mono); color: var(--accent); transition: transform 200ms var(--ease-out); }
 .faq details[open] summary::after { transform: rotate(45deg); }
 .faq details p { margin: 0; padding: 0 var(--s4) var(--s3); color: var(--muted); }
 
@@ -261,34 +262,36 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   100% { opacity: 1; }
 }
 @keyframes rise {
-  from { opacity: 0; transform: translateY(14px); }
+  from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: none; }
 }
 @keyframes tray {
-  from { opacity: 0; transform: translateY(32px) scale(0.98); }
+  from { opacity: 0; transform: translateY(20px) scale(0.985); }
   to { opacity: 1; transform: none; }
 }
 .lcd--hero .lcd-line { animation: lcd-boot 520ms steps(1, end) both; }
 .lcd--hero .lcd-line + .lcd-line { animation-delay: 90ms; }
-.hero h1 { animation: rise 700ms var(--ease-out) 140ms both; }
-.hero .lede { animation: rise 700ms var(--ease-out) 210ms both; }
-.hero .actions { animation: rise 700ms var(--ease-out) 280ms both; }
-.shot--hero { animation: tray 900ms var(--ease-out) 360ms both; }
+.hero h1 { animation: rise 500ms var(--ease-out) 80ms both; }
+.hero .lede { animation: rise 500ms var(--ease-out) 140ms both; }
+.hero .actions { animation: rise 500ms var(--ease-out) 200ms both; }
+.shot--hero { animation: tray 600ms var(--ease-out) 120ms both; }
 .status .led::after { opacity: 0; animation: led-on 1ms linear 600ms forwards; }
 @keyframes led-on { to { opacity: 1; } }
 
 /* Scroll reveals (main.js adds .reveal-ready, then .is-in as each block comes into view). */
-.reveal-ready [data-reveal] { opacity: 0; transform: translateY(18px); }
-.reveal-ready [data-reveal="tray"] { transform: translateY(32px) scale(0.98); }
+.reveal-ready [data-reveal] { opacity: 0; transform: translateY(10px); }
+.reveal-ready [data-reveal="tray"] { transform: translateY(20px) scale(0.985); }
 .reveal-ready [data-reveal].is-in {
   opacity: 1; transform: none;
-  transition: opacity 600ms var(--ease-out), transform 750ms var(--ease-out);
-  transition-delay: calc(var(--i, 0) * 70ms);
+  transition: opacity 450ms var(--ease-out), transform 550ms var(--ease-out);
+  transition-delay: calc(var(--i, 0) * 50ms);
 }
 /* Section rules draw from the left, like a printed line. */
 .reveal-ready .index::after { transform: scaleX(0); }
-.reveal-ready .index.is-in::after { transform: scaleX(1); transition: transform 900ms var(--ease-out) 120ms; }
-/* Order for staggered items, in CSS so the strict CSP (no inline styles) holds. */
+.reveal-ready .index.is-in::after { transform: scaleX(1); transition: transform 600ms var(--ease-out) 80ms; }
+/* Order for staggered items, in CSS so the strict CSP (no inline styles) holds. Reset first:
+   the parent block carries its own --i, which would otherwise be inherited by the first item. */
+.stages li, .lcd--table tbody tr { --i: 0; }
 .stages li:nth-child(2), .lcd--table tbody tr:nth-child(2) { --i: 1; }
 .stages li:nth-child(3), .lcd--table tbody tr:nth-child(3) { --i: 2; }
 .stages li:nth-child(4), .lcd--table tbody tr:nth-child(4) { --i: 3; }
@@ -317,6 +320,11 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
   .shot--hero { margin-inline: calc(-1 * var(--s2)); }
   .section { padding-block: var(--s6) 0; }
+}
+
+/* Printing: reveals never run on paper. */
+@media print {
+  .reveal-ready [data-reveal], .reveal-ready .lcd--table tbody tr, .reveal-ready .stages .led::after { opacity: 1 !important; transform: none !important; }
 }
 
 /* Reduce Motion: keep the fades (they carry meaning), drop every movement. */

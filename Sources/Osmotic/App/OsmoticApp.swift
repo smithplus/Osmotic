@@ -127,7 +127,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard let model, model.screen != .cameras || model.restoringWifi else { return .terminateNow }
+        // On the cameras screen a Cancel or Disconnect may still be handing the Wi-Fi back.
+        guard let model, model.screen != .cameras || model.restoringWifi || model.hasWifiWorkPending else {
+            return .terminateNow
+        }
         if model.transfer != nil {
             let alert = NSAlert()
             alert.messageText = String(localized: "Quit while files are downloading?")

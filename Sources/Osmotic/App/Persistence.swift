@@ -27,7 +27,7 @@ enum Preferences {
     }
 
     static var organizeByDate: Bool {
-        get { d.bool(forKey: "organizeByDate") }
+        get { d.object(forKey: "organizeByDate") as? Bool ?? true }  // day folders unless turned off
         set { d.set(newValue, forKey: "organizeByDate") }
     }
 

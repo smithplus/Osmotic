@@ -29,8 +29,8 @@ enum Theme {
     static let muted = rgb(160, 157, 150)  // ≥ 4.5:1 on every graphite surface
     // Plastics
     static let accent = rgb(238, 92, 36)  // orange key
-    static let accentTop = rgb(230, 84, 28)  // key face: dark enough for white text
-    static let accentBottom = rgb(196, 64, 16)
+    static let accentTop = rgb(206, 70, 20)  // key face: white text stays ≥ 4.5:1 across the gradient
+    static let accentBottom = rgb(180, 58, 14)
     static let greyTop = rgb(66, 66, 65)  // graphite key
     static let greyBottom = rgb(53, 53, 52)
     // LCD
@@ -54,8 +54,6 @@ enum Theme {
     static let radiusM: CGFloat = 9
     static let radiusL: CGFloat = 14
 
-    /// Printed wordmark / headings on metal.
-    static func display(_ size: CGFloat = 26) -> Font { .system(size: size, weight: .bold, design: .default) }
     /// Silkscreen: small caps sans.
     static func label(_ size: CGFloat = 9.5) -> Font { .system(size: size, weight: .medium, design: .default) }
     /// LCD / numeric readouts.
@@ -72,7 +70,7 @@ enum BrushedMetal {
     static let grain: Image = {
         let size: CGFloat = 640
         let blur: CGFloat = 36
-        let noise = CIFilter.randomGenerator().outputImage!
+        let noise = (CIFilter.randomGenerator().outputImage ?? CIImage(color: .gray))
             .cropped(to: CGRect(x: 0, y: 0, width: size + blur * 4, height: size))
         let mono = noise.applyingFilter(
             "CIColorControls",
@@ -150,10 +148,12 @@ extension ShadowStyle {
 /// - lights come on in a quick bloom (`bloom`); plain state changes are brief (`quick`);
 /// - displays never cross-fade: values change instantly, segment meters step, and a display that
 ///   appears powers up with a short flicker (`LCDBoot`).
-/// With Reduce Motion on, everything collapses to instant changes or plain fades.
+/// With Reduce Motion on, every change is instant (`MotionModifier`).
 enum Motion {
-    static let press = Animation.easeIn(duration: 0.045)
-    static let release = Animation.spring(response: 0.2, dampingFraction: 0.55)
+    // Ease-out, never ease-in, on anything the user triggers: the key starts moving at once.
+    static let press = Animation.easeOut(duration: 0.045)
+    // A hair past rest (~2–3% overshoot), like a sprung key coming back up.
+    static let release = Animation.spring(response: 0.2, dampingFraction: 0.75)
     static let panel = Animation.spring(response: 0.32, dampingFraction: 0.9)
     static let bloom = Animation.easeOut(duration: 0.14)
     static let quick = Animation.easeOut(duration: 0.1)
@@ -298,6 +298,7 @@ struct LCDPair: View {
         .tracking(1.4)
         .lineLimit(1)
         .fixedSize()
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -585,19 +586,21 @@ struct SegmentMeter: View {
     var unlit: Color = Theme.lcdDim
 
     var body: some View {
-        GeometryReader { geo in
+        // One Canvas instead of a view per segment: the transfer bar redraws on every progress tick.
+        Canvas { ctx, size in
             let gap: CGFloat = 2
-            let w = (geo.size.width - gap * CGFloat(segments - 1)) / CGFloat(segments)
-            HStack(spacing: gap) {
-                ForEach(0..<segments, id: \.self) { i in
-                    let on = Double(i) < value * Double(segments)
-                    Rectangle()
-                        .fill(on ? lit : unlit)
-                        .frame(width: max(1, w))
-                        .shadow(Depth.glow(on ? lit : .clear))
-                }
+            let w = max(1, (size.width - gap * CGFloat(segments - 1)) / CGFloat(segments))
+            let litCount = Int((value * Double(segments)).rounded(.up))
+            func rect(_ i: Int) -> Path { Path(CGRect(x: CGFloat(i) * (w + gap), y: 0, width: w, height: size.height)) }
+            for i in litCount..<max(litCount, segments) { ctx.fill(rect(i), with: .color(unlit)) }
+            ctx.drawLayer { lit in
+                lit.addFilter(.shadow(color: self.lit.opacity(0.35), radius: 3))
+                for i in 0..<min(litCount, segments) { lit.fill(rect(i), with: .color(self.lit)) }
             }
         }
+        .accessibilityElement()
+        .accessibilityLabel(Text("Progress"))
+        .accessibilityValue(Text(verbatim: "\(Int((min(1, max(0, value)) * 100).rounded()))%"))
     }
 }
 
@@ -639,6 +642,13 @@ enum Format {
     static let shortDay: DateFormatter = {
         let f = DateFormatter()
         f.setLocalizedDateFormatFromTemplate("EEE d MMM yyyy")
+        return f
+    }()
+
+    /// Day and time in one template, so each language orders them its own way.
+    static let dayAndTime: DateFormatter = {
+        let f = DateFormatter()
+        f.setLocalizedDateFormatFromTemplate("EEEE d MMMM yyyy jmm")
         return f
     }()
 

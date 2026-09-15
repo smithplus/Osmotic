@@ -18,7 +18,10 @@ enum WiFiService {
         var errorDescription: String? {
             switch self {
             case .noInterface: String(localized: "This Mac has no Wi-Fi interface available.")
-            case .timedOut(let ssid): String(localized: "Couldn’t join the camera’s Wi-Fi network (\(ssid)).")
+            case .timedOut(let ssid):
+                String(
+                    localized:
+                        "Couldn’t join the camera’s Wi-Fi network (\(ssid)). Bring the Mac closer to the camera and try again.")
             }
         }
     }
@@ -67,7 +70,8 @@ enum WiFiService {
             // Name hidden (no Location permission): trust it only if the address actually changed,
             // or the Mac wasn't on a 192.168.2.x network to begin with.
             guard let ip = ipv4Address(name) else { return false }
-            return ipBefore == nil || !(ipBefore!.hasPrefix("192.168.2.")) || ip != ipBefore
+            guard let ipBefore else { return true }
+            return !ipBefore.hasPrefix("192.168.2.") || ip != ipBefore
         }
 
         if iface.ssid() == ssid && reachable(name) {

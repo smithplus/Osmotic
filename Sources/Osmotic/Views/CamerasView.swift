@@ -80,10 +80,11 @@ struct CamerasView: View {
                     if bluetoothReady { EmptyNearby() }
                 } else {
                     ForEach(nearby) { cam in
+                        // One orange key per screen: the first camera's. The rest are plain Connect keys.
                         CameraModule(
                             title: cam.model.name, subtitle: cam.name, rssi: cam.rssi,
                             saved: model.savedCameras.contains { $0.id == cam.id }, inRange: true,
-                            enabled: bluetoothReady
+                            primary: cam.id == nearby.first?.id, enabled: bluetoothReady
                         ) {
                             model.connect(cam)
                         }
@@ -108,10 +109,19 @@ struct CamerasView: View {
             DownloadFolderFooter()
         }
         .frame(maxWidth: 620, alignment: .leading)
+        // The notices above slide in on rails (their `.panelFromTop` needs an animated change).
+        .motion(Motion.panel, value: model.restoringWifi)
+        .motion(Motion.panel, value: model.wifiRestoreFailed)
+        .motion(Motion.panel, value: updateAvailable)
         .padding(.horizontal, Theme.s5)
         .padding(.top, Theme.s3)
         .padding(.bottom, Theme.s6)
         .frame(maxWidth: .infinity)
+    }
+
+    private var updateAvailable: Bool {
+        if case .available = model.updater.state { return true }
+        return false
     }
 
     /// The LCD: what the radio is doing, in the device's own words.
@@ -121,7 +131,7 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     LCDText(text: headline, size: 16, weight: .medium)
                     LCDText(
-                        text: String(localized: "Osmo › Mac  ·  No cables  ·  No phone").uppercased(), size: 10.5,
+                        text: String(localized: "Osmo › Mac  ·  Wireless  ·  No phone").uppercased(), size: 10.5,
                         weight: .medium, color: Theme.lcdText.opacity(0.75))
                 }
                 Spacer()
@@ -160,7 +170,7 @@ struct CamerasView: View {
                             NSWorkspace.shared.open(url)
                         }
                     }
-                    .buttonStyle(.primaryKey)
+                    .buttonStyle(.secondaryKey)
                 }
             }
         case .unsupported: Notice(text: "This Mac doesn’t have Bluetooth LE.")
@@ -199,12 +209,14 @@ private struct CameraModule: View {
     let rssi: Int?
     let saved: Bool
     let inRange: Bool
+    var primary = false
     var enabled = true
     let connect: () -> Void
 
     var body: some View {
         HStack(spacing: Theme.s3) {
             Image(systemName: "camera.fill")
+                .accessibilityHidden(true)
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(Theme.ink.opacity(inRange ? 0.75 : 0.35))
                 .frame(width: 46, height: 46)
@@ -229,8 +241,9 @@ private struct CameraModule: View {
             }
             CassetteKeyBank {
                 Button("Connect", action: connect)
-                    .buttonStyle(CassetteKeyStyle(finish: inRange ? .primary : .secondary))
+                    .buttonStyle(CassetteKeyStyle(finish: inRange && primary ? .primary : .secondary))
                     .disabled(!enabled)
+                    .accessibilityLabel(Text("Connect to \(subtitle)"))
             }
         }
         .padding(.vertical, Theme.s3 - 2)
@@ -258,6 +271,7 @@ private struct EmptyNearby: View {
     var body: some View {
         HStack(spacing: Theme.s3) {
             Image(systemName: "dot.radiowaves.left.and.right")
+                .accessibilityHidden(true)
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(Theme.ink.opacity(0.45))
                 .frame(width: 46, height: 46)
