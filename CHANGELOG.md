@@ -10,6 +10,10 @@ Formato [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/); versiones [
 - Navegación de la grilla con flechas; VoiceOver en celdas, filtros, LEDs y etapas; Reducir movimiento.
 - Binario universal (Apple silicon + Intel); licencias y créditos dentro de la app; scripts de firma Developer ID y notarización.
 
+### Actualizaciones y créditos
+- Actualización automática desde GitHub Releases (Ajustes › Updates, menú Check for Updates…): descarga, verifica la firma Ed25519 y el bundle, reemplaza la app y la reabre. `scripts/release.sh` arma y firma la release; publica solo con `--publish`.
+- Ajustes › Credits: quienes hicieron posible la app (Osmosis, Kaze for DJI, OpenPocketCine, la investigación del protocolo y los testers de Osmosis).
+
 ### Rendimiento
 - En reposo la app ya casi no consume: los LEDs parpadean en dos pasos (no animación continua) y todo lo animado, el escaneo Bluetooth y la webcam se pausan con la ventana oculta (pantalla de cámaras: 13 % → ~0 % de CPU).
 - Miniaturas reducidas a 560 px al recibirlas (~40 KB en vez de ~460 KB) y en una caché con límite; ordenar y agrupar una tarjeta grande ya no congela la ventana; el progreso de descarga no redibuja toda la grilla.

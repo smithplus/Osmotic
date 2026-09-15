@@ -27,12 +27,13 @@ Una sola prueba con la Pocket 3 real (build `776be7d`, Files OK). **Todo lo post
 | pestaña Live (control, vista en vivo) | `docs/CONTROL.md`; especificación con fuentes: `docs/CONTROL_SPEC.md` (§7 = sin verificar) |
 | seguridad y privacidad | `SECURITY.md` |
 | historial para el usuario | `CHANGELOG.md` |
+| créditos (se muestran en Ajustes › Credits) | `Sources/Osmotic/App/Credits.swift` |
 
 ## Comandos
 
 ```bash
 swift build                      # app + core
-swift test                       # 78 tests en 19 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
+swift test                       # 82 tests en 20 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
 swift test --filter Golden       # solo los snapshots del decodificador
 scripts/lint.sh [--fix]          # formato con swift-format (.swift-format: 4 espacios, 130 columnas); CI lo exige
 scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstrings; lista los que faltan traducir
@@ -57,7 +58,7 @@ scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest
 
 **Pantalla o pestaña nueva.** `AppModel.Workspace` + `setWorkspace` + `WorkspaceTabs`; vista con `TopPlate` y piezas de `Theme`; caso en `SnapshotView`/`loadDemo` para poder revisarla con `snapshot.sh`.
 
-**Release.** Tag `vX.Y.Z` (la versión sale del tag, el build del conteo de commits), entrada en `CHANGELOG.md`, `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`, subir el DMG a GitHub Releases.
+**Release (y actualización automática).** Sección `## [X.Y.Z]` en `CHANGELOG.md`, commit, `scripts/release.sh X.Y.Z` (dry run: tag local, app universal, `build/Osmotic-X.Y.Z.zip` + `.sig` firmado con la clave del Llavero) y, **solo con permiso explícito del usuario**, `scripts/release.sh X.Y.Z --publish` (empuja el tag y crea la release con `gh`). La app instalada la encuentra con `UpdateService` (`api.github.com/.../releases/latest`) y la instala si la firma coincide con `OsmoticUpdatePublicKey` (Info.plist). La clave privada: `swift scripts/update_key.swift` (Llavero, servicio `io.github.smithplus.osmotic.update-signing`); si se pierde, generar otra y cambiar la pública — los usuarios instalan esa versión a mano una vez. Para Developer ID + notarización: `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`.
 
 ## Reglas del proyecto
 

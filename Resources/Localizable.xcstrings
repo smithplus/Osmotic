@@ -404,6 +404,46 @@
         }
       }
     },
+    "Check Now": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar ahora"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar actualizaciones…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscar actualizaciones automáticamente"
+          }
+        }
+      }
+    },
+    "Checking…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buscando…"
+          }
+        }
+      }
+    },
     "Choose": {
       "localizations": {
         "es": {
@@ -420,6 +460,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Cerrar"
+          }
+        }
+      }
+    },
+    "Code": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Código"
           }
         }
       }
@@ -524,6 +574,26 @@
         }
       }
     },
+    "Couldn’t reach GitHub. Check your internet connection.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo llegar a GitHub. Revisá tu conexión a Internet."
+          }
+        }
+      }
+    },
+    "Credits": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Créditos"
+          }
+        }
+      }
+    },
     "Deselect": {
       "localizations": {
         "es": {
@@ -540,6 +610,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Deseleccionar todo (esc)"
+          }
+        }
+      }
+    },
+    "Details": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Detalles"
           }
         }
       }
@@ -570,6 +650,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Desconectar automáticamente al terminar de descargar"
+          }
+        }
+      }
+    },
+    "Disconnect from the camera to install.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectate de la cámara para instalar."
           }
         }
       }
@@ -794,6 +884,16 @@
         }
       }
     },
+    "Downloading %@…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Descargando %@…"
+          }
+        }
+      }
+    },
     "Downloads": {
       "localizations": {
         "es": {
@@ -917,6 +1017,26 @@
         }
       }
     },
+    "General": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "General"
+          }
+        }
+      }
+    },
+    "GitHub didn’t answer. Try again later.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub no respondió. Probá más tarde."
+          }
+        }
+      }
+    },
     "Go back to my Wi-Fi when disconnecting": {
       "localizations": {
         "es": {
@@ -967,6 +1087,26 @@
         }
       }
     },
+    "Install": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalar"
+          }
+        }
+      }
+    },
+    "Install %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Instalar %@"
+          }
+        }
+      }
+    },
     "It shows up here, and as a camera in Zoom, Meet, FaceTime or OBS.": {
       "localizations": {
         "es": {
@@ -983,6 +1123,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Conectando a %@…"
+          }
+        }
+      }
+    },
+    "Last checked %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última búsqueda %@"
           }
         }
       }
@@ -1107,6 +1257,16 @@
         }
       }
     },
+    "MIT License. Not affiliated with DJI.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Licencia MIT. Sin afiliación con DJI."
+          }
+        }
+      }
+    },
     "Maintenance": {
       "localizations": {
         "es": {
@@ -1133,6 +1293,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Motionlapse"
+          }
+        }
+      }
+    },
+    "Move the new Osmotic from Finder into Applications to finish.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mové el Osmotic nuevo desde Finder a Aplicaciones para terminar."
           }
         }
       }
@@ -1257,6 +1427,16 @@
         }
       }
     },
+    "Not checked yet": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Todavía no se buscó"
+          }
+        }
+      }
+    },
     "Not connected": {
       "localizations": {
         "es": {
@@ -1337,6 +1517,16 @@
         }
       }
     },
+    "Open Release Page": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la página de la versión"
+          }
+        }
+      }
+    },
     "Open Settings": {
       "localizations": {
         "es": {
@@ -1360,12 +1550,32 @@
     "Osmotic": {
       "shouldTranslate": false
     },
+    "Osmotic %@ is available.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic %@ está disponible."
+          }
+        }
+      }
+    },
     "Osmotic Help": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Ayuda de Osmotic"
+          }
+        }
+      }
+    },
+    "Osmotic asks GitHub (api.github.com) for the latest release; nothing about you or your camera is sent. Updates are installed only when their signature matches the key built into this app.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic le pregunta a GitHub (api.github.com) por la última versión; no se manda nada sobre vos ni tu cámara. Las actualizaciones se instalan solo si su firma coincide con la clave incluida en la app."
           }
         }
       }
@@ -1380,12 +1590,42 @@
         }
       }
     },
+    "Osmotic is up to date.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic está actualizada."
+          }
+        }
+      }
+    },
     "Osmotic needs Bluetooth permission: System Settings › Privacy & Security › Bluetooth.": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Osmotic necesita permiso de Bluetooth: Ajustes del Sistema › Privacidad y seguridad › Bluetooth."
+          }
+        }
+      }
+    },
+    "Osmotic on GitHub": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic en GitHub"
+          }
+        }
+      }
+    },
+    "Osmotic stands on the work of people who opened up DJI’s cameras when DJI didn’t. Thank you.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Osmotic se apoya en el trabajo de quienes abrieron las cámaras de DJI cuando DJI no lo hizo. Gracias."
           }
         }
       }
@@ -1549,6 +1789,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Anterior (←)"
+          }
+        }
+      }
+    },
+    "Protocol research": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Investigación del protocolo"
           }
         }
       }
@@ -1863,6 +2113,16 @@
         }
       }
     },
+    "Status": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado"
+          }
+        }
+      }
+    },
     "Step %lld of %lld": {
       "localizations": {
         "es": {
@@ -1939,6 +2199,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Registro técnico"
+          }
+        }
+      }
+    },
+    "Testers": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testers"
           }
         }
       }
@@ -2039,6 +2309,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "La tarjeta está vacía"
+          }
+        }
+      }
+    },
+    "The download didn’t complete.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La descarga no terminó."
+          }
+        }
+      }
+    },
+    "The update doesn’t contain a valid Osmotic. Nothing was installed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La actualización no contiene un Osmotic válido. No se instaló nada."
+          }
+        }
+      }
+    },
+    "The update’s signature doesn’t match. Nothing was installed.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La firma de la actualización no coincide. No se instaló nada."
           }
         }
       }
@@ -2153,12 +2453,32 @@
         }
       }
     },
+    "Updates": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actualizaciones"
+          }
+        }
+      }
+    },
     "Use the camera as a webcam over USB": {
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
             "value": "Usá la cámara como webcam por USB"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Versión"
           }
         }
       }
@@ -2259,6 +2579,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Lo ya descargado queda guardado; lo demás se reanuda la próxima vez."
+          }
+        }
+      }
+    },
+    "What’s new in %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Novedades de %@"
           }
         }
       }

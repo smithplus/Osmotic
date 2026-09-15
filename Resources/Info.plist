@@ -41,6 +41,8 @@
 	<string>Osmotic talks to your camera on its own Wi-Fi network (192.168.2.1) to list and download your files.</string>
 	<key>NSDownloadsFolderUsageDescription</key>
 	<string>Osmotic saves your camera’s videos and photos to the DJI folder in Downloads.</string>
+	<key>OsmoticUpdatePublicKey</key>
+	<string>E91cPnO2WAGj9zKOmR9UaBkEytuPIqKiZ4Kjbl1wao4=</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Osmotic shows your DJI camera’s picture when it’s plugged in by USB as a webcam.</string>
 	<key>NSBonjourServices</key>

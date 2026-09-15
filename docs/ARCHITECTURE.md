@@ -45,6 +45,7 @@ Pestañas (`AppModel.Workspace`): **Files** (`.files`, flujo Wi-Fi: cámaras →
 | `HTTP/CameraHTTP.swift` | URLSession efímera sin redirecciones, HEAD/data/range, `resolveStorage` |
 | `HTTP/FileDownloader.swift` | descarga a `.part` con reanudación por Range; completa solo si coincide con Content-Length/Content-Range; rechaza HTML/redirecciones; 416 = completa; nunca borra en el destino |
 | `HTTP/ThumbnailFetcher.swift` | actor: `.scr` → `.thm` → EXIF, concurrencia 4, caché en disco (solo imágenes) |
+| `Update/Update.swift` | `SemVer`, `UpdateFeed` (JSON de la release, verificación Ed25519), `UpdateInstaller.script` (reemplazo al salir) |
 | `HTTP/EmbeddedJpeg.swift` | miniatura EXIF desde los primeros 64 KiB |
 
 ### `Sources/Osmotic` (app, MainActor por defecto)
@@ -59,6 +60,9 @@ Pestañas (`AppModel.Workspace`): **Files** (`.files`, flujo Wi-Fi: cámaras →
 | `Services/WiFiService.swift` | join/restore (devuelve si volvió a una red), `pause` no cancelable, redes guardadas, IPs, ruta, `LocationPermission`, `LocalNetworkPermission` |
 | `Services/TransferNotifier.swift` | sonido, rebote del Dock y notificación al terminar; pide el permiso en la primera descarga |
 | `Services/LiveVideoRenderer.swift` | SPS/PPS → `CMVideoFormatDescription` → `AVSampleBufferDisplayLayer` (cola propia, `nonisolated`); informa la proporción del video |
+| `Services/UpdateService.swift` | actualización desde GitHub Releases: chequeo diario, descarga (solo hosts de GitHub), firma Ed25519, validación del bundle, reemplazo al salir |
+| `Services/AppVisibility.swift` | si la ventana se ve; pausa animaciones, escaneo BLE y webcam cuando no |
+| `App/Credits.swift` | créditos mostrados en Ajustes › Credits |
 | `Services/WebcamService.swift` | la cámara por USB como webcam (UVC): detección, permiso (solo con cámara presente), vista previa |
 | `Views/RootView.swift` | pantalla según `screen`, `TopPlate` (franja superior con pestañas al centro) |
 | `Views/CamerasView.swift` | cámaras cercanas y guardadas, `Notice`, `ErrorBanner`, carpeta de destino |

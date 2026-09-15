@@ -140,6 +140,7 @@ final class AppModel {
     /// Bumped on every live-view start, so a timer from an earlier visit can't touch a newer one.
     @ObservationIgnored var liveStartToken = 0
     let webcam = WebcamService()
+    let updater = UpdateService()
     /// Work that touches the Wi-Fi and must never overlap a new connection: the last teardown (it may
     /// still be restoring the user's network), the launch-time crash recovery, and link recovery.
     @ObservationIgnored private var teardownTask: Task<Void, Never>?
@@ -162,7 +163,10 @@ final class AppModel {
         }
         SavedCameraStore.migratePasswordsToKeychain()
         ble.startScan()
-        startupRecovery = Task { await self.recoverInterruptedSession() }
+        startupRecovery = Task {
+            await self.recoverInterruptedSession()
+            self.updater.checkIfDue()  // after the Wi-Fi is back on the user's network
+        }
     }
 
     /// UI demo without hardware: a captured manifest on screen, or the connection stepper mid-way.
@@ -562,6 +566,7 @@ final class AppModel {
         screen = .cameras
         await cleanup(restoreWifi: Preferences.restoreWifi)
         ble.startScan()
+        updater.checkIfDue()  // back on the user's network: a good moment
     }
 
     /// Teardown in a task of its own, so a cancelled caller (a cancelled connect, the transfer queue

@@ -53,6 +53,10 @@ Si no das el permiso de ubicación, igual funciona: al terminar, la app se desco
 
 La build de este repo está firmada ad-hoc: macOS vuelve a pedir los permisos en cada build nueva, y al abrirla por primera vez hay que ir a Ajustes del Sistema › Privacidad y seguridad › "Abrir igualmente". Una build firmada con Developer ID y notarizada (`scripts/notarize.sh`) no tiene ninguno de los dos problemas.
 
+## Actualizaciones
+
+Osmotic busca versiones nuevas en las [releases de GitHub](https://github.com/smithplus/Osmotic/releases) (al abrir, una vez por día; o menú Osmotic › Check for Updates…). Si hay una, la instala sola al cerrar y se vuelve a abrir — solo si su firma coincide con la clave de la app. Se configura en Ajustes › Updates. Con la build ad-hoc, macOS vuelve a pedir los permisos después de cada actualización.
+
 ## Si algo falla
 
 La app guarda un registro técnico en `~/Library/Logs/Osmotic/` (menú Window › Technical Log — Ventana › Registro técnico —, ⌥⌘L, o Ajustes › Maintenance › Open Folder). Ese archivo es lo que hace falta para diagnosticar una cámara que no responde. Problemas y sugerencias: [issues](https://github.com/smithplus/Osmotic/issues).
@@ -80,5 +84,7 @@ Guía para colaboradores y agentes de IA: [`CLAUDE.md`](CLAUDE.md) (también `AG
 ## Créditos y licencia
 
 MIT. El protocolo es obra de [KonradIT/osmosis](https://github.com/KonradIT/osmosis) y de los proyectos en los que se apoya (dji-remote, osmo-download, DJI-Wifi-Connect, lib-osmo-ble, dji_protocol, reverse-engineering-dji, los DJI OGs). Las capturas de prueba en `Tests/OsmoticCoreTests/Fixtures` vienen de ese repositorio. El control de la cámara y la vista en vivo (pestaña Live) siguen a [Kaze for DJI](https://github.com/brianmerchant/Kaze-for-DJI) de Brian Merchant (MIT; partes adaptadas) y las notas de [OpenPocketCine](https://github.com/erik-sutton95/OpenPocketCine) (Apache-2.0; re-implementado a partir de su documentación, sin copiar código).
+
+La lista completa de créditos (código, investigación del protocolo y testers) está en la app: Ajustes › Credits.
 
 Proyecto independiente, **sin afiliación con DJI**. "DJI" y "Osmo" son marcas de sus dueños.

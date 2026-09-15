@@ -22,6 +22,9 @@ struct OsmoticApp: App {
         .defaultSize(width: 1120, height: 740)
         .commands {
             CommandGroup(replacing: .newItem) {}
+            CommandGroup(after: .appInfo) {
+                Button("Check for Updates…") { Task { await model.updater.check(userInitiated: true) } }
+            }
             CommandMenu("Camera") {
                 Button("Download New") { model.downloadNew() }
                     .keyboardShortcut("d", modifiers: [.command, .shift])

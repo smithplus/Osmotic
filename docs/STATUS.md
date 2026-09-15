@@ -17,7 +17,7 @@ Todo el flujo de Files funcionó a la primera: BLE armado (MTU 512), ya empareja
 
 ## Verificado sin hardware
 
-`swift test`: **78 tests en 19 suites**, en verde; también en CI (GitHub Actions, macos-26).
+`swift test`: **82 tests en 20 suites**, en verde; también en CI (GitHub Actions, macos-26).
 - Decodificador idéntico al upstream en las **14 capturas golden** (6 de Pocket 3); tramas BLE/datalink idénticas a capturas reales.
 - Sesión contra `FakeCamera`: handshake, rechazo `0x02/0x0c`, playback por `0x01/0x01`, lista, paginación inline, salida de playback al cerrar.
 - Control contra `FakeCamera` (`ControlTests`): salida de playback (dos vías), grabar/detener, foto, modo, vista en vivo H.264 reensamblada; vectores de bytes de Kaze para ACK y routing.

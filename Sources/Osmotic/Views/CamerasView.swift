@@ -61,6 +61,18 @@ struct CamerasView: View {
                 Notice(verbatim: summary.text, color: summary.ok ? Theme.success : Theme.warning)
             }
             bluetoothNotice
+            if case .available(let release) = model.updater.state {
+                HStack(spacing: Theme.s3) {
+                    Notice(text: "Osmotic \(release.version.description) is available.", color: Theme.success)
+                    CassetteKeyBank {
+                        Button(model.updater.canInstall ? "Install" : "Details") {
+                            Task { await model.updater.install(release) }
+                        }
+                        .buttonStyle(.secondaryKey)
+                    }
+                }
+                .transition(.panelFromTop)
+            }
 
             VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                 SectionIndex(number: 1, title: "Nearby")
