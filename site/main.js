@@ -10,7 +10,7 @@
   for (const el of blocks) {
     if (el.style.getPropertyValue("--i")) continue;
     const peers = [...el.parentElement.children].filter((c) => c.hasAttribute("data-reveal"));
-    if (peers.length > 1) el.style.setProperty("--i", String(Math.min(peers.indexOf(el), 4)));
+    if (peers.length > 1) el.style.setProperty("--i", String(Math.min(peers.indexOf(el), 6)));
   }
   const fold = window.innerHeight;
   for (const el of blocks) {

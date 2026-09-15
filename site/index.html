@@ -50,13 +50,13 @@
       <p class="lcd-line"><span>Wireless</span><span aria-hidden="true">·</span><span>No phone</span><span aria-hidden="true">·</span><span>No account</span></p>
     </div>
     <h1>Your Osmo camera,<br>on your Mac.</h1>
-    <p class="lede">Download your DJI Osmo footage straight to your Mac over the camera's own Wi-Fi. No cable, no card reader, no phone in between. Then record, switch modes and watch the camera live from across the room.</p>
+    <p class="lede">Wireless downloads, live control and a USB webcam, in one native Mac app.</p>
     <div class="actions">
       <div class="bank">
         <a class="key key--primary" href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download for Mac</a>
         <a class="key" href="https://github.com/smithplus/Osmotic">View on GitHub</a>
       </div>
-      <p class="fine">Free and open source (MIT) · macOS 15 or later · Apple silicon and Intel</p>
+      <p class="fine">Free and open source · macOS 15+ · Apple silicon and Intel</p>
     </div>
     <figure class="shot shot--hero">
       <img src="images/library.webp" width="1488" height="1053" fetchpriority="high" alt="Osmotic's Files tab: clips from an Osmo Pocket 3 grouped by day, two selected, a download in progress">
@@ -67,17 +67,17 @@
       <p><span class="label">License:</span> MIT</p>
       <p><span class="label">Account:</span> None</p>
     </div>
-    <p class="fine fine--proof">Speed measured over Wi-Fi with a real Osmo Pocket 3: a 2 GB clip takes about a minute.</p>
+    <p class="fine fine--proof">Speed measured with a real Pocket 3.</p>
   </section>
 
   <section class="section" id="how" aria-labelledby="how-title">
     <h2 class="index" id="how-title" data-reveal><span aria-hidden="true">01</span>How it works</h2>
-    <p class="intro" data-reveal>DJI's own app sends wireless transfers to a phone only; to get files onto a computer it's a cable or a card reader. Osmotic lets the Mac talk to the camera directly.</p>
+    <p class="intro" data-reveal>DJI's app sends wireless transfers to a phone only. Osmotic talks to the camera directly.</p>
     <ol class="panel panel--screws stages" data-reveal>
-      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Bluetooth</span><p>The Mac finds the camera and pairs with it. You approve once, on the camera.</p></li>
-      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Wi-Fi</span><p>The camera hands over its Wi-Fi password and the Mac joins its network.</p></li>
-      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Download</span><p>New files land in a folder per day, dated when they were shot.</p></li>
-      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Back home</span><p>When you disconnect, the camera returns to normal and your Mac rejoins your Wi-Fi.</p></li>
+      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Bluetooth</span><p>Pairs with the camera</p></li>
+      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Wi-Fi</span><p>Joins the camera's network</p></li>
+      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Download</span><p>Pulls only what's new</p></li>
+      <li><span class="led led--stage" aria-hidden="true"></span><span class="stage-name">Back home</span><p>Rejoins your Wi-Fi</p></li>
     </ol>
   </section>
 
@@ -88,7 +88,7 @@
       <div class="feature-text" data-reveal>
         <p class="readout"><span class="label">Tab:</span> Files</p>
         <h3>The card, on your Mac</h3>
-        <p>Thumbnails by day, with filters for videos, photos, starred and new. <strong>Download New</strong> takes everything that isn't on your Mac yet. A clip already there is skipped, never replaced, and a download that stops halfway picks up where it left off.</p>
+        <p>Only what's new lands on your Mac, in a folder per day.</p>
       </div>
       <figure class="shot" data-reveal="tray"><img src="images/files.webp" width="1368" height="1013" loading="lazy" alt="Files tab: a day of photos from an Osmo Pocket 3, two selected, one already on the Mac"></figure>
     </article>
@@ -97,7 +97,7 @@
       <div class="feature-text" data-reveal>
         <p class="readout"><span class="label">Tab:</span> Live</p>
         <h3>Control it from across the room</h3>
-        <p>Start and stop recording, take photos, switch between Video, Photo, Slow-mo and Low Light, and watch the camera's picture live over Wi-Fi. Back in Files, what you just shot is already listed.</p>
+        <p>Record, take photos, switch modes and watch the picture live.</p>
       </div>
       <figure class="shot" data-reveal="tray"><img src="images/live.webp" width="1368" height="970" loading="lazy" alt="Live tab: the camera's picture while recording for 12:34, mode keys and a Stop key"></figure>
     </article>
@@ -106,7 +106,8 @@
       <div class="feature-text" data-reveal>
         <p class="readout"><span class="label">Tab:</span> Webcam</p>
         <h3>A webcam with a gimbal</h3>
-        <p>Plug the camera in with USB-C and choose Webcam on it. The picture shows up in Osmotic, and in Zoom, Meet, FaceTime or OBS even with Osmotic closed. Not yet tested on hardware.</p>
+        <p>Plug in USB-C and pick it in Zoom, Meet or OBS.</p>
+        <p class="tag">Not yet tested on hardware</p>
       </div>
       <figure class="shot" data-reveal="tray"><img src="images/webcam.webp" width="1368" height="570" loading="lazy" alt="Webcam tab: three numbered steps to use the camera as a USB webcam"></figure>
     </article>
@@ -114,13 +115,29 @@
 
   <section class="section" aria-labelledby="details-title">
     <h2 class="index" id="details-title" data-reveal><span aria-hidden="true">03</span>The details</h2>
-    <ul class="grid">
-      <li class="panel" data-reveal><h3>Dated right</h3><p>Each file gets the moment it was shot as its date, so Finder and your editor sort it correctly.</p></li>
-      <li class="panel" data-reveal><h3>Light previews</h3><p>Space bar opens a preview from the camera's small <code>.LRF</code> proxy, not the full 4K file.</p></li>
-      <li class="panel" data-reveal><h3>The extras</h3><p>RAW <code>.DNG</code> next to photos and the backup <code>.WAV</code> next to clips. On by default; turn them off in Settings.</p></li>
-      <li class="panel" data-reveal><h3>Keyboard first</h3><p>Arrows to move, <kbd>⇧</kbd> to extend, space to preview, <kbd>⌘D</kbd> and <kbd>⇧⌘D</kbd> to download.</p></li>
-      <li class="panel" data-reveal><h3>Updates itself</h3><p>New versions come from GitHub Releases and install only if their signature checks out.</p></li>
-      <li class="panel" data-reveal><h3>Private</h3><p>No account and no analytics. Nothing leaves your Mac except the update check with GitHub.</p></li>
+    <svg class="sprite" aria-hidden="true" focusable="false">
+      <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2h8.5A1.5 1.5 0 0 1 21 9.5v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></symbol>
+      <symbol id="i-calendar" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 9.5h17M8 3v4M16 3v4"/></symbol>
+      <symbol id="i-resume" viewBox="0 0 24 24"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v4.5h-4.5"/></symbol>
+      <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></symbol>
+      <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+      <symbol id="i-wave" viewBox="0 0 24 24"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 10.5v3"/></symbol>
+      <symbol id="i-command" viewBox="0 0 24 24"><path d="M9 9H6.5A2.5 2.5 0 1 1 9 6.5v11A2.5 2.5 0 1 1 6.5 15h11a2.5 2.5 0 1 1-2.5 2.5v-11A2.5 2.5 0 1 1 17.5 9z"/></symbol>
+      <symbol id="i-update" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v8M8.5 12l3.5 3.5 3.5-3.5"/></symbol>
+      <symbol id="i-private" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M5 19.5c1-3.5 4-5 7-5s6 1.5 7 5M4 4l16 16"/></symbol>
+      <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9.5 3v3M14.5 3v3M9.5 18v3M14.5 18v3M3 9.5h3M3 14.5h3M18 9.5h3M18 14.5h3"/></symbol>
+    </svg>
+    <ul class="icons">
+      <li data-reveal><svg aria-hidden="true"><use href="#i-folder"/></svg><span>Day folders</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-calendar"/></svg><span>Dated when shot</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-resume"/></svg><span>Resumes downloads</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-shield"/></svg><span>Never overwrites</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-eye"/></svg><span>Light previews</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-wave"/></svg><span>RAW and WAV extras</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-command"/></svg><span>Keyboard first</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-update"/></svg><span>Signed updates</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-private"/></svg><span>No account</span></li>
+      <li data-reveal><svg aria-hidden="true"><use href="#i-chip"/></svg><span>Universal app</span></li>
     </ul>
   </section>
 
@@ -129,28 +146,24 @@
     <div class="lcd lcd--table" data-reveal tabindex="0" role="region" aria-label="Comparison table">
       <table>
         <caption class="visually-hidden">Osmotic compared with other ways to get Osmo footage onto a Mac</caption>
-        <thead><tr><td></td><th scope="col">Osmotic</th><th scope="col">DJI Mimo</th><th scope="col">Cable or card reader</th><th scope="col">Pro offload apps</th></tr></thead>
+        <thead><tr><td></td><th scope="col">Osmotic</th><th scope="col">DJI Mimo</th><th scope="col">Card reader</th><th scope="col">Pro offload apps</th></tr></thead>
         <tbody>
-          <tr><th scope="row">Camera to Mac, wireless</th><td class="on">Yes</td><td>To a phone only</td><td>No</td><td>No</td></tr>
-          <tr><th scope="row">Price</th><td class="on">Free</td><td>Free</td><td>A reader</td><td>$49/month or $169+</td></tr>
+          <tr><th scope="row">Wireless to Mac</th><td class="on">Yes</td><td>Phone only</td><td>No</td><td>No</td></tr>
+          <tr><th scope="row">Price</th><td class="on">Free</td><td>Free</td><td>A reader</td><td>$49/mo or $169+</td></tr>
           <tr><th scope="row">Open source</th><td class="on">Yes</td><td>No</td><td>n/a</td><td>No</td></tr>
-          <tr><th scope="row">Knows Osmo files</th><td class="on">Proxies, sidecars, day folders</td><td>Yes</td><td>No</td><td>No</td></tr>
-          <tr><th scope="row">Made for</th><td class="on">Osmo owners on a Mac</td><td>Editing on a phone</td><td>Any camera</td><td>Film crews</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fine fine--left" data-reveal>Pro offload apps: OffShoot and ShotPut Pro, prices from their sites in September 2026. DJI Mimo: per <a href="https://support.dji.com/help/content?customId=en-us03400006849&amp;spaceId=34&amp;re=US&amp;lang=en">DJI's export guide</a>.</p>
+    <p class="fine fine--left" data-reveal>Pro offload apps: OffShoot, ShotPut Pro (Sept 2026). Mimo: <a href="https://support.dji.com/help/content?customId=en-us03400006849&amp;spaceId=34&amp;re=US&amp;lang=en">DJI's export guide</a>.</p>
   </section>
 
   <section class="section" id="install" aria-labelledby="install-title">
     <h2 class="index" id="install-title" data-reveal><span aria-hidden="true">05</span>Install</h2>
-    <div class="panel panel--screws install" data-reveal>
-      <ol class="steps">
-        <li><span class="n">01</span><p><a href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download the <code>.dmg</code></a>, open it and drag <strong>Osmotic</strong> onto <strong>Applications</strong>.</p></li>
-        <li><span class="n">02</span><p>Open it. The first time, macOS says it can't verify the app because this build isn't notarized by Apple yet. Go to <strong>System Settings › Privacy &amp; Security</strong> and click <strong>Open Anyway</strong>.</p></li>
-        <li><span class="n">03</span><p>Turn on the camera and click <strong>Connect</strong>. The first time, approve the pairing on the camera's screen.</p></li>
-      </ol>
-    </div>
+    <ol class="steps steps--row">
+      <li class="panel" data-reveal><span class="n">01</span><p><a href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download the <code>.dmg</code></a> and drag Osmotic to Applications.</p></li>
+      <li class="panel" data-reveal><span class="n">02</span><p>First launch: <strong>Privacy &amp; Security › Open Anyway</strong>. <span class="muted">Not notarized by Apple yet.</span></p></li>
+      <li class="panel" data-reveal><span class="n">03</span><p>Turn on the camera and click <strong>Connect</strong>.</p></li>
+    </ol>
   </section>
 
   <section class="section" aria-labelledby="cameras-title">
@@ -161,34 +174,43 @@
         <thead><tr><th scope="col">Camera</th><th scope="col">Files</th><th scope="col">Live</th><th scope="col">Tested</th></tr></thead>
         <tbody>
           <tr><th scope="row">Osmo Pocket 3</th><td>Yes</td><td>Yes</td><td class="on">On hardware</td></tr>
-          <tr><th scope="row">Osmo Pocket 4 / 4 Pro</th><td>Yes</td><td>Yes</td><td>Not yet (same protocol)</td></tr>
-          <tr><th scope="row">Osmo Action 4 / 5 Pro / 6</th><td>Yes</td><td>No</td><td>Not yet (works in Osmosis)</td></tr>
-          <tr><th scope="row">Osmo Nano</th><td>Yes</td><td>No</td><td>Not yet (works in Osmosis)</td></tr>
+          <tr><th scope="row">Osmo Pocket 4 / 4 Pro</th><td>Yes</td><td>Yes</td><td>Not yet</td></tr>
+          <tr><th scope="row">Osmo Action 4 / 5 Pro / 6</th><td>Yes</td><td>No</td><td>Not yet</td></tr>
+          <tr><th scope="row">Osmo Nano</th><td>Yes</td><td>No</td><td>Not yet</td></tr>
         </tbody>
       </table>
     </div>
-    <p class="fine fine--left" data-reveal>Tried one of the untested cameras? A <a href="https://github.com/smithplus/Osmotic/issues">report</a> with the app's technical log (Window › Technical Log) helps a lot.</p>
+    <p class="fine fine--left" data-reveal>Tried an untested model? <a href="https://github.com/smithplus/Osmotic/issues">Send a report</a>.</p>
   </section>
 
   <section class="section" id="faq" aria-labelledby="faq-title">
     <h2 class="index" id="faq-title" data-reveal><span aria-hidden="true">07</span>Questions</h2>
     <div class="faq">
-      <details data-reveal><summary>Is this made by DJI?</summary><p>No. It's an independent open-source project, not affiliated with DJI. It never deletes or changes files already on the camera.</p></details>
-      <details data-reveal><summary>Do I still need DJI Mimo?</summary><p>Only to activate a brand-new camera, which DJI does through Mimo. After that, Osmotic doesn't need your phone.</p></details>
-      <details data-reveal><summary>Why does my Mac lose Internet while connected?</summary><p>The Mac joins the camera's own Wi-Fi, which has no Internet. Ethernet, or an iPhone sharing its connection over a cable, keeps you online. When you disconnect, your Mac rejoins your network.</p></details>
-      <details data-reveal><summary>How fast is it?</summary><p>About 33 MB/s with a Pocket 3 in our tests, so a 2 GB clip takes about a minute.</p></details>
-      <details data-reveal><summary>What if a download stops halfway?</summary><p>It resumes where it stopped, even for clips over 4 GB. Files already on your Mac are skipped, never replaced.</p></details>
-      <details data-reveal><summary>Does it run on Intel Macs?</summary><p>Yes. It's a universal app for Apple silicon and Intel, on macOS 15 or later.</p></details>
-      <details data-reveal><summary>Does the webcam need Osmotic open?</summary><p>No. In Webcam mode the camera is a standard USB webcam, so Zoom, Meet, FaceTime and OBS see it directly. The Webcam tab isn't tested on hardware yet.</p></details>
-      <details data-reveal><summary>Why does macOS say it can't verify the app?</summary><p>This build isn't notarized by Apple yet. Open it once with System Settings › Privacy &amp; Security › Open Anyway. Updates are signed, and their signature is checked before they install.</p></details>
+      <details data-reveal><summary>Is this made by DJI?</summary><p>No. It's independent and open source. It never deletes or changes files already on the camera.</p></details>
+      <details data-reveal><summary>Do I still need DJI Mimo?</summary><p>Only to activate a brand-new camera. After that, no.</p></details>
+      <details data-reveal><summary>Why does my Mac lose Internet while connected?</summary><p>It's on the camera's Wi-Fi, which has no Internet. Ethernet or a tethered iPhone keep you online; your Wi-Fi comes back when you disconnect.</p></details>
+      <details data-reveal><summary>How fast is it?</summary><p>About 33 MB/s with a Pocket 3: a 2 GB clip in about a minute.</p></details>
+      <details data-reveal><summary>What if a download stops halfway?</summary><p>It resumes where it stopped, even clips over 4 GB. Files already on your Mac are skipped.</p></details>
+      <details data-reveal><summary>Does it run on Intel Macs?</summary><p>Yes. It's universal, on macOS 15 or later.</p></details>
+      <details data-reveal><summary>Does the webcam need Osmotic open?</summary><p>No. In Webcam mode it's a standard USB webcam. Not yet tested on hardware.</p></details>
+      <details data-reveal><summary>Why does macOS say it can't verify the app?</summary><p>It isn't notarized by Apple yet. Open it once with Privacy &amp; Security › Open Anyway. Updates are signed and checked.</p></details>
     </div>
   </section>
 
   <section class="section" id="credits" aria-labelledby="credits-title">
     <h2 class="index" id="credits-title" data-reveal><span aria-hidden="true">08</span>Built on the work of others</h2>
-    <div class="panel panel--screws credits" data-reveal>
-      <p>Osmotic is a native macOS port of <a href="https://github.com/KonradIT/osmosis">Osmosis</a> by <strong>Konrad Iturbe</strong>, the Android app that reverse-engineered how DJI's Osmo cameras hand over their files on Wi-Fi. Camera control and the live view follow <a href="https://github.com/brianmerchant/Kaze-for-DJI">Kaze for DJI</a> by <strong>Brian Merchant</strong>, with notes from <a href="https://github.com/erik-sutton95/OpenPocketCine">OpenPocketCine</a>.</p>
-      <p>Underneath it all are years of protocol research by the <a href="https://github.com/o-gs">DJI OGs</a>, <a href="https://github.com/dimadesu/dji-remote">dji-remote</a>, <a href="https://github.com/SemiConscious/osmo-download">osmo-download</a>, <a href="https://github.com/sniffingpickles/DJI-Wifi-Connect">DJI-Wifi-Connect</a>, <a href="https://github.com/yigitkonur/lib-osmo-ble">lib-osmo-ble</a>, <a href="https://github.com/samuelsadok/dji_protocol">dji_protocol</a> and <a href="https://github.com/xaionaro/reverse-engineering-dji">reverse-engineering-dji</a>, and the testers of Osmosis. Thank you.</p>
+    <div class="credits" data-reveal>
+      <p>A macOS port of <a href="https://github.com/KonradIT/osmosis">Osmosis</a> by <strong>Konrad Iturbe</strong>. Control and live view follow <a href="https://github.com/brianmerchant/Kaze-for-DJI">Kaze for DJI</a> by <strong>Brian Merchant</strong>.</p>
+      <ul class="chips" aria-label="Protocol research">
+        <li><a href="https://github.com/o-gs">DJI OGs</a></li>
+        <li><a href="https://github.com/erik-sutton95/OpenPocketCine">OpenPocketCine</a></li>
+        <li><a href="https://github.com/dimadesu/dji-remote">dji-remote</a></li>
+        <li><a href="https://github.com/SemiConscious/osmo-download">osmo-download</a></li>
+        <li><a href="https://github.com/sniffingpickles/DJI-Wifi-Connect">DJI-Wifi-Connect</a></li>
+        <li><a href="https://github.com/yigitkonur/lib-osmo-ble">lib-osmo-ble</a></li>
+        <li><a href="https://github.com/samuelsadok/dji_protocol">dji_protocol</a></li>
+        <li><a href="https://github.com/xaionaro/reverse-engineering-dji">reverse-engineering-dji</a></li>
+      </ul>
     </div>
   </section>
 

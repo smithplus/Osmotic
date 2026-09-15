@@ -30,6 +30,7 @@ Tested with a real Pocket 3: Files (2026-09-14) and Files + Live (2026-09-15: li
 | credits (shown in Settings › Credits) | `Sources/Osmotic/App/Credits.swift` |
 | writing anything people read (README, docs, landing, UI strings, release notes) | `.claude/skills/osmotic-writing/SKILL.md` (voice, checks, microcopy rules) |
 | Product Hunt launch: competitors, positioning, copy, assets | `docs/LAUNCH.md` |
+| landing page references (Raycast, Liqoria, Dropover, Craft, Rectangle) and text-density targets | `docs/LANDING_REFERENCES.md` |
 | landing page (GitHub Pages) | `site/` (static HTML/CSS/JS, the app's tokens in CSS), `.github/workflows/pages.yml` |
 
 ## Commands

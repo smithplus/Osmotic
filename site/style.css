@@ -181,7 +181,8 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
 h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 var(--s3); }
 .feature { display: grid; grid-template-columns: 5fr 7fr; gap: var(--s5); align-items: center; margin-bottom: var(--s6); }
 .feature--flip .feature-text { order: 2; }
-.feature p { color: var(--muted); margin: 0 0 var(--s3); }
+.feature p { color: var(--muted); margin: 0 0 var(--s3); font-size: 18px; }
+.feature h3 { font-size: clamp(26px, 3.4vw, 36px); }
 
 /* Raised panel (raisedPanel) with corner screws */
 .panel {
@@ -209,13 +210,28 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .stage-name { font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; }
 .stages p { margin: 0; color: var(--muted); font-size: 15px; }
 
-.grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s3); }
-.grid h3 { font-size: 15px; letter-spacing: 0; margin-bottom: var(--s2); }
-.grid p { margin: 0; color: var(--muted); font-size: 15px; }
+/* The details: an icon grid (Liqoria-style density), each glyph in a sunken pocket like the app's
+   camera glyphs. */
+.sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.icons { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: var(--s5) var(--s3); }
+.icons li { display: grid; justify-items: center; gap: var(--s2); text-align: center; }
+.icons svg {
+  width: 52px; height: 52px; padding: 13px; border-radius: var(--radius-m);
+  fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  background: rgb(25 25 24);
+  box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.55), 0 1px 0 var(--lip);
+}
+.icons span { font-size: 14px; color: var(--muted); line-height: 1.3; }
+
+.tag { display: inline-block; margin: 0; padding: 3px 8px; border-radius: 4px; font: 500 11px/1.4 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--lcd-caption); background: var(--lcd); box-shadow: var(--inset-deep); }
+.muted { color: var(--muted); }
 
 .steps { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s3); }
 .steps li { display: grid; grid-template-columns: 40px 1fr; gap: var(--s2); align-items: baseline; }
 .steps p { margin: 0; font-size: 17px; }
+.steps--row { grid-template-columns: repeat(3, 1fr); }
+.steps--row li { grid-template-columns: 1fr; gap: var(--s3); align-content: start; }
+.steps--row p { font-size: 16px; }
 .n { font: 700 15px/1 var(--mono); color: var(--lcd-text); }
 
 .lcd--table { padding: var(--s3) var(--s4); overflow-x: auto; }
@@ -236,8 +252,10 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 .faq details[open] summary::after { transform: rotate(45deg); }
 .faq details p { margin: 0; padding: 0 var(--s4) var(--s3); color: var(--muted); }
 
-.credits p { margin: 0 0 var(--s3); color: var(--muted); }
-.credits p:last-child { margin: 0; }
+.credits p { margin: 0 0 var(--s4); color: var(--muted); font-size: 18px; max-width: 760px; }
+.chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--s2); }
+.chips a { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 13px; text-decoration: none; color: var(--muted); background: linear-gradient(var(--metal-top), var(--metal-bottom)); box-shadow: inset 0 1px 0 var(--edge-light), var(--contact); }
+@media (hover: hover) and (pointer: fine) { .chips a:hover { color: var(--ink); } }
 
 .cta { text-align: center; padding-block: var(--s7) var(--s6); }
 .cta-line { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--s4); }
@@ -309,14 +327,18 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 @media (max-width: 860px) {
   .feature { grid-template-columns: 1fr; gap: var(--s3); }
   .feature--flip .feature-text { order: 0; }
-  .grid { grid-template-columns: 1fr 1fr; }
+  .icons { grid-template-columns: repeat(3, 1fr); }
   .stages { grid-template-columns: 1fr 1fr; }
+  .steps--row { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
   .topbar nav { order: 3; width: 100%; }
-  .grid, .stages { grid-template-columns: 1fr; }
+  .stages { grid-template-columns: 1fr; }
+  .icons { grid-template-columns: 1fr 1fr; }
   .panel--screws { padding: var(--s4); }
   .lcd--hero { padding: var(--s3) var(--s4); }
+  /* One row on a phone: a separator left at the end of a line reads as a stray dot. */
+  .lcd--hero .lcd-line:not(.lcd-line--big) { font-size: 11px; letter-spacing: 0.08em; gap: 0 var(--s2); flex-wrap: nowrap; }
   .lcd--proof { justify-content: flex-start; padding: var(--s3) var(--s4); }
   .shot--hero { margin-inline: calc(-1 * var(--s2)); }
   .section { padding-block: var(--s6) 0; }
