@@ -1,0 +1,43 @@
+name: Something doesn't work
+description: A camera that won't connect, a download that fails, anything broken.
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The technical log is what makes a camera problem diagnosable: **Window › Technical Log** (⌥⌘L), or Settings › Maintenance › Open Folder. It carries no passwords, and your network name is abbreviated.
+  - type: input
+    id: camera
+    attributes:
+      label: Camera
+      placeholder: Osmo Pocket 3
+    validations:
+      required: true
+  - type: input
+    id: mac
+    attributes:
+      label: Mac and macOS version
+      placeholder: MacBook Air M4, macOS 15.6
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Osmotic version
+      description: Settings › Updates, or the About box.
+      placeholder: 0.2.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what happened instead.
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Technical log
+      description: Attach the file, or paste the lines around the failure.
+      render: text

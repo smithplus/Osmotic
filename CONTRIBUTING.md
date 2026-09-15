@@ -1,6 +1,6 @@
 # Contributing
 
-Short guide; the details for working on the code are in [`CLAUDE.md`](CLAUDE.md) (it works the same for people and for AI agents).
+Short guide; the details for working on the code are in [`CLAUDE.md`](CLAUDE.md) (it works the same for people and for AI agents). Be decent to each other: [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 
 1. `swift build && swift test` before proposing changes; `scripts/lint.sh --fix` for formatting.
 2. UI text in English with `Text("…")`/`String(localized:)`; then `scripts/sync_strings.sh` and the Spanish in `Resources/Localizable.xcstrings`.

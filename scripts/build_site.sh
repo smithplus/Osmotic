@@ -8,7 +8,9 @@ OUT="$ROOT_DIR/build/site"
 rm -rf "$OUT"
 mkdir -p "$OUT/images"
 cp -R "$ROOT_DIR/site/." "$OUT/"
-cp "$ROOT_DIR"/docs/images/*.png "$ROOT_DIR"/docs/images/*.webp "$ROOT_DIR"/docs/images/*.jpg "$OUT/images/"
+# Only what the page loads: the WebP screenshots, the favicon and the social card. The PNGs in
+# docs/images are for the README on GitHub, not for the site.
+cp "$ROOT_DIR"/docs/images/*.webp "$ROOT_DIR"/docs/images/icon.png "$ROOT_DIR"/docs/images/og.jpg "$OUT/images/"
 # The social card (1200×630), made by scripts/make_launch_assets.swift; committed with the screenshots.
 # sitemap.xml, dated with the last commit that touched the page or its images.
 LASTMOD="$(git -C "$ROOT_DIR" log -1 --format=%cs -- site docs/images 2>/dev/null)"

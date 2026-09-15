@@ -32,6 +32,26 @@
   for (const el of blocks) if (!el.classList.contains("is-in")) io.observe(el);
 })();
 
+// The nav keys follow the reader: once the sticky dock reaches the top of the window, it closes into
+// a pill. Read on a passive scroll listener, coalesced into one frame.
+(() => {
+  const dock = document.querySelector(".navdock");
+  if (!dock) return;
+  let queued = false;
+  const update = () => {
+    queued = false;
+    dock.classList.toggle("is-stuck", dock.getBoundingClientRect().top <= 0.5);
+  };
+  const onScroll = () => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(update);
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll, { passive: true });
+  update();
+})();
+
 // iOS Safari applies :active (the key press) only when a touch listener exists.
 document.addEventListener("touchstart", () => {}, { passive: true });
 

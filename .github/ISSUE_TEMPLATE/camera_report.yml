@@ -1,0 +1,30 @@
+name: A camera worked (or didn't)
+description: Tried Osmotic with a camera that isn't tested yet? Say how it went.
+labels: [camera report]
+body:
+  - type: input
+    id: camera
+    attributes:
+      label: Camera
+      placeholder: Osmo Action 5 Pro
+    validations:
+      required: true
+  - type: dropdown
+    id: files
+    attributes:
+      label: Files tab
+      options: ["Worked", "Partly worked", "Didn't work", "Didn't try"]
+    validations:
+      required: true
+  - type: dropdown
+    id: live
+    attributes:
+      label: Live tab
+      options: ["Worked", "Partly worked", "Didn't work", "Didn't try"]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes and technical log
+      description: Window › Technical Log (⌥⌘L). Anything odd is worth mentioning.
