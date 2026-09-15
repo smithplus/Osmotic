@@ -226,28 +226,74 @@ try slide("07-open.png") {
     text("github.com/smithplus/Osmotic", mono(15), amber, x: 90, y: 590, width: 600, tracking: 1, glow: amber.withAlphaComponent(0.3))
 }
 
-// Social card for the landing page (og:image, 1200×630 at 1x), committed to docs/images.
+// Social card for the landing page (og:image, 1200×630). Link previews show it at about a third of
+// this width, so the headline is huge and says what the app is for; a reader who only sees the card
+// should not guess "music player". Drawn on its own canvas, not by scaling a gallery slide.
 do {
-    let cw: CGFloat = 1200, chh: CGFloat = 630
-    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(cw), pixelsHigh: Int(chh), bitsPerSample: 8,
+    let cw: CGFloat = 1200, ch: CGFloat = 630
+    let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(cw), pixelsHigh: Int(ch), bitsPerSample: 8,
                                samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
                                bytesPerRow: 0, bitsPerPixel: 0)!
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     NSGraphicsContext.current?.imageInterpolation = .high
-    // Reuse the slide drawing at a scale that fits 1270×760 into 1200×630, then crop the overflow.
-    let k = cw / W
-    NSGraphicsContext.current?.cgContext.translateBy(x: 0, y: chh - H * k)
-    NSGraphicsContext.current?.cgContext.scaleBy(x: k, y: k)
-    plate()
-    wordmark()
-    label("Osmo › Mac · Wireless", x: 48, y: 150)
-    let h = text("Download your DJI Osmo footage to your Mac over Wi-Fi", sans(46, .bold), ink, x: 48, y: 182, width: 470, tracking: -1.2, line: 1.02)
-    text("Free and open source. No phone app, no account.", sans(19, .regular), muted, x: 48, y: 182 + h + 22, width: 440, line: 1.25)
-    shot("library.png", x: 560, y: 110, width: 760)
+
+    NSGradient(colors: [rgb(38, 38, 37), rgb(25, 25, 24)])!.draw(in: NSRect(x: 0, y: 0, width: cw, height: ch), angle: -90)
+
+    /// Text from the top-left of this canvas.
+    @discardableResult
+    func card(_ str: String, _ font: NSFont, _ color: NSColor, x: CGFloat, y: CGFloat, width: CGFloat,
+              tracking: CGFloat = 0, line: CGFloat = 1.0, glow: NSColor? = nil) -> CGFloat {
+        let p = NSMutableParagraphStyle()
+        p.lineHeightMultiple = line
+        var attrs: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color, .paragraphStyle: p, .kern: tracking]
+        if let glow {
+            let sh = NSShadow(); sh.shadowColor = glow; sh.shadowBlurRadius = 10; sh.shadowOffset = .zero
+            attrs[.shadow] = sh
+        }
+        let a = NSAttributedString(string: str, attributes: attrs)
+        let h = ceil(a.boundingRect(with: NSSize(width: width, height: 900), options: [.usesLineFragmentOrigin]).height)
+        a.draw(with: NSRect(x: x, y: ch - y - h, width: width, height: h), options: [.usesLineFragmentOrigin])
+        return h
+    }
+
+    // The app's screenshot, cropped to the grid of clips: footage, at a glance.
+    if let shot = NSImage(contentsOf: images.appendingPathComponent("library.png")),
+        let cg = shot.cgImage(forProposedRect: nil, context: nil, hints: nil)
+    {
+        let cropW = Int(Double(cg.width) * 0.62), cropH = Int(Double(cg.height) * 0.42)
+        if let crop = cg.cropping(to: CGRect(x: cg.width - cropW - 60, y: Int(Double(cg.height) * 0.30), width: cropW, height: cropH)) {
+            let w: CGFloat = 470, h = w * CGFloat(cropH) / CGFloat(cropW)
+            let r = NSRect(x: cw - w - 56, y: (ch - h) / 2, width: w, height: h)
+            NSGraphicsContext.saveGraphicsState()
+            let sh = NSShadow(); sh.shadowColor = NSColor.black.withAlphaComponent(0.5); sh.shadowBlurRadius = 30; sh.shadowOffset = NSSize(width: 0, height: -10)
+            sh.set()
+            let clip = NSBezierPath(roundedRect: r, xRadius: 14, yRadius: 14)
+            clip.addClip()
+            NSImage(cgImage: crop, size: r.size).draw(in: r)
+            // The crop cuts a column: fade that edge so it reads as "there is more".
+            NSGradient(colors: [rgb(28, 28, 27), rgb(28, 28, 27, 0)])!
+                .draw(in: NSRect(x: r.minX, y: r.minY, width: 90, height: r.height), angle: 0)
+            NSGraphicsContext.restoreGraphicsState()
+            NSColor.white.withAlphaComponent(0.1).setStroke()
+            NSBezierPath(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), xRadius: 14, yRadius: 14).stroke()
+        }
+    }
+
+    // Wordmark, then the headline: what it does, in as few words as read at thumbnail size.
+    let font = sans(30, .heavy)
+    let mark = NSAttributedString(string: "osmotic", attributes: [.font: font, .foregroundColor: ink, .kern: -0.6])
+    mark.draw(at: NSPoint(x: 64, y: ch - 64 - mark.size().height))
+    accent.setFill()
+    NSBezierPath(ovalIn: NSRect(x: 64 + mark.size().width + 3, y: ch - 64 - mark.size().height - font.descender, width: 8, height: 8)).fill()
+
+    card("DJI OSMO → MAC", mono(23, .medium), amber, x: 64, y: 190, width: 620, tracking: 3.5, glow: amber.withAlphaComponent(0.35))
+    let hh = card("Camera footage,\nstraight to\nyour Mac.", sans(78, .bold), ink, x: 64, y: 232, width: 620, tracking: -2.2, line: 1.02)
+    card("Wireless, over the camera's own Wi-Fi.\nFree Mac app.", sans(26, .regular), muted, x: 64, y: 232 + hh + 26, width: 600, line: 1.25)
+
     NSGraphicsContext.restoreGraphicsState()
     // JPEG: link previews (WhatsApp, iMessage) often skip cards over ~300 KB.
-    try rep.representation(using: .jpeg, properties: [.compressionFactor: 0.82])!.write(to: images.appendingPathComponent("og.jpg"))
+    try rep.representation(using: .jpeg, properties: [.compressionFactor: 0.84])!.write(to: images.appendingPathComponent("og.jpg"))
     print(images.appendingPathComponent("og.jpg").path)
 }
 
