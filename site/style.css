@@ -46,7 +46,10 @@ html { scroll-behavior: smooth; }
 body {
   margin: 0;
   padding-inline: max(var(--s3), env(safe-area-inset-left));
-  background: linear-gradient(var(--plate-top), var(--plate-bottom)) fixed;
+  /* Material, not flat colour: a 128-px grain tile over the plate gradient (scripts/make_textures.swift). */
+  background:
+    url("textures/grain.webp") 0 0 / 128px 128px repeat,
+    linear-gradient(var(--plate-top), var(--plate-bottom)) fixed;
   background-color: var(--plate-bottom);
   color: var(--ink);
   font: 16px/1.55 var(--sans);
@@ -93,7 +96,7 @@ strong { color: #fff; font-weight: 600; }
   min-width: 44px; height: 40px; padding: 0 20px; margin-bottom: calc(var(--travel) + 4px);
   font: 600 11.5px/1 var(--sans); letter-spacing: 0.11em; text-transform: uppercase; text-decoration: none;
   color: var(--ink);
-  background: linear-gradient(var(--face-top), var(--grey-bottom));
+  background: url("textures/grain.webp") 0 0 / 96px 96px repeat, linear-gradient(var(--face-top), var(--grey-bottom));
   border-radius: 2.5px;
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.12),
@@ -112,7 +115,7 @@ strong { color: #fff; font-weight: 600; }
 .key--primary {
   --skirt: rgb(133 51 13);
   color: #fff;
-  background: linear-gradient(var(--accent-top), var(--accent-bottom));
+  background: url("textures/grain.webp") 0 0 / 96px 96px repeat, linear-gradient(var(--accent-top), var(--accent-bottom));
   box-shadow:
     inset 0 1px 0 rgb(255 255 255 / 0.3),
     inset 1px 0 0 rgb(255 255 255 / 0.07),
@@ -130,7 +133,10 @@ strong { color: #fff; font-weight: 600; }
 
 /* ---- LCD ----------------------------------------------------------------------------------- */
 .lcd {
-  background: var(--lcd);
+  background:
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.014) 0 1px, transparent 1px 3px),
+    linear-gradient(to bottom, rgb(255 255 255 / 0.022), transparent 40%),
+    var(--lcd);
   border-radius: var(--radius-l);
   box-shadow: var(--inset-deep), 0 1px 0 var(--lip);
   color: var(--lcd-text);
@@ -187,7 +193,7 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 /* Raised panel (raisedPanel) with corner screws */
 .panel {
   position: relative;
-  background: linear-gradient(var(--metal-top), var(--metal-bottom));
+  background: url("textures/brushed.webp") 0 0 / 128px 128px repeat, linear-gradient(var(--metal-top), var(--metal-bottom));
   border-radius: var(--radius-l);
   box-shadow: inset 0 1px 0 var(--edge-light), var(--contact), var(--ambient);
   padding: var(--s4);
@@ -199,6 +205,7 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
     var(--screw) calc(100% - 10px) 10px / 6px 6px no-repeat,
     var(--screw) 10px calc(100% - 10px) / 6px 6px no-repeat,
     var(--screw) calc(100% - 10px) calc(100% - 10px) / 6px 6px no-repeat,
+    url("textures/brushed.webp") 0 0 / 128px 128px repeat,
     linear-gradient(var(--metal-top), var(--metal-bottom));
   padding: var(--s5);
 }
@@ -218,7 +225,7 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .icons svg {
   width: 52px; height: 52px; padding: 13px; border-radius: var(--radius-m);
   fill: none; stroke: var(--ink); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
-  background: rgb(25 25 24);
+  background: url("textures/grain.webp") 0 0 / 96px 96px repeat, rgb(25 25 24);
   box-shadow: inset 0 2px 3px rgb(0 0 0 / 0.55), 0 1px 0 var(--lip);
 }
 .icons span { font-size: 14px; color: var(--muted); line-height: 1.3; }
@@ -234,7 +241,13 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .steps--row p { font-size: 16px; }
 .n { font: 700 15px/1 var(--mono); color: var(--lcd-text); }
 
-.lcd--table { padding: var(--s3) var(--s4); overflow-x: auto; }
+.lcd--table {
+  padding: var(--s3) var(--s4); overflow-x: auto;
+  background:
+    radial-gradient(circle, rgb(255 146 52 / 0.055) 0 1px, transparent 1.4px) 0 0 / 14px 14px,
+    repeating-linear-gradient(to bottom, rgb(255 255 255 / 0.014) 0 1px, transparent 1px 3px),
+    var(--lcd);
+}
 .lcd--table:focus-visible { border-radius: var(--radius-l); }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th, td { text-align: left; padding: 12px var(--s3) 12px 0; font-weight: 400; vertical-align: top; }
@@ -245,7 +258,7 @@ td { color: rgb(255 146 52 / 0.72); }
 td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 
 .faq { display: grid; gap: var(--s2); }
-.faq details { background: linear-gradient(var(--metal-top), var(--metal-bottom)); border-radius: var(--radius-m); box-shadow: inset 0 1px 0 var(--edge-light), var(--contact); }
+.faq details { background: url("textures/brushed.webp") 0 0 / 128px 128px repeat, linear-gradient(var(--metal-top), var(--metal-bottom)); border-radius: var(--radius-m); box-shadow: inset 0 1px 0 var(--edge-light), var(--contact); }
 .faq summary { cursor: pointer; list-style: none; padding: var(--s3) var(--s4); font-weight: 600; display: flex; justify-content: space-between; gap: var(--s3); }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: "+" / ""; font-family: var(--mono); color: var(--accent); transition: transform 200ms var(--ease-out); }
@@ -254,6 +267,16 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
 
 
 .cta { text-align: center; padding-block: var(--s7) var(--s6); }
+.cta .panel { display: grid; justify-items: center; gap: var(--s4); padding-block: var(--s5); }
+/* Punched grille: a dark hole with a lit lip under it, repeated. */
+.grille {
+  width: min(420px, 70%); height: 34px; border-radius: 6px;
+  background:
+    radial-gradient(circle at 50% 62%, rgb(255 255 255 / 0.055) 0 1.9px, transparent 2.2px) 0 0 / 9px 9px,
+    radial-gradient(circle at 50% 50%, rgb(10 10 9) 0 1.7px, transparent 2px) 0 0 / 9px 9px,
+    linear-gradient(var(--metal-top), var(--metal-bottom));
+  box-shadow: inset 0 1px 0 var(--lip);
+}
 .cta-line { font-size: clamp(22px, 3vw, 30px); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 var(--s4); }
 
 /* Footer: the maker's signature first (as on smithplus's other sites), then credits and legal, small. */
