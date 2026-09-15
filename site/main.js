@@ -120,12 +120,11 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   for (const el of targets) io.observe(el);
 })();
 
-// The hero video: one session with a camera, on a loop. It starts once the page has loaded (the
-// poster is what paints first), shows which step is on screen, stops while it is out of view, and
-// the reader can pause it (a moving picture must be stoppable). Reduce Motion leaves the poster.
-(() => {
-  const figure = document.querySelector("[data-demo]");
-  if (!figure) return;
+// The demo videos (the hero's session, the Live tab): loops rendered by the app itself. Each starts
+// once the page has loaded (the poster is what paints first), plays only while it is in view, names
+// the step on screen, and has a Pause key (a moving picture must be stoppable). Reduce Motion
+// leaves the posters.
+for (const figure of document.querySelectorAll("[data-demo]")) {
   const video = figure.querySelector("video");
   const bar = figure.querySelector(".demo-bar");
   const stepName = figure.querySelector("[data-demo-step]");
@@ -137,7 +136,7 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
     .map(([t, name]) => ({ t: Number(t), name }))
     .filter((s) => Number.isFinite(s.t) && s.name);
   let userPaused = reduceMotion.matches;
-  let inView = true;
+  let inView = false;
 
   const label = () => {
     const now = video.currentTime;
@@ -182,6 +181,24 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   };
   if (document.readyState === "complete") start();
   else addEventListener("load", start, { once: true });
+}
+
+// Short clips that show one gesture (dragging the app to Applications) play once, when the reader
+// gets to them, and rest on their last frame. Under five seconds, so no pause key is needed.
+(() => {
+  const clips = [...document.querySelectorAll("video[data-play-once]")];
+  if (clips.length === 0 || reduceMotion.matches || !("IntersectionObserver" in window)) return;
+  const io = new IntersectionObserver(
+    (entries) => {
+      for (const e of entries) {
+        if (!e.isIntersecting) continue;
+        io.unobserve(e.target);
+        setTimeout(() => e.target.play().catch(() => {}), 400);  // after the card has risen in
+      }
+    },
+    { threshold: 0.6 },
+  );
+  for (const clip of clips) io.observe(clip);
 })();
 
 // iOS Safari applies :active (the key press) only when a touch listener exists.

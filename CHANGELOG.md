@@ -9,7 +9,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 - A user guide (`docs/GUIDE.md`), which the Help menu now opens: every screen, the keyboard shortcuts and what to try when something fails.
 - Settings › Credits now names the maker and links a way to support the work.
 - A Settings key on the top plate, next to Bluetooth and in the library beside Disconnect.
-- The landing page opens with a short looping video of a whole session, drawn by the app itself.
+- The landing page opens with a short looping video of a whole session, drawn by the app itself; the Live section has its own (record, stop, change mode), and the first install step shows the drag to Applications.
 
 ### Security
 - Sizes stated by the camera's web server are bounded, and small reads (thumbnails, preview stills) are capped: a device answering at the camera's address could otherwise crash the app or make it buffer without end.

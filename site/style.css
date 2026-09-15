@@ -314,6 +314,7 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
 
 h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 var(--s3); }
 .feature { display: grid; grid-template-columns: 5fr 7fr; gap: var(--s5); align-items: center; margin-bottom: var(--s6); }
+.feature--flip { grid-template-columns: 7fr 5fr; }  /* the picture keeps the wide column */
 .feature--flip .feature-text { order: 2; }
 .feature p { color: var(--muted); margin: 0 0 var(--s3); font-size: 18px; }
 .feature h3 { font-size: clamp(26px, 3.4vw, 36px); }
@@ -383,8 +384,8 @@ h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.
 .steps--row p { font-size: 16px; }
 .steps--row li { align-content: space-between; }
 .step-shot { margin: 0; }
-.step-shot img {
-  width: 100%; border-radius: var(--radius-m);
+.step-shot img, .step-shot video {
+  display: block; width: 100%; height: auto; aspect-ratio: 900 / 520; border-radius: var(--radius-m);
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.06), var(--contact);
 }
 .n { font: 700 15px/1 var(--mono); color: var(--lcd-text); }

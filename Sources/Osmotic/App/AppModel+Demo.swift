@@ -12,7 +12,8 @@ extension AppModel {
     /// The landing's demo video (`scripts/make_demo_video.sh`) steps through one session with:
     /// `OSMOTIC_DEMO_STAGE=bluetooth|pairing|wifi|datalink` (connecting), and on the library
     /// `OSMOTIC_DEMO_SELECT=<n>` (clips ticked, default 2), `OSMOTIC_DEMO_PROGRESS=none|<0…1>` (the
-    /// download of those clips) and `OSMOTIC_DEMO_DONE=1` (they arrived).
+    /// download of those clips) and `OSMOTIC_DEMO_DONE=1` (they arrived); on the Live tab
+    /// `OSMOTIC_DEMO_CAPTURE=video|photo|slowmo|lowlight` and `OSMOTIC_DEMO_REC=off|<seconds>`.
     func loadDemo(manifestPath: String, screen demoScreen: String?) {
         let env = ProcessInfo.processInfo.environment
         log("demo: \(manifestPath)")
@@ -65,9 +66,12 @@ extension AppModel {
             workspace = .camera
             liveView = .live
             var st = status
-            st.captureMode = .video
-            st.recording = true
-            st.recordingSeconds = 754
+            let modes: [String: CaptureMode] = ["video": .video, "photo": .photo, "slowmo": .slowMotion, "lowlight": .lowLight]
+            st.captureMode = modes[env["OSMOTIC_DEMO_CAPTURE"] ?? ""] ?? .video
+            // `OSMOTIC_DEMO_REC=off` shows it idle; a number is the seconds recorded so far.
+            let rec = env["OSMOTIC_DEMO_REC"]
+            st.recording = rec != "off"
+            st.recordingSeconds = Int(rec ?? "") ?? 754
             status = st
         case "cameras":
             screen = .cameras

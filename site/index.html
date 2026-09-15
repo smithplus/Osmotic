@@ -110,7 +110,16 @@
         <h3>Control it from across the room</h3>
         <p>Record, take photos, switch modes and watch the picture live.</p>
       </div>
-      <figure class="shot" data-reveal="tray"><img src="images/live.webp" width="1368" height="970" loading="lazy" alt="Live tab: the camera's picture while recording for 12:34, mode keys and a Stop key"></figure>
+      <figure class="shot" data-reveal="tray" data-demo data-steps="0:Record,4:Stop,5.1:Mode,7.9:Record">
+        <video class="demo-video" width="1400" height="966" poster="images/live-poster.webp" muted loop playsinline preload="none"
+               aria-label="Osmotic's Live tab: recording starts, stops, and the mode switches to Slow-mo and back">
+          <source src="images/live.mp4" type="video/mp4">
+        </video>
+        <figcaption class="demo-bar" hidden>
+          <span class="demo-step"><span class="label">Step:</span> <span data-demo-step>Record</span></span>
+          <span class="bank"><button type="button" class="key key--compact" data-demo-toggle>Pause</button></span>
+        </figcaption>
+      </figure>
     </article>
 
     <article class="feature">
@@ -173,11 +182,11 @@
     <h2 class="index" id="install-title" data-reveal><span aria-hidden="true">05</span>Install</h2>
     <ol class="steps steps--row">
       <li class="panel" data-reveal><span class="n">01</span><p><a href="https://github.com/smithplus/Osmotic/releases/latest" data-download>Download the <code>.dmg</code></a> and drag Osmotic to Applications.</p>
-        <figure class="step-shot"><img src="images/step-1.webp" width="900" height="520" loading="lazy" alt="The Osmotic icon, an arrow, and an Applications folder"></figure></li>
+        <figure class="step-shot"><video src="images/step-1.mp4" poster="images/step-1.webp" width="900" height="520" muted playsinline preload="none" data-play-once aria-label="The Osmotic disk image in Finder: the Osmotic icon dragged onto the Applications folder"></video></figure></li>
       <li class="panel" data-reveal><span class="n">02</span><p>First launch: <strong>Privacy &amp; Security › Open Anyway</strong>. <span class="muted">Not notarized by Apple yet.</span></p>
-        <figure class="step-shot"><img src="images/step-2.webp" width="900" height="520" loading="lazy" alt="The path System Settings, Privacy and Security, and the Open Anyway key to press once"></figure></li>
+        <figure class="step-shot"><img src="images/step-2.webp" width="900" height="520" loading="lazy" alt="System Settings, Privacy and Security: the notice that Osmotic was blocked, and the Open Anyway button to click once"></figure></li>
       <li class="panel" data-reveal><span class="n">03</span><p>Turn on the camera and click <strong>Connect</strong>.</p>
-        <figure class="step-shot"><img src="images/step-3.webp" width="900" height="520" loading="lazy" alt="Osmotic's Cameras screen: an Osmo Pocket 3 nearby, with its signal and a Connect key"></figure></li>
+        <figure class="step-shot"><img src="images/step-3.webp" width="900" height="520" loading="lazy" alt="Osmotic's Cameras screen: an Osmo Pocket 3 nearby, and the pointer on its Connect key"></figure></li>
     </ol>
   </section>
 

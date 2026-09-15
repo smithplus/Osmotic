@@ -1,7 +1,7 @@
 // One illustration per install step, for the landing page (docs/images/step-1..3.png, then WebP).
-//   1. drag Osmotic to Applications: the disk image as Finder opens it
+//   1. drag Osmotic to Applications: the disk image as Finder opens it (+ step-1.mp4, the drag itself)
 //   2. the first launch: the Privacy & Security pane, drawn the way macOS lays it out
-//   3. connect: a crop of the app's own Cameras screen (a real screenshot)
+//   3. connect: the app's own Cameras screen (a real render), with the key to press marked
 // Steps 1 and 2 are drawings: macOS windows can't be captured here (no screen-recording permission),
 // so they copy the system's layout and colors, never Apple's own artwork.
 // Run: swift scripts/make_install_steps.swift . && for f in docs/images/step-*.png; do cwebp -quiet -q 88 "$f" -o "${f%.png}.webp"; done
@@ -38,19 +38,48 @@ func plate() {
     NSGradient(colors: [rgb(40, 40, 39), rgb(28, 28, 27)])!.draw(in: NSRect(x: 0, y: 0, width: W, height: H), angle: -90)
 }
 
-func save(_ name: String, _ draw: () -> Void) throws {
+/// One picture on the plate. Rows are packed (no padding), so the pixels can go straight to ffmpeg.
+func render(_ draw: () -> Void) -> NSBitmapImageRep {
     let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: Int(W), pixelsHigh: Int(H), bitsPerSample: 8,
                                samplesPerPixel: 4, hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB,
-                               bytesPerRow: 0, bitsPerPixel: 0)!
+                               bytesPerRow: Int(W) * 4, bitsPerPixel: 32)!
     NSGraphicsContext.saveGraphicsState()
     NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
     NSGraphicsContext.current?.imageInterpolation = .high
     plate()
     draw()
     NSGraphicsContext.restoreGraphicsState()
-    try rep.representation(using: .png, properties: [:])!.write(to: images.appendingPathComponent(name))
+    return rep
+}
+
+func save(_ name: String, _ draw: () -> Void) throws {
+    try render(draw).representation(using: .png, properties: [:])!.write(to: images.appendingPathComponent(name))
     print(images.appendingPathComponent(name).path)
 }
+
+/// The arrow pointer with its tip at `tip` (top-based): black with a white outline, as macOS draws it.
+func pointer(tip: NSPoint, scale k: CGFloat = 1) {
+    let shape: [(CGFloat, CGFloat)] = [(0, 0), (0, 17), (4.2, 13.2), (7.2, 19.8), (9.9, 18.6), (7, 12.2), (12.6, 12.2)]
+    let path = NSBezierPath()
+    for (i, p) in shape.enumerated() {
+        let q = NSPoint(x: tip.x + p.0 * 1.6 * k, y: H - (tip.y + p.1 * 1.6 * k))
+        if i == 0 { path.move(to: q) } else { path.line(to: q) }
+    }
+    path.close()
+    // The white outline first (half of it falls outside the shape), shadowed; then the black body.
+    NSGraphicsContext.saveGraphicsState()
+    let sh = NSShadow(); sh.shadowColor = NSColor.black.withAlphaComponent(0.5); sh.shadowBlurRadius = 4
+    sh.shadowOffset = NSSize(width: 0, height: -1.5); sh.set()
+    NSColor.white.setStroke()
+    path.lineWidth = 3.4
+    path.lineJoinStyle = .round
+    path.stroke()
+    NSGraphicsContext.restoreGraphicsState()
+    NSColor.black.setFill()
+    path.fill()
+}
+
+func smooth(_ x: Double) -> Double { let t = min(1, max(0, x)); return t * t * (3 - 2 * t) }
 
 /// Top-based rect (like `text`) to AppKit's bottom-based one.
 func tr(_ r: NSRect) -> NSRect { NSRect(x: r.minX, y: H - r.maxY, width: r.width, height: r.height) }
@@ -148,31 +177,45 @@ func iconItem(centerX: CGFloat, top: CGFloat, size: CGFloat, labelY: CGFloat, la
     text(label, sans(15, .regular), rgb(230, 230, 234), x: centerX - 110, y: labelY, width: 220, align: .center)
 }
 
-// 1. The disk image as Finder opens it: drag the app onto Applications.
-try save("step-1.png") {
-    let win = NSRect(x: 58, y: 66, width: W - 116, height: 388)
+// 1. The disk image as Finder opens it: drag the app onto Applications. The still is the window at
+// rest; the clip (step-1.mp4, played once on the page) is the same window with the drag happening.
+let dmg = NSRect(x: 58, y: 66, width: W - 116, height: 388)
+let iconRow = dmg.minY + 122
+let appCenter = NSPoint(x: dmg.minX + 150, y: iconRow + 62)
+let folderCenter = NSPoint(x: dmg.midX + 20, y: iconRow + 70)
+let appIcon = NSImage(contentsOf: root.appendingPathComponent("build/icon-1024.png"))
+
+/// `t` is the clip's time in seconds; nil draws the still (no pointer, the guide showing).
+func step1(_ t: Double?) {
+    let win = dmg
     _ = macWindow(win, title: "Osmotic", toolbar: 52)
-    let row = win.minY + 122
+    let row = iconRow
     let labelY = row + 138
-    iconItem(centerX: win.minX + 150, top: row, size: 124, labelY: labelY, label: "Osmotic") { r in
-        if let icon = NSImage(contentsOf: root.appendingPathComponent("build/icon-1024.png")) {
-            icon.draw(in: tr(r))
-        }
+    // The drop target lights as the icon arrives over it, the way Finder shows it.
+    let over = t.map { smooth(($0 - 1.55) / 0.2) * (1 - smooth(($0 - 2.3) / 0.25)) } ?? 0
+    if over > 0 {
+        NSColor.white.withAlphaComponent(0.12 * over).setFill()
+        NSBezierPath(roundedRect: tr(NSRect(x: folderCenter.x - 78, y: row - 10, width: 156, height: 146)), xRadius: 14, yRadius: 14).fill()
     }
-    iconItem(centerX: win.midX + 20, top: row, size: 124, labelY: labelY, label: "Applications") { r in
+    iconItem(centerX: appCenter.x, top: row, size: 124, labelY: labelY, label: "Osmotic") { r in appIcon?.draw(in: tr(r)) }
+    iconItem(centerX: folderCenter.x, top: row, size: 124, labelY: labelY, label: "Applications") { r in
         folder(NSRect(x: r.minX, y: r.minY + 16, width: r.width, height: r.height - 26))
     }
-    iconItem(centerX: win.maxX - 130, top: row, size: 124, labelY: labelY, label: "Read Me First.txt") { r in
+    iconItem(centerX: dmg.maxX - 130, top: row, size: 124, labelY: labelY, label: "Read Me First.txt") { r in
         document(NSRect(x: r.minX + 18, y: r.minY + 4, width: r.width - 36, height: r.height - 8))
     }
 
-    // The page's own pointer: the drag, as a run of LEDs from the app to the folder.
-    amber.withAlphaComponent(0.8).setFill()
+    // The page's own pointer: the drag, as a run of LEDs from the app to the folder. In the clip
+    // they light one after another ahead of the icon.
     let dotY = H - row - 62
     var x = win.minX + 226
+    var i = 0.0
     while x < win.midX - 62 {
+        let lit = t.map { smooth(($0 - 0.7 - i * 0.07) / 0.15) } ?? 1
+        amber.withAlphaComponent(0.25 + 0.55 * lit).setFill()
         NSBezierPath(ovalIn: NSRect(x: x, y: dotY, width: 7, height: 7)).fill()
         x += 20
+        i += 1
     }
     let head = NSBezierPath()
     head.move(to: NSPoint(x: win.midX - 48, y: dotY + 3.5))
@@ -186,8 +229,61 @@ try save("step-1.png") {
     NSColor.white.withAlphaComponent(0.1).setStroke()
     let edge = NSBezierPath(roundedRect: tr(win).insetBy(dx: 0.5, dy: 0.5), xRadius: 14, yRadius: 14)
     edge.stroke()
+
+    guard let t else { return }
+    // The hand: in from the corner, onto the icon, press, drag to the folder, let go, step back.
+    let grip = NSPoint(x: 10, y: 18)  // where the pointer holds the icon, from its centre
+    let startP = NSPoint(x: W - 150, y: H - 60)
+    let onApp = NSPoint(x: appCenter.x + grip.x, y: appCenter.y + grip.y)
+    let onFolder = NSPoint(x: folderCenter.x + grip.x, y: folderCenter.y + grip.y - 8)
+    let away = NSPoint(x: folderCenter.x + 150, y: folderCenter.y + 120)
+    func mix(_ a: NSPoint, _ b: NSPoint, _ u: Double) -> NSPoint {
+        NSPoint(x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u)
+    }
+    let hand: NSPoint
+    switch t {
+    case ..<0.6: hand = mix(startP, onApp, smooth((t - 0.1) / 0.5))
+    case ..<0.8: hand = onApp
+    case ..<1.75: hand = mix(onApp, onFolder, smooth((t - 0.8) / 0.95))
+    case ..<2.2: hand = onFolder
+    default: hand = mix(onFolder, away, smooth((t - 2.2) / 0.7))
+    }
+    // The icon travels with the hand, faded like a drag image, and sinks into the folder on release.
+    if t >= 0.72 && t < 2.35 {
+        let release = smooth((t - 2.05) / 0.3)
+        let size = 112 * (1 - 0.55 * release)
+        let c = NSPoint(x: hand.x - grip.x, y: hand.y - grip.y + 6 * release)
+        appIcon?.draw(
+            in: tr(NSRect(x: c.x - size / 2, y: c.y - size / 2, width: size, height: size)),
+            from: .zero, operation: .sourceOver, fraction: 0.62 * (1 - release))
+    }
+    let pressed = (t >= 0.6 && t < 0.72) || (t >= 2.0 && t < 2.12)
+    pointer(tip: hand, scale: pressed ? 0.88 : 1)
 }
 
+try save("step-1.png") { step1(nil) }
+
+// The clip: 3.2 s at 30 fps through ffmpeg, H.264 at the still's size. It plays once on the page.
+if let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(where: { FileManager.default.fileExists(atPath: $0) }) {
+    let mp4 = images.appendingPathComponent("step-1.mp4")
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: ffmpeg)
+    p.arguments = [
+        "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", "\(Int(W))x\(Int(H))", "-r", "30", "-i", "-",
+        "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart", mp4.path,
+    ]
+    let pipe = Pipe()
+    p.standardInput = pipe
+    try p.run()
+    for n in 0..<96 {
+        let rep = render { step1(Double(n) / 30) }
+        pipe.fileHandleForWriting.write(Data(bytes: rep.bitmapData!, count: Int(W) * Int(H) * 4))
+    }
+    pipe.fileHandleForWriting.closeFile()
+    p.waitUntilExit()
+    print(mp4.path)
+}
 
 // 2. The first launch: the Settings pane to open, drawn in the system's own visual language.
 // The real window can't be captured here (no screen-recording permission), so this is a drawing of
@@ -262,28 +358,22 @@ try save("step-2.png") {
     edge.stroke()
 }
 
-// 3. Connect: the app's own Cameras screen.
+// 3. Connect: the app's own Cameras screen, whole (like the two windows before it), with the page's
+// amber ring on the key to press and the pointer on it.
 try save("step-3.png") {
-    guard let shot = NSImage(contentsOf: images.appendingPathComponent("cameras.png")),
-        let cg = shot.cgImage(forProposedRect: nil, context: nil, hints: nil)
-    else { return }
-    // The nearby-camera row with its Connect key, from the middle of the window.
-    let cropW = Int(Double(cg.width) * 0.66), cropH = Int(Double(cg.height) * 0.30)
-    guard let crop = cg.cropping(to: CGRect(x: Int(Double(cg.width) * 0.20), y: Int(Double(cg.height) * 0.34),
-                                            width: cropW, height: cropH))
-    else { return }
-    let w = W - 120, h = w * CGFloat(cropH) / CGFloat(cropW)
-    let r = NSRect(x: 60, y: (H - h) / 2, width: w, height: h)
-    NSGraphicsContext.saveGraphicsState()
-    let sh = NSShadow(); sh.shadowColor = NSColor.black.withAlphaComponent(0.45); sh.shadowBlurRadius = 24
-    sh.shadowOffset = NSSize(width: 0, height: -8); sh.set()
-    let clip = NSBezierPath(roundedRect: r, xRadius: 16, yRadius: 16)
-    clip.fill()
-    NSGraphicsContext.restoreGraphicsState()
-    NSGraphicsContext.saveGraphicsState()
-    clip.addClip()
-    NSImage(cgImage: crop, size: r.size).draw(in: r)
-    NSGraphicsContext.restoreGraphicsState()
-    NSColor.white.withAlphaComponent(0.1).setStroke()
-    NSBezierPath(roundedRect: r.insetBy(dx: 0.5, dy: 0.5), xRadius: 16, yRadius: 16).stroke()
+    guard let shot = NSImage(contentsOf: images.appendingPathComponent("cameras.png")) else { return }
+    // cameras.png is framed already (44-px margin, shadow): place it by its window, 780 px wide.
+    let px = shot.representations.first.map { CGFloat($0.pixelsWide) } ?? shot.size.width
+    let k: CGFloat = 780 / (px - 88)
+    let w = px * k, h = CGFloat(shot.representations.first?.pixelsHigh ?? Int(shot.size.height)) * k
+    let origin = NSPoint(x: (W - w) / 2, y: (H - h) / 2)
+    shot.draw(in: tr(NSRect(x: origin.x, y: origin.y, width: w, height: h)))
+    // The Connect key, from the window's own points (x 809, y 218 under the 32-pt band).
+    let ppt = (px - 88) / 1120  // framed pixels per point
+    let key = NSPoint(x: origin.x + (44 + 809 * ppt) * k, y: origin.y + (44 + (32 + 218) * ppt) * k)
+    amber.withAlphaComponent(0.9).setStroke()
+    let ring = NSBezierPath(roundedRect: tr(NSRect(x: key.x - 42, y: key.y - 17, width: 84, height: 34)), xRadius: 8, yRadius: 8)
+    ring.lineWidth = 2
+    ring.stroke()
+    pointer(tip: NSPoint(x: key.x + 14, y: key.y + 6))
 }
