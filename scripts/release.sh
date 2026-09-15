@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Build a release that the in-app updater can install: tag, universal app, zip, Ed25519 signature.
-#   scripts/release.sh 0.2.0              dry run: builds build/Osmotic-0.2.0.zip + .sig, publishes nothing
+# Build a release: tag, universal app, a DMG for people (drag to Applications) and a zip + Ed25519
+# signature for the in-app updater.
+#   scripts/release.sh 0.2.0              dry run: builds build/Osmotic-0.2.0.{dmg,zip,zip.sig}, publishes nothing
 #   scripts/release.sh 0.2.0 --publish    also pushes the tag and creates the GitHub release (gh)
 # Needs: a clean tree, a "## [0.2.0]" section in CHANGELOG.md, the signing key in the Keychain
 # (swift scripts/update_key.swift generate) and its public half in Info.plist (OsmoticUpdatePublicKey).
-# Optional: SIGN_IDENTITY for a Developer ID build (see package_app.sh / notarize.sh).
+# Optional: SIGN_IDENTITY for a Developer ID build (see package_app.sh / notarize.sh); NOTES_FILE for
+# release notes other than the CHANGELOG section.
 set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT_DIR"
@@ -28,12 +30,30 @@ ditto -c -k --keepParent build/Osmotic.app "$ZIP"
 swift scripts/update_key.swift sign "$ZIP" > "$ZIP.sig"
 swift scripts/update_key.swift verify "$ZIP" "$ZIP.sig" "$PUBKEY"
 
-NOTES="$(mktemp)"
-awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > "$NOTES"
-echo "Built $ZIP ($(du -h "$ZIP" | cut -f1)) and its signature."
+# The DMG: the app, a shortcut to Applications and a note for the first launch of an unnotarized
+# build. Signed only when there's a Developer ID (notarize.sh is the path for that).
+DMG="build/Osmotic-$VERSION.dmg"
+rm -f "$DMG"
+STAGE="$(mktemp -d)"
+trap 'rm -rf "$STAGE"' EXIT
+cp -R build/Osmotic.app "$STAGE/"
+ln -s /Applications "$STAGE/Applications"
+cp scripts/dmg_readme.txt "$STAGE/Read Me First.txt"
+cp LICENSE "$STAGE/LICENSE.txt"
+hdiutil create -quiet -volname "Osmotic $VERSION" -srcfolder "$STAGE" -ov -format UDZO -fs HFS+ "$DMG"
+[ -n "${SIGN_IDENTITY:-}" ] && codesign --sign "$SIGN_IDENTITY" --timestamp "$DMG"
+
+# Release notes: NOTES_FILE if given, else the version's section of CHANGELOG.md.
+if [ -n "${NOTES_FILE:-}" ]; then
+  NOTES="$NOTES_FILE"
+else
+  NOTES="$(mktemp)"
+  awk -v v="$VERSION" '$0 ~ "^## \\[" v "\\]" {f=1; next} /^## \[/ {f=0} f' CHANGELOG.md > "$NOTES"
+fi
+echo "Built $DMG ($(du -h "$DMG" | cut -f1)), $ZIP ($(du -h "$ZIP" | cut -f1)) and its signature."
 if [ "$PUBLISH" = "--publish" ]; then
   git push origin "v$VERSION"
-  gh release create "v$VERSION" "$ZIP" "$ZIP.sig" --title "Osmotic $VERSION" --notes-file "$NOTES"
+  gh release create "v$VERSION" "$DMG" "$ZIP" "$ZIP.sig" --title "Osmotic $VERSION" --notes-file "$NOTES"
 else
   echo "Dry run — nothing published. To publish: scripts/release.sh $VERSION --publish"
 fi

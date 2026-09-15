@@ -90,7 +90,7 @@ struct PreviewView: View {
         if let r = f.resolution { parts.append(r) }
         if let fps = f.resLabel { parts.append(fps) }
         if f.durationSec > 0 { parts.append(Format.duration(f.durationSec)) }
-        if f.sizeBytes > 0 { parts.append(Format.bytes(f.sizeBytes)) }
+        if model.size(of: f) > 0 { parts.append(Format.bytes(model.size(of: f))) }
         if !source.isEmpty { parts.append(source) }
         return parts.joined(separator: " · ")
     }

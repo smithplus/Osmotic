@@ -121,12 +121,20 @@ final class FakeHTTPServer: @unchecked Sendable {
     }
 }
 
+/// The sizes a download reported through `onTotal`, from the delegate's queue.
+final class Totals: @unchecked Sendable {
+    private let lock = NSLock()
+    private var list: [Int] = []
+    func add(_ v: Int) { lock.withLock { list.append(v) } }
+    var values: [Int] { lock.withLock { list } }
+}
+
 @Suite(.serialized) struct DownloaderTests {
     let body: [UInt8] = (0..<3_000_000).map { UInt8(truncatingIfNeeded: $0 &* 31 &+ 7) }
 
-    func run(_ script: [FakeHTTPServer.Behavior], expected: Int? = nil) async throws -> (
-        FileDownloader.Result, [UInt8], FakeHTTPServer
-    ) {
+    func run(
+        _ script: [FakeHTTPServer.Behavior], expected: Int? = nil, totals: Totals? = nil
+    ) async throws -> (FileDownloader.Result, [UInt8], FakeHTTPServer) {
         let server = try FakeHTTPServer(body: body, script: script)
         let http = CameraHTTP(ip: "127.0.0.1", port: Int(server.port))
         let dl = FileDownloader(http: http, log: { _ in })
@@ -134,8 +142,9 @@ final class FakeHTTPServer: @unchecked Sendable {
         let dest = dir.appendingPathComponent("DJI_20260101120000_0001_D.MP4")
         let result = await dl.download(
             urlPath: "/v2?storage=0&path=DCIM/DJI_001/x.MP4", to: dest,
-            expectedSize: expected ?? body.count
-        ) { _ in }
+            expectedSize: expected ?? body.count,
+            onTotal: { total in totals?.add(total) }, progress: { _ in }
+        )
         let got = (try? Data(contentsOf: dest)).map { [UInt8]($0) } ?? []
         server.stop()
         try? FileManager.default.removeItem(at: dir)
@@ -180,6 +189,15 @@ final class FakeHTTPServer: @unchecked Sendable {
         let (r, got, _) = try await run([.cutAfter(1_500_000), .serve], expected: 1_000_000)
         guard case .saved = r else { Issue.record("\(r)"); return }
         #expect(got == body)
+    }
+
+    @Test(.timeLimit(.minutes(1))) func `the server's size is reported even when the manifest's wrapped`() async throws {
+        // A >4 GiB clip is listed with its size mod 2^32; progress and the time left use this report.
+        let totals = Totals()
+        let (r, _, _) = try await run([.cutAfter(1_200_000), .serve], expected: 200_000, totals: totals)
+        guard case .saved = r else { Issue.record("\(r)"); return }
+        // Once from Content-Length, once from the resume's Content-Range total.
+        #expect(totals.values == [body.count, body.count])
     }
 
     @Test(.timeLimit(.minutes(1))) func `an HTML page from another device is never saved as the file`() async throws {

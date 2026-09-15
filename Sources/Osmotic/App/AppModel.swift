@@ -67,6 +67,10 @@ final class AppModel {
     var filter: Filter = .all
     private(set) var downloaded: Set<String> = []
     var previewFile: CameraFile?
+    /// Sizes the camera's web server stated, by file id. The manifest's size is a u32 that wraps
+    /// above 4 GiB, so a long 4K clip can be listed as a few hundred MB — or as nothing.
+    private(set) var realSizes: [String: Int] = [:]
+    @ObservationIgnored private var sizeProbed: Set<String> = []
 
     // ---- transfers ----------------------------------------------------------------------------
     private(set) var transfer: TransferState?
@@ -217,8 +221,14 @@ final class AppModel {
             screen = .cameras
             ble.injectDemo(
                 DiscoveredCamera(
-                    id: UUID(), name: "OsmoPocket3-8B1D", rssi: -41, modelId: 0x20,
+                    id: UUID(), name: "OsmoPocket3-D1E9", rssi: -41, modelId: 0x20,
                     model: CameraModel.resolve(modelId: 0x20, name: nil), brand: .dji, lastSeen: Date()))
+            // Demo data only: never the user's own saved cameras in a screenshot.
+            savedCameras = [
+                SavedCamera(
+                    id: UUID(), bleName: "OsmoAction5Pro-4C2A", modelId: 0x15, modelName: "Osmo Action 5 Pro",
+                    lastConnected: Date().addingTimeInterval(-86_400 * 3))
+            ]
         default:
             screen = .library
             if let first = files.first { downloaded.insert(first.id) }
@@ -572,6 +582,8 @@ final class AppModel {
         previewFile = nil
         if !keepSummary { lastTransferSummary = nil }
         retryCounts = [:]
+        realSizes = [:]
+        sizeProbed = []
         thumbCache.removeAllObjects()
         moreAvailable = false
         status = CameraStatus()
@@ -813,6 +825,37 @@ final class AppModel {
             files.filter { f in
                 history.contains(f) || fm.fileExists(atPath: DownloadPaths.destination(for: f).path)
             }.map(\.id))
+        probeRealSizes()
+    }
+
+    /// The size to show and to count on: the server's when known, else the manifest's.
+    func size(of f: CameraFile) -> Int { realSizes[f.id] ?? f.sizeBytes }
+
+    /// One HEAD per clip whose listed size can't be trusted: videos over two minutes (4 GiB is about
+    /// four minutes of 4K at the Pocket 3's top bitrate) and files listed without a size.
+    private func probeRealSizes() {
+        let candidates = files.filter { f in
+            !sizeProbed.contains(f.id) && f.isVideo && (f.durationSec >= 120 || f.sizeBytes <= 0)
+        }
+        guard !candidates.isEmpty, let s = session else { return }
+        sizeProbed.formUnion(candidates.map(\.id))
+        Task { [weak self] in
+            for f in candidates {
+                guard let self, self.session === s, !self.sessionInControl else { return }
+                guard let head = await self.http.headStatus(f.originalURLPath), head.status == 200, head.length > 0
+                else { self.sizeProbed.remove(f.id); continue }
+                guard self.session === s, head.length != self.size(of: f) else { continue }
+                let before = self.size(of: f)
+                self.realSizes[f.id] = head.length
+                // Queued but not started: fix the total now. The file downloading now is fixed by the
+                // downloader's own report of the size (`transferRealSize`).
+                if self.queue.contains(where: { $0.id == f.id }), var t = self.transfer {
+                    t.bytesTotal += head.length - max(0, before)
+                    self.transfer = t
+                }
+                log("library: \(f.name) is \(head.length / 1_000_000) MB (listed as \(f.sizeBytes / 1_000_000) MB)")
+            }
+        }
     }
 
     func loadMoreIfNeeded() {
@@ -985,7 +1028,7 @@ final class AppModel {
         // Oldest first, so an interrupted run leaves a contiguous, dated set on disk.
         queue += fresh.sorted { $0.timestamp != $1.timestamp ? $0.timestamp < $1.timestamp : $0.seq < $1.seq }
         queuedIds.formUnion(fresh.map(\.id))
-        let bytes = fresh.reduce(0) { $0 + max(0, $1.sizeBytes) }
+        let bytes = fresh.reduce(0) { $0 + max(0, size(of: $1)) }
         if var t = transfer {
             t.total += fresh.count
             t.bytesTotal += bytes
@@ -1029,13 +1072,15 @@ final class AppModel {
             transfer?.current = f
             currentTransferId = f.id
             transfer?.currentBytes = 0
-            transfer?.currentSize = f.sizeBytes
+            transfer?.currentSize = max(0, size(of: f))
             let dest = DownloadPaths.destination(for: f)
             log("transfer: \(f.name) → \(dest.path)")
             speedSample = (Date(), -1)  // seeded by the first report, which includes any resumed bytes
-            let result = await downloader.download(urlPath: f.originalURLPath, to: dest, expectedSize: f.sizeBytes) { bytes in
-                Task { @MainActor [weak self] in self?.transferProgress(fileId: f.id, bytes: bytes) }
-            }
+            let result = await downloader.download(
+                urlPath: f.originalURLPath, to: dest, expectedSize: size(of: f),
+                onTotal: { total in Task { @MainActor [weak self] in self?.transferRealSize(fileId: f.id, total: total) } },
+                progress: { bytes in Task { @MainActor [weak self] in self?.transferProgress(fileId: f.id, bytes: bytes) } }
+            )
             switch result {
             case .saved(let url), .skipped(let url):
                 if case .saved = result { saved += 1; stampDates(url, f) }
@@ -1076,7 +1121,7 @@ final class AppModel {
             currentTransferId = nil
             if var t = transfer {
                 t.done += 1
-                t.bytesDone += max(0, f.sizeBytes)
+                t.bytesDone += max(0, t.currentSize)  // the real size when the server stated it
                 t.currentBytes = 0
                 t.current = nil
                 transfer = t
@@ -1108,6 +1153,19 @@ final class AppModel {
 
     @ObservationIgnored private var speedSample = (time: Date(), bytes: 0)
     @ObservationIgnored private var retryCounts: [String: Int] = [:]
+
+    /// The server's size for the file downloading now. The manifest's is a u32 that wraps above 4 GiB
+    /// (a long 4K clip can be listed as 0 MB), which pinned the bar at 100% with the time left at 0.
+    private func transferRealSize(fileId: String, total: Int) {
+        guard var t = transfer, t.current?.id == fileId, total > 0, total != t.currentSize else { return }
+        t.bytesTotal += total - t.currentSize
+        t.currentSize = total
+        transfer = t
+        realSizes[fileId] = total
+        log(
+            "transfer: \(t.current?.name ?? fileId) is \(total / 1_000_000) MB (listed as \((t.current?.sizeBytes ?? 0) / 1_000_000) MB)"
+        )
+    }
 
     private func transferProgress(fileId: String, bytes: Int) {
         guard var t = transfer, t.current?.id == fileId else { return }

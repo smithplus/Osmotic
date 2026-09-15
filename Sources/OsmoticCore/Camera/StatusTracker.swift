@@ -64,7 +64,8 @@ public struct StatusTracker: Sendable {
             let hasInternal = p.count >= 32
             let inTotal = hasInternal ? p.u32le(24) : 0
             let inFree = hasInternal ? p.u32le(28) : 0
-            let sig = "\(p.count)|\(sdTotal)|\(sdFree)|\(inTotal)|\(inFree)"
+            // Free space ticks down every push while recording: log it once per GB, not every 400 ms.
+            let sig = "\(p.count)|\(sdTotal)|\(sdFree / 1000)|\(inTotal)|\(inFree / 1000)"
             if sig != lastStorageSig {
                 lastStorageSig = sig
                 log(

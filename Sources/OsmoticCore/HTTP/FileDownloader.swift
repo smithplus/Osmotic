@@ -49,10 +49,15 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         var outcome: Attempt?
         var total: Int?
         let progress: (Int) -> Void
+        let onTotal: ((Int) -> Void)?
         let done: (Attempt) -> Void
         var lastReport = Date.distantPast
 
-        init(handle: FileHandle, rangeStart: Int, progress: @escaping (Int) -> Void, done: @escaping (Attempt) -> Void) {
+        init(
+            handle: FileHandle, rangeStart: Int, progress: @escaping (Int) -> Void, onTotal: ((Int) -> Void)?,
+            done: @escaping (Attempt) -> Void
+        ) {
+            self.onTotal = onTotal
             self.handle = handle
             self.rangeStart = rangeStart
             self.written = rangeStart
@@ -81,8 +86,11 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
 
     /// Download `urlPath` to `destination`. `expectedSize` (from the manifest) of 0 means unknown.
     /// `progress` receives the file's running byte count, throttled.
+    /// `onTotal` receives the file's real size as soon as the server states it — the manifest's size is
+    /// a u32 that wraps above 4 GiB, so a long clip can be listed as a few MB (or 0).
     public func download(
         urlPath: String, to destination: URL, expectedSize: Int,
+        onTotal: (@Sendable (Int) -> Void)? = nil,
         progress: @escaping @Sendable (Int) -> Void
     ) async -> Result {
         let fm = FileManager.default
@@ -129,7 +137,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         while true {
             if Task.isCancelled { return .cancelled }
             let offset = partSize()
-            let outcome = await fetch(urlPath: urlPath, into: part, from: offset, progress: progress)
+            let outcome = await fetch(urlPath: urlPath, into: part, from: offset, onTotal: onTotal, progress: progress)
             if Task.isCancelled { return .cancelled }
             var after = partSize()
             if case .rangeIgnored = outcome {
@@ -177,6 +185,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
     /// One HTTP attempt, appending to `part` from `offset`.
     private func fetch(
         urlPath: String, into part: URL, from offset: Int,
+        onTotal: (@Sendable (Int) -> Void)?,
         progress: @escaping @Sendable (Int) -> Void
     ) async -> Attempt {
         guard let handle = try? FileHandle(forWritingTo: part) else { return .failed(-1) }
@@ -189,7 +198,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
         let task = session.dataTask(with: req)
         return await withTaskCancellationHandler {
             await withCheckedContinuation { (cont: CheckedContinuation<Attempt, Never>) in
-                let state = TaskState(handle: handle, rangeStart: offset, progress: progress) { outcome in
+                let state = TaskState(handle: handle, rangeStart: offset, progress: progress, onTotal: onTotal) { outcome in
                     try? handle.close()
                     cont.resume(returning: outcome)
                 }
@@ -244,6 +253,7 @@ public final class FileDownloader: NSObject, URLSessionDataDelegate, @unchecked 
             code == 206
             ? Self.contentRangeTotal(http)
             : (response.expectedContentLength > 0 ? Int(response.expectedContentLength) : nil)
+        if let total = st.total { st.onTotal?(total) }
         completionHandler(.allow)
     }
 

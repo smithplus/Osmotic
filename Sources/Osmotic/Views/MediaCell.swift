@@ -191,7 +191,7 @@ struct MediaCell: View {
         parts.append(file.isVideo ? String(localized: "Video") : String(localized: "Photo"))
         if let d = file.captureDate { parts.append(Format.time.string(from: d)) }
         if file.isVideo && file.durationSec > 0 { parts.append(Format.duration(file.durationSec)) }
-        if file.sizeBytes > 0 { parts.append(Format.bytes(file.sizeBytes)) }
+        if model.size(of: file) > 0 { parts.append(Format.bytes(model.size(of: file))) }
         if file.starred { parts.append(String(localized: "Starred")) }
         if downloaded { parts.append(String(localized: "On Mac")) }
         if model.queuedIds.contains(file.id) { parts.append(String(localized: "Queued")) }
@@ -227,24 +227,33 @@ struct MediaCell: View {
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .foregroundStyle(Theme.ink)
-            Text(details.uppercased())
-                .font(.system(size: 9.5, weight: .semibold))
-                .tracking(0.5)
-                .foregroundStyle(Theme.muted)
-                .lineLimit(1)
+            // Narrow cells (or a wide time format like "12:13 p. m.") drop the resolution before the
+            // size gets cut to "69,8…".
+            ViewThatFits(in: .horizontal) {
+                detailText(details(full: true))
+                detailText(details(full: false))
+            }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, 2)
     }
 
-    private var details: String {
+    private func detailText(_ s: String) -> some View {
+        Text(s.uppercased())
+            .font(.system(size: 9.5, weight: .semibold))
+            .tracking(0.5)
+            .foregroundStyle(Theme.muted)
+            .lineLimit(1)
+    }
+
+    private func details(full: Bool) -> String {
         var parts: [String] = []
         if let r = Format.resolutionLabel(file.resolution) {
-            parts.append(file.resLabel.map { "\(r) \($0)" } ?? r)
-        } else if let fps = file.resLabel {
+            parts.append(full ? file.resLabel.map { "\(r) \($0)" } ?? r : r)
+        } else if let fps = file.resLabel, full {
             parts.append(fps)
         }
-        if file.sizeBytes > 0 { parts.append(Format.bytes(file.sizeBytes)) }
+        if model.size(of: file) > 0 { parts.append(Format.bytes(model.size(of: file))) }
         if !file.isVideo && !file.ext.isEmpty { parts.append(file.ext) }
         return parts.joined(separator: " · ")
     }

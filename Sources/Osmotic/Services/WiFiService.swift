@@ -173,13 +173,21 @@ enum WiFiService {
             let out = runNetworksetup(["-removepreferredwirelessnetwork", name, cameraSSID])
             log("wifi: forget \(cameraSSID) → \(out.isEmpty ? "ok" : out)")
         }
+        // networksetup echoes the network's name in its errors ("Failed to join network X."): the log
+        // must not carry the user's SSID.
+        func scrubbed(_ out: String, _ ssid: String) -> String {
+            out.isEmpty
+                ? "ok"
+                : out.replacingOccurrences(of: ssid, with: redactedSSID(ssid))
+                    .replacingOccurrences(of: "\n", with: " ")
+        }
         func home() async -> Bool {
             await waitForHomeNetwork(iface, name, cameraSSID: cameraSSID, cameraSideIP: cameraSideIP, seconds: 8)
         }
         if let previous, !previous.isEmpty, previous != cameraSSID {
             for attempt in 1...3 {
                 let out = runNetworksetup(["-setairportnetwork", name, previous])
-                log("wifi: rejoin \(redactedSSID(previous)) (attempt \(attempt)) → \(out.isEmpty ? "ok" : out)")
+                log("wifi: rejoin \(redactedSSID(previous)) (attempt \(attempt)) → \(scrubbed(out, previous))")
                 if await home() { log("wifi: back on \(redactedSSID(previous))"); return true }
             }
             log("wifi: could not rejoin \(redactedSSID(previous)) — falling back to auto-join")
@@ -196,7 +204,7 @@ enum WiFiService {
         let candidates = visible.isEmpty ? Array(preferred.prefix(3)) : preferred.filter(visible.contains)
         for ssid in candidates {
             let out = runNetworksetup(["-setairportnetwork", name, ssid])
-            log("wifi: trying preferred \(redactedSSID(ssid)) → \(out.isEmpty ? "ok" : out)")
+            log("wifi: trying preferred \(redactedSSID(ssid)) → \(scrubbed(out, ssid))")
             if await home() { log("wifi: joined \(redactedSSID(ssid))"); return true }
         }
         log("wifi: could not rejoin a network automatically — pick one from the menu bar")

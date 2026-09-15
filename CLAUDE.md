@@ -33,13 +33,14 @@ Una sola prueba con la Pocket 3 real (build `776be7d`, Files OK). **Todo lo post
 
 ```bash
 swift build                      # app + core
-swift test                       # 82 tests en 20 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
+swift test                       # 83 tests en 20 suites (~50 s; los e2e de sesión y de control tardan 10–16 s c/u)
 swift test --filter Golden       # solo los snapshots del decodificador
 scripts/lint.sh [--fix]          # formato con swift-format (.swift-format: 4 espacios, 130 columnas); CI lo exige
 scripts/sync_strings.sh          # textos nuevos → Resources/Localizable.xcstrings; lista los que faltan traducir
 scripts/package_app.sh [debug]   # build/Osmotic.app (release = universal arm64+x86_64); ad-hoc salvo SIGN_IDENTITY
 scripts/notarize.sh              # release firmada + DMG + notarización (necesita cuenta Apple Developer; ver el script)
 scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest.bin]   # render sin hardware; necesita build/Osmotic.app
+scripts/release.sh X.Y.Z [--publish]   # DMG + zip firmado para el actualizador (ver "Release")
 ```
 
 - CI: `.github/workflows/ci.yml` (macos-26): formato, build, tests, empaquetado en cada push a `main`/`ui/**`.
@@ -58,7 +59,7 @@ scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest
 
 **Pantalla o pestaña nueva.** `AppModel.Workspace` + `setWorkspace` + `WorkspaceTabs`; vista con `TopPlate` y piezas de `Theme`; caso en `SnapshotView`/`loadDemo` para poder revisarla con `snapshot.sh`.
 
-**Release (y actualización automática).** Sección `## [X.Y.Z]` en `CHANGELOG.md`, commit, `scripts/release.sh X.Y.Z` (dry run: tag local, app universal, `build/Osmotic-X.Y.Z.zip` + `.sig` firmado con la clave del Llavero) y, **solo con permiso explícito del usuario**, `scripts/release.sh X.Y.Z --publish` (empuja el tag y crea la release con `gh`). La app instalada la encuentra con `UpdateService` (`api.github.com/.../releases/latest`) y la instala si la firma coincide con `OsmoticUpdatePublicKey` (Info.plist). La clave privada: `swift scripts/update_key.swift` (Llavero, servicio `io.github.smithplus.osmotic.update-signing`); si se pierde, generar otra y cambiar la pública — los usuarios instalan esa versión a mano una vez. Para Developer ID + notarización: `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`.
+**Release (y actualización automática).** Sección `## [X.Y.Z]` en `CHANGELOG.md`, commit, `scripts/release.sh X.Y.Z` (dry run: tag local, app universal, `build/Osmotic-X.Y.Z.dmg` para instalar a mano — con `scripts/dmg_readme.txt` como "Read Me First" — y `build/Osmotic-X.Y.Z.zip` + `.sig` firmado con la clave del Llavero para el actualizador) y, **solo con permiso explícito del usuario**, `scripts/release.sh X.Y.Z --publish` (empuja el tag y crea la release con `gh`). La app instalada la encuentra con `UpdateService` (`api.github.com/.../releases/latest`) y la instala si la firma coincide con `OsmoticUpdatePublicKey` (Info.plist). La clave privada: `swift scripts/update_key.swift` (Llavero, servicio `io.github.smithplus.osmotic.update-signing`); si se pierde, generar otra y cambiar la pública — los usuarios instalan esa versión a mano una vez. Para Developer ID + notarización: `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/notarize.sh`.
 
 ## Reglas del proyecto
 
@@ -78,6 +79,7 @@ scripts/snapshot.sh out.png [library|connecting|cameras|camera|webcam] [manifest
 - Movimiento solo con `Motion` vía `.motion(_:value:)` (respeta Reducir movimiento): tecla abajo `press`, arriba `release`, paneles `panel` con `.panelFromTop`/`.trayFromBottom`, luces `bloom`, estado `quick`. Las pantallas LCD no hacen fundidos (`LCDGlass` ya aplica `LCDBoot` y `.transaction { $0.animation = nil }`). Nada de `scaleEffect` al pasar el mouse.
 - Accesibilidad: todo control con etiqueta y estado para VoiceOver (`.isSelected` en grupos, valor en LEDs); contraste ≥ 4.5:1 (`Theme.muted` ya lo cumple).
 - Referencias visuales que el usuario aprobó: EP-133 de Teenage Engineering y el VST "BASSBOI" (Dribbble). Revisar con `snapshot.sh` antes de mostrar.
+- Capturas del README (`docs/images/{en,es}/`): `snapshot.sh` con `OSMOTIC_LANG=en|es OSMOTIC_LOCALE=en_US|es_AR`, fixture `op3_15.bin` y `OSMOTIC_DEMO_THUMBS` con escenas sintéticas (nunca el material del usuario ni sus cámaras guardadas: el modo demo no las lee), recortadas y enmarcadas (esquinas, sombra) a 1280–1400 px. Si cambia la UI, regenerarlas en los dos idiomas.
 
 ## Estado guardado (dónde vive)
 
