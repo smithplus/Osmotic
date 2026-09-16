@@ -81,7 +81,12 @@ struct CamerasView: View {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                     SectionIndex(number: 1, title: "Plugged in")
                     ForEach(model.cards.cards) { card in
-                        CardModule(card: card, busy: model.transfer != nil) { model.openCard(card) }
+                        CardModule(
+                            card: card, busy: model.transfer != nil,
+                            measured: model.cards.speed(of: card), measuring: model.cards.isMeasuring(card)
+                        ) {
+                            model.openCard(card)
+                        }
                     }
                     if model.cards.accessDenied {
                         // macOS keeps files on removable volumes behind a permission; the reader can
@@ -284,6 +289,9 @@ private struct CameraModule: View {
 private struct CardModule: View {
     let card: CardWatcher.Card
     let busy: Bool
+    /// Real MB/s off this card, once measured; the bus's headline number says little about a long copy.
+    let measured: Double?
+    let measuring: Bool
     let open: () -> Void
 
     var body: some View {
@@ -300,11 +308,16 @@ private struct CardModule: View {
                     .font(.system(size: 16, weight: .bold))
                     .foregroundStyle(Theme.ink)
                 HStack(spacing: 6) {
-                    if let link = card.link {
-                        Silk(verbatim: link.label + " · " + link.headline)
-                    }
-                    if card.totalBytes > 0 {
-                        Silk(verbatim: "· " + Format.compact(bytes: card.freeBytes) + " free")
+                    if let link = card.link { Silk(verbatim: link.label) }
+                    if let measured {
+                        // What it really reads, and what that means for everything on the card.
+                        Silk(verbatim: "· " + String(format: "%.0f", measured) + " MB/s")
+                            .foregroundStyle(measured < 45 ? Theme.warning : Theme.muted)
+                        if let minutes = CardProbe.minutes(forBytes: used, at: measured) {
+                            Silk(verbatim: "· ~\(minutes) min for " + Format.compact(bytes: used))
+                        }
+                    } else if measuring {
+                        Silk("· measuring…")
                     }
                 }
             }
@@ -319,8 +332,16 @@ private struct CardModule: View {
         .padding(.vertical, Theme.s3 - 2)
         .padding(.horizontal, Theme.s3)
         .raisedPanel(screws: true)
-        .help(Text("The camera's card, over the cable. No Wi-Fi, and your Internet stays on."))
+        .help(
+            Text(
+                measured == nil
+                    ? "The camera's card, over the cable. No Wi-Fi, and your Internet stays on."
+                    : "Measured by reading the biggest clip on the card. A cable that only carries USB 2 tops out near 40 MB/s."
+            ))
     }
+
+    /// What is on the card, as far as the volume knows.
+    private var used: Int { max(0, card.totalBytes - card.freeBytes) }
 }
 
 /// Four small green LEDs for signal strength.

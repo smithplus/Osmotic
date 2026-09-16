@@ -31,6 +31,12 @@ extension AppModel {
         log("card: \(files.count) file(s), \(files.reduce(0) { $0 + $1.sizeBytes } / 1_000_000) MB")
     }
 
+    /// MB/s measured off the card being browsed, once the probe has run.
+    var cardReadSpeed: Double? {
+        guard let volume = cardVolume else { return nil }
+        return cards.measured[volume]
+    }
+
     /// The reader points at the card themselves. macOS treats picking a folder in an open panel as
     /// consent, so this works even when the removable-volumes permission was refused
     /// (Apple's implied-consent path for files on removable volumes).

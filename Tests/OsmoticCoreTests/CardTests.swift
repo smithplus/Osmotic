@@ -137,3 +137,20 @@ private final class Reports: @unchecked Sendable {
         return seen
     }
 }
+
+@Suite struct CardProbeTests {
+    @Test func measuresWhatTheCardReadsAndTurnsItIntoMinutes() throws {
+        // A file big enough to read past the warm-up block.
+        let card = try makeCard([("DJI_20260827200600_0001_D.MP4", CardProbe.block * 6)])
+        let speed = CardProbe.readSpeed(on: card, seconds: 0.2)
+        #expect(speed != nil && speed! > 0, "a local file reads at some measurable rate")
+        #expect(CardProbe.minutes(forBytes: 36_000_000_000, at: 30) == 20, "36 GB at 30 MB/s is about 20 minutes")
+        #expect(CardProbe.minutes(forBytes: 0, at: 30) == nil)
+        #expect(CardProbe.minutes(forBytes: 1_000_000, at: 0) == nil, "no speed, no estimate")
+    }
+
+    @Test func saysNothingWhenThereIsNothingToMeasure() throws {
+        let card = try makeCard([("DJI_20260827200600_0001_D.MP4", 1024)])
+        #expect(CardProbe.readSpeed(on: card) == nil, "too small to mean anything")
+    }
+}

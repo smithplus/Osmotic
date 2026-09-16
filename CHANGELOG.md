@@ -5,6 +5,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 ## [Unreleased]
 
 ### Added
+- **What the cable really gives.** When a card is plugged in, Osmotic reads a stretch of the biggest clip on it and reports the measured rate ("USB 2.0 · 40 MB/s · ~19 min for 46 GB"), so a slow cable can be swapped before a long copy rather than after it.
 - **Files off the card over USB-C.** With the camera plugged in and set to storage mode, its card mounts as a disk and Osmotic reads it directly: no Bluetooth, no Wi-Fi, no phone, and your Internet stays on. The cameras screen lists it under "Plugged in" with how fast the cable negotiated, and the library works as usual (day folders, dated when shot, skips what you already have, copies the `.WAV` beside a clip). Eject when you're done.
 
 ## [0.3.0] - 2026-09-15

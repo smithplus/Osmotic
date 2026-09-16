@@ -56,6 +56,11 @@ final class CardWatcher {
     }
 
     private(set) var cards: [Card] = []
+    /// Measured read speed per card, in MB/s: what the cable and the card really give, which is the
+    /// number worth seeing before copying 40 GB.
+    private(set) var measured: [URL: Double] = [:]
+    /// Cards whose measurement is running.
+    private(set) var measuring: Set<URL> = []
     /// macOS is refusing to read a removable volume: the app needs permission in
     /// Privacy & Security › Files and Folders, or the reader can point at the card themselves.
     private(set) var accessDenied = false
@@ -85,9 +90,30 @@ final class CardWatcher {
             }
             guard result.cards != cards else { return }
             cards = result.cards
+            measured = measured.filter { entry in result.cards.contains { $0.volume == entry.key } }
             log("card: \(result.cards.map { "\($0.name) [\($0.link?.label ?? "unknown link")]" }.joined(separator: ", "))")
+            for card in result.cards where measured[card.volume] == nil { measure(card) }
         }
     }
+
+    /// Reads a stretch of the biggest clip on the card, once per mount, to report real MB/s.
+    func measure(_ card: Card) {
+        guard !measuring.contains(card.volume) else { return }
+        measuring.insert(card.volume)
+        let volume = card.volume
+        Task { [weak self] in
+            let speed = await Task.detached(priority: .utility) { CardProbe.readSpeed(on: volume) }.value
+            guard let self else { return }
+            measuring.remove(volume)
+            guard let speed else { return }
+            measured[volume] = speed
+            log("card: \(card.name) reads at \(String(format: "%.0f", speed)) MB/s")
+        }
+    }
+
+    /// MB/s measured for this card, when the measurement has finished.
+    func speed(of card: Card) -> Double? { measured[card.volume] }
+    func isMeasuring(_ card: Card) -> Bool { measuring.contains(card.volume) }
 
     /// A volume the reader pointed at themselves (an open panel): macOS counts that as consent, so it
     /// works even when the permission was refused earlier.
@@ -134,38 +160,30 @@ final class CardWatcher {
 
     // ---- How the cable negotiated ----------------------------------------------------------------
 
-    /// The USB speed of the device this volume lives on: the disk's BSD name, then up the IO registry
-    /// until a USB device turns up, and its `Device Speed`.
+    /// The USB speed of the device this volume lives on: the disk's BSD name, then one search up the
+    /// IO registry for the `Device Speed` the USB host device published.
     nonisolated static func link(of volume: URL) -> Link? {
         guard let session = DASessionCreate(kCFAllocatorDefault),
             let disk = DADiskCreateFromVolumePath(kCFAllocatorDefault, session, volume as CFURL),
             let bsd = DADiskGetBSDName(disk).map({ String(cString: $0) })
         else { return nil }
 
-        var media: io_service_t = IO_OBJECT_NULL
-        // The whole-disk media (disk5), not the partition (disk5s1), carries the USB parent.
-        let whole = bsd.split(separator: "s").first.map(String.init) ?? bsd
-        if let matching = IOBSDNameMatching(kIOMainPortDefault, 0, whole) {
-            media = IOServiceGetMatchingService(kIOMainPortDefault, matching)
+        // The whole-disk media (disk5), not the partition (disk5s1), is the one under the USB device.
+        // Splitting on "s" would cut "disk5" itself, so the suffix is trimmed after the digits.
+        var whole = ""
+        for ch in bsd {
+            if ch.isNumber || whole.isEmpty || !whole.last!.isNumber { whole.append(ch) } else { break }
         }
+        guard let matching = IOBSDNameMatching(kIOMainPortDefault, 0, whole) else { return nil }
+        let media = IOServiceGetMatchingService(kIOMainPortDefault, matching)
         guard media != IO_OBJECT_NULL else { return nil }
         defer { IOObjectRelease(media) }
 
-        var node = media
-        IOObjectRetain(node)
-        for _ in 0..<12 {
-            if let speed = IORegistryEntryCreateCFProperty(node, "Device Speed" as CFString, kCFAllocatorDefault, 0)?
-                .takeRetainedValue() as? Int, let link = Link(rawValue: speed)
-            {
-                IOObjectRelease(node)
-                return link
-            }
-            var parent: io_registry_entry_t = IO_OBJECT_NULL
-            guard IORegistryEntryGetParentEntry(node, kIOServicePlane, &parent) == KERN_SUCCESS else { break }
-            IOObjectRelease(node)
-            node = parent
-        }
-        IOObjectRelease(node)
-        return nil
+        let options = IOOptionBits(kIORegistryIterateParents | kIORegistryIterateRecursively)
+        guard
+            let value = IORegistryEntrySearchCFProperty(
+                media, kIOServicePlane, "Device Speed" as CFString, kCFAllocatorDefault, options) as? NSNumber
+        else { return nil }
+        return Link(rawValue: value.intValue)
     }
 }

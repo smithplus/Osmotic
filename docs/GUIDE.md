@@ -55,6 +55,7 @@ Plug the camera into the Mac with USB-C and choose **USB storage** (or **Data**)
 - Nothing wireless happens: no Bluetooth, no pairing, and your Mac keeps its own Wi-Fi and its Internet.
 - Sizes come from the card, so the bar and the time left are right from the first second, whatever the clip's length.
 - **Eject** unmounts the card so the cable can come out. Pulling the cable mid-copy is safe too: what already arrived is saved, and the file being copied is discarded rather than left half written.
+- The card's row shows what it **measured**, not just what the bus promises: Osmotic reads a stretch of the biggest clip and reports the rate and roughly how long the whole card would take. A slow cable is worth swapping before the copy, not after.
 - About speed: the readout shows **USB 2.0** or **USB 3**. A cable that only carries USB 2 (most charging cables) tops out around 40 MB/s, which is roughly what Wi-Fi gives you. A USB 3 cable, straight into the Mac rather than through a hub, is the one worth using for a full card.
 
 ## Live: control the camera

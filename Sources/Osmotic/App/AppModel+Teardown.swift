@@ -7,6 +7,11 @@ import OsmoticCore
 
 extension AppModel {
     func requestDisconnect() {
+        // A card has nothing to release: leave the library, keep the volume mounted.
+        if isCard {
+            closeCard()
+            return
+        }
         if transfer != nil && screen == .library { confirmingDisconnect = true } else { Task { await disconnect() } }
     }
 

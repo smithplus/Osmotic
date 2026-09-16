@@ -484,6 +484,16 @@
         }
       }
     },
+    "Choose Card…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir tarjeta…"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "es": {
@@ -1357,6 +1367,26 @@
         }
       }
     },
+    "Measured by reading the biggest clip on the card": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medido leyendo el clip más grande de la tarjeta"
+          }
+        }
+      }
+    },
+    "Measured by reading the biggest clip on the card. A cable that only carries USB 2 tops out near 40 MB/s.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Medido leyendo el clip más grande de la tarjeta. Un cable que solo lleva USB 2 no pasa de unos 40 MB/s."
+          }
+        }
+      }
+    },
     "Mode": {
       "localizations": {
         "es": {
@@ -1820,6 +1850,16 @@
         }
       }
     },
+    "Pick the camera's card (the disk with a DCIM folder on it).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegí la tarjeta de la cámara (el disco que tiene una carpeta DCIM)."
+          }
+        }
+      }
+    },
     "Picture": {
       "localizations": {
         "es": {
@@ -1953,6 +1993,16 @@
         }
       }
     },
+    "Quit while files are copying?": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Salir mientras se copian archivos?"
+          }
+        }
+      }
+    },
     "Quit while files are downloading?": {
       "localizations": {
         "es": {
@@ -1969,6 +2019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "REC"
+          }
+        }
+      }
+    },
+    "Read": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lectura"
           }
         }
       }
@@ -2369,6 +2429,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pruebas"
+          }
+        }
+      }
+    },
+    "That disk has no DCIM folder, so there is nothing from a camera on it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese disco no tiene carpeta DCIM, así que no hay nada de una cámara ahí."
           }
         }
       }
@@ -2846,6 +2916,16 @@
         }
       }
     },
+    "macOS won’t let Osmotic read the card yet. Allow it in System Settings › Privacy & Security › Files and Folders, or pick the card yourself.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS todavía no deja que Osmotic lea la tarjeta. Permitilo en Configuración del Sistema › Privacidad y seguridad › Archivos y carpetas, o elegí la tarjeta vos."
+          }
+        }
+      }
+    },
     "on your Mac": {
       "localizations": {
         "es": {
@@ -2899,6 +2979,16 @@
         }
       }
     },
+    "· measuring…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· midiendo…"
+          }
+        }
+      }
+    },
     "· out of range": {
       "localizations": {
         "es": {
@@ -2915,46 +3005,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "· guardada"
-          }
-        }
-      }
-    },
-    "Choose Card…": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegir tarjeta…"
-          }
-        }
-      }
-    },
-    "Pick the camera's card (the disk with a DCIM folder on it).": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Elegí la tarjeta de la cámara (el disco que tiene una carpeta DCIM)."
-          }
-        }
-      }
-    },
-    "That disk has no DCIM folder, so there is nothing from a camera on it.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ese disco no tiene carpeta DCIM, así que no hay nada de una cámara ahí."
-          }
-        }
-      }
-    },
-    "macOS won’t let Osmotic read the card yet. Allow it in System Settings › Privacy & Security › Files and Folders, or pick the card yourself.": {
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "macOS todavía no deja que Osmotic lea la tarjeta. Permitilo en Configuración del Sistema › Privacidad y seguridad › Archivos y carpetas, o elegí la tarjeta vos."
           }
         }
       }

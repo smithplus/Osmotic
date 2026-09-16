@@ -348,6 +348,13 @@ private struct StatusDisplay: View {
                         LCDPair(label: "Link", value: link.label, color: link.isSlow ? Theme.warning : Theme.lcdText)
                             .help(String(localized: "The cable negotiated \(link.headline)"))
                     }
+                    if let read = model.cardReadSpeed {
+                        LCDPair(
+                            label: "Read", value: String(format: "%.0f MB/s", read),
+                            color: read < 45 ? Theme.warning : Theme.lcdText
+                        )
+                        .help(String(localized: "Measured by reading the biggest clip on the card"))
+                    }
                     if model.cardTotalBytes > 0 {
                         LCDPair(label: "Free", value: Format.compact(bytes: model.cardFreeBytes))
                     }

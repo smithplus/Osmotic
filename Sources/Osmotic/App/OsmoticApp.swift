@@ -127,9 +127,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { true }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        // On the cameras screen a Cancel or Disconnect may still be handing the Wi-Fi back.
+        // On the cameras screen a Cancel or Disconnect may still be handing the Wi-Fi back. A card
+        // over the cable has nothing to hand back, so only a copy in progress is worth asking about.
         guard let model, model.screen != .cameras || model.restoringWifi || model.hasWifiWorkPending else {
             return .terminateNow
+        }
+        if model.isCard {
+            guard model.transfer != nil else { return .terminateNow }
+            let alert = NSAlert()
+            alert.messageText = String(localized: "Quit while files are copying?")
+            alert.informativeText = String(localized: "What already arrived stays saved; the rest resumes next time.")
+            alert.addButton(withTitle: String(localized: "Quit"))
+            alert.addButton(withTitle: String(localized: "Cancel"))
+            return alert.runModal() == .alertFirstButtonReturn ? .terminateNow : .terminateCancel
         }
         if model.transfer != nil {
             let alert = NSAlert()
