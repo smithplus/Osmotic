@@ -6,3 +6,4 @@
 "NSHumanReadableCopyright" = "Copyright © 2026 smithplus. Licencia MIT. No afiliado a DJI.";
 "NSCameraUsageDescription" = "Osmotic muestra la imagen de tu cámara DJI cuando la enchufás por USB como webcam.";
 "NSDownloadsFolderUsageDescription" = "Osmotic guarda los videos y fotos de tu cámara en la carpeta DJI de Descargas.";
+"NSRemovableVolumesUsageDescription" = "Osmotic lee la tarjeta de la cámara cuando la enchufás por USB, para copiar tus clips a la Mac.";

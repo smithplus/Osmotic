@@ -99,6 +99,7 @@ Later versions install themselves (**Osmotic › Check for Updates…**).
 | Location | macOS only tells apps the name of your Wi-Fi network if they have it; Osmotic uses the name to rejoin your network afterwards. Your location is never read or stored. |
 | Local Network | Talk to the camera at `192.168.2.1` |
 | Downloads folder | Save to `~/Downloads/DJI` |
+| Removable volumes | Read the camera's card when it is plugged in over USB |
 | Camera | Show the picture in the Webcam tab (asked only once a camera is plugged in) |
 | Notifications | Tell you when a download finishes |
 

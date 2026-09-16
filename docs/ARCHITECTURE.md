@@ -45,6 +45,8 @@ Tabs (`AppModel.Workspace`): **Files** (`.files`, Wi-Fi flow: cameras → connec
 | `Video/H264AnnexB.swift` | NALs, AVCC |
 | `HTTP/CameraHTTP.swift` | ephemeral URLSession without redirects, HEAD/data/range, `resolveStorage` |
 | `HTTP/FileDownloader.swift` | downloads to `.part` with Range resume; completes only if it matches Content-Length/Content-Range; rejects HTML/redirects; 416 = complete; never deletes at the destination |
+| `Card/CardScanner.swift` | a mounted card read as the same `CameraFile` the manifest gives (real sizes, `.LRF` as the proxy), its companions, and paths that can only resolve inside the card's `DCIM` |
+| `Card/CardCopier.swift` | copying a file off the card with progress, into a `.part` that is moved into place at the end |
 | `HTTP/ThumbnailFetcher.swift` | actor: `.scr` → `.thm` → EXIF, concurrency 4, disk cache (images only) |
 | `Update/Update.swift` | `SemVer`, `UpdateFeed` (release JSON, Ed25519 verification), `UpdateInstaller.script` (replacement on quit) |
 | `HTTP/EmbeddedJpeg.swift` | EXIF thumbnail from the first 64 KiB |
@@ -71,6 +73,7 @@ Tabs (`AppModel.Workspace`): **Files** (`.files`, Wi-Fi flow: cameras → connec
 | `Services/AppVisibility.swift` | whether the window is visible; pauses animations, BLE scanning and the webcam when it isn't |
 | `App/Credits.swift` | credits shown in Settings › Credits |
 | `Services/WebcamService.swift` | the camera over USB as a webcam (UVC): detection, permission (only with a camera present), preview |
+| `Services/CardWatcher.swift` | cards mounted over USB: mount/unmount notifications, a background scan (the first read of a removable volume is what asks for permission, so it never runs on the main thread), the negotiated USB speed from the IO registry, and the open-panel path when the permission was refused |
 | `Views/RootView.swift` | screen based on `screen`, `TopPlate` (top strip with the tabs in the center) |
 | `Views/CamerasView.swift` | nearby and saved cameras, `Notice`, `ErrorBanner`, destination folder |
 | `Views/ConnectingView.swift` | connection stages, approval, manual password |

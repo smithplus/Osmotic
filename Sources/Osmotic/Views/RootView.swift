@@ -14,6 +14,8 @@ struct RootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background { AluminumPlate().ignoresSafeArea() }
         .motion(Motion.quick, value: model.screen)
+        // A card plugged in or pulled out, on any screen.
+        .onChange(of: model.cards.cards) { model.cardsChanged() }
     }
 }
 

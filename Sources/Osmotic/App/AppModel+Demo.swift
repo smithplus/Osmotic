@@ -8,7 +8,7 @@ import OsmoticCore
 
 extension AppModel {
     /// UI demo without hardware: a captured manifest on screen, or the connection stepper mid-way.
-    /// `OSMOTIC_DEMO_MANIFEST=<file.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<dir>]`.
+    /// `OSMOTIC_DEMO_MANIFEST=<file.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam|card] [OSMOTIC_DEMO_THUMBS=<dir>]`.
     /// The landing's demo video (`scripts/make_demo_video.sh`) steps through one session with:
     /// `OSMOTIC_DEMO_STAGE=bluetooth|pairing|wifi|datalink` (connecting), and on the library
     /// `OSMOTIC_DEMO_SELECT=<n>` (clips ticked, default 2), `OSMOTIC_DEMO_PROGRESS=none|<0…1>` (the
@@ -57,6 +57,13 @@ extension AppModel {
                 stage = .pairing
                 needsApproval = true
                 stageDetail = String(localized: "Approve the connection on the camera’s screen")
+            }
+        case "card":
+            // A card plugged in right now, for checking the card screens without pairing anything.
+            if let card = cards.cards.first {
+                openCard(card)
+            } else {
+                log("demo: no card mounted")
             }
         case "webcam":
             screen = .cameras

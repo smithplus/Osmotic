@@ -89,6 +89,19 @@ final class AppModel {
     /// The automatic return to the user's network failed; they have to pick one in the menu bar.
     var wifiRestoreFailed = false
 
+    // ---- card over USB -------------------------------------------------------------------------
+    /// Cards plugged into the Mac: an Osmo in storage mode mounts its SD card as a removable volume.
+    @ObservationIgnored let cards = CardWatcher()
+    /// The card the library is showing, when the files come off the cable instead of the camera's Wi-Fi.
+    var cardVolume: URL?
+    var cardName = ""
+    var cardLink: CardWatcher.Link?
+    var cardFreeBytes = 0
+    var cardTotalBytes = 0
+    /// True while the library is a card's, not a wireless camera's: no session, no Wi-Fi to hand back.
+    var isCard: Bool { cardVolume != nil }
+    @ObservationIgnored lazy var copier = CardCopier(log: { log($0) })
+
     // ---- library ------------------------------------------------------------------------------
     var files: [CameraFile] = []
     var status = CameraStatus()

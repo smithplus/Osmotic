@@ -414,6 +414,16 @@
         }
       }
     },
+    "Card": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarjeta"
+          }
+        }
+      }
+    },
     "Change…": {
       "localizations": {
         "es": {
@@ -570,6 +580,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No se pudo conectar por Bluetooth. ¿La cámara está encendida y cerca?"
+          }
+        }
+      }
+    },
+    "Couldn’t eject the card. Close anything still reading it and try again.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo expulsar la tarjeta. Cerrá lo que la esté leyendo y probá de nuevo."
           }
         }
       }
@@ -940,6 +960,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Descargas"
+          }
+        }
+      }
+    },
+    "Eject": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Expulsar"
           }
         }
       }
@@ -1547,6 +1577,16 @@
         }
       }
     },
+    "Open": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir"
+          }
+        }
+      }
+    },
     "Open Downloads Folder": {
       "localizations": {
         "es": {
@@ -1593,6 +1633,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Abrir Ajustes"
+          }
+        }
+      }
+    },
+    "Open the card %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir la tarjeta %@"
           }
         }
       }
@@ -1806,6 +1856,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Enchufá la cámara a esta Mac con un cable USB-C."
+          }
+        }
+      }
+    },
+    "Plugged in": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conectada por cable"
           }
         }
       }
@@ -2323,6 +2383,16 @@
         }
       }
     },
+    "The cable negotiated %@": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cable negoció %@"
+          }
+        }
+      }
+    },
     "The camera closed the Bluetooth connection.": {
       "localizations": {
         "es": {
@@ -2393,6 +2463,16 @@
         }
       }
     },
+    "The camera's card, over the cable. No Wi-Fi, and your Internet stays on.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La tarjeta de la cámara, por cable. Sin Wi-Fi, y no perdés Internet."
+          }
+        }
+      }
+    },
     "The camera’s card": {
       "localizations": {
         "es": {
@@ -2409,6 +2489,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "La tarjeta está vacía"
+          }
+        }
+      }
+    },
+    "The card was unplugged.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconectó la tarjeta."
+          }
+        }
+      }
+    },
+    "The card was unplugged. What already arrived is saved.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se desconectó la tarjeta. Lo que ya llegó quedó guardado."
           }
         }
       }
@@ -2549,6 +2649,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "No disponible"
+          }
+        }
+      }
+    },
+    "Unmount the card so the cable can come out": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desmontar la tarjeta para poder sacar el cable"
           }
         }
       }
@@ -2805,6 +2915,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "· guardada"
+          }
+        }
+      }
+    },
+    "Choose Card…": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegir tarjeta…"
+          }
+        }
+      }
+    },
+    "Pick the camera's card (the disk with a DCIM folder on it).": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Elegí la tarjeta de la cámara (el disco que tiene una carpeta DCIM)."
+          }
+        }
+      }
+    },
+    "That disk has no DCIM folder, so there is nothing from a camera on it.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese disco no tiene carpeta DCIM, así que no hay nada de una cámara ahí."
+          }
+        }
+      }
+    },
+    "macOS won’t let Osmotic read the card yet. Allow it in System Settings › Privacy & Security › Files and Folders, or pick the card yourself.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS todavía no deja que Osmotic lea la tarjeta. Permitilo en Configuración del Sistema › Privacidad y seguridad › Archivos y carpetas, o elegí la tarjeta vos."
           }
         }
       }

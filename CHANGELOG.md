@@ -4,6 +4,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versions: [Sem
 
 ## [Unreleased]
 
+### Added
+- **Files off the card over USB-C.** With the camera plugged in and set to storage mode, its card mounts as a disk and Osmotic reads it directly: no Bluetooth, no Wi-Fi, no phone, and your Internet stays on. The cameras screen lists it under "Plugged in" with how fast the cable negotiated, and the library works as usual (day folders, dated when shot, skips what you already have, copies the `.WAV` beside a clip). Eject when you're done.
+
 ## [0.3.0] - 2026-09-15
 
 Safer around the camera, easier to find your way, and a new look for the lights. Updating from 0.2.0 happens inside the app; macOS asks for its permissions once more because this build is not notarized yet.

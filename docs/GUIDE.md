@@ -5,6 +5,7 @@ Everything the app does, in the order you meet it. Short version: turn the camer
 - [Install](#install)
 - [Connect](#connect)
 - [Files: download from the card](#files-download-from-the-card)
+- [From the card, over USB](#from-the-card-over-usb)
 - [Live: control the camera](#live-control-the-camera)
 - [Webcam](#webcam)
 - [Settings](#settings)
@@ -45,6 +46,16 @@ Cameras you have used before appear under "Connected before", so a second trip i
 - Files land in `~/Downloads/DJI`, one folder per day, and each file gets the moment it was shot as its creation date, so Finder and your editor sort it correctly.
 - A clip already on your Mac is skipped, never overwritten. An interrupted download resumes from where it stopped, even past 4 GB. If the link drops, the app waits for the camera and carries on.
 - The transfer bar shows the file, the speed and the time left. **Cancel** stops after the current file and keeps what arrived.
+
+## From the card, over USB
+
+Plug the camera into the Mac with USB-C and choose **USB storage** (or **Data**) on the camera. Its card mounts as a disk, and Osmotic lists it on the cameras screen under **Plugged in**, with how fast the cable negotiated.
+
+- **Open** shows the card's files in the same grid, with the same keys: Download New, Download Selection, Download Day, the filters and the day headers. Files already on your Mac are skipped.
+- Nothing wireless happens: no Bluetooth, no pairing, and your Mac keeps its own Wi-Fi and its Internet.
+- Sizes come from the card, so the bar and the time left are right from the first second, whatever the clip's length.
+- **Eject** unmounts the card so the cable can come out. Pulling the cable mid-copy is safe too: what already arrived is saved, and the file being copied is discarded rather than left half written.
+- About speed: the readout shows **USB 2.0** or **USB 3**. A cable that only carries USB 2 (most charging cables) tops out around 40 MB/s, which is roughly what Wi-Fi gives you. A USB 3 cable, straight into the Mac rather than through a hub, is the one worth using for a full card.
 
 ## Live: control the camera
 

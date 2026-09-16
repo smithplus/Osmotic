@@ -122,6 +122,7 @@ extension AppModel {
 
     func thumbnail(for f: CameraFile) async -> NSImage? {
         if let img = thumbCache.object(forKey: f.id as NSString) { return img }
+        if isCard { return await cardThumbnail(for: f) }
         guard let data = await thumbnails.thumbnail(for: f), let img = NSImage(data: data) else { return nil }
         cacheThumbnail(img, for: f.id)
         return img

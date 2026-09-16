@@ -5,7 +5,7 @@ Single entry point: read this first. It tells you where everything is and how to
 ## What it is
 
 Native macOS app (Swift 6.2, SwiftUI, macOS 15+) for DJI Osmo cameras (target: **Pocket 3**), with three tabs:
-- **Files**: downloads media over BLE → the camera's Wi-Fi → UDP datalink → HTTP to `~/Downloads/DJI`.
+- **Files**: downloads media over BLE → the camera's Wi-Fi → UDP datalink → HTTP to `~/Downloads/DJI`. Or, with the camera plugged in over USB-C in storage mode, straight off its mounted card (`CardScanner`/`CardCopier`, no radio at all).
 - **Live**: capture control (record, photo, mode) and live view over the same datalink.
 - **Webcam**: the camera plugged in over USB-C as a UVC webcam (Zoom, Meet and OBS see it too).
 
@@ -59,13 +59,16 @@ swift scripts/make_scenes.swift <dir>      # the synthetic "footage" demo mode s
 
 - CI: `.github/workflows/ci.yml` (macos-26): format, build, tests, packaging on every push to `main`/`ui/**`. `pages.yml` publishes the landing page on pushes to `main` that touch `site/` or `docs/images/`.
 - Every run writes a log to `~/Library/Logs/Osmotic/osmotic-*.log` (Window › Technical Log, ⌥⌘L). It is the source of truth for diagnosing tests with the real camera; the key lines are in `docs/STATUS.md` and `docs/CONTROL.md`.
-- Demo mode: `OSMOTIC_DEMO_MANIFEST=<fixture.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<folder of .jpg>] [OSMOTIC_LANG=es]`. No screen: library with a download half done; `camera` = Live tab recording. For the demo video: `OSMOTIC_DEMO_STAGE=bluetooth|pairing|wifi|datalink` (connecting), `OSMOTIC_DEMO_SELECT=<n>`, `OSMOTIC_DEMO_PROGRESS=none|<0…1>`, `OSMOTIC_DEMO_DONE=1` (library). `OSMOTIC_SNAPSHOT_DELAY` shortens the wait before a snapshot.
+- Demo mode: `OSMOTIC_DEMO_MANIFEST=<fixture.bin> [OSMOTIC_DEMO_SCREEN=connecting|cameras|camera|webcam] [OSMOTIC_DEMO_THUMBS=<folder of .jpg>] [OSMOTIC_LANG=es]`. No screen: library with a download half done; `camera` = Live tab recording. `card` opens whatever camera card is mounted right now (real files, for checking the card screens). For the demo video: `OSMOTIC_DEMO_STAGE=bluetooth|pairing|wifi|datalink` (connecting), `OSMOTIC_DEMO_SELECT=<n>`, `OSMOTIC_DEMO_PROGRESS=none|<0…1>`, `OSMOTIC_DEMO_DONE=1` (library). `OSMOTIC_SNAPSHOT_DELAY` shortens the wait before a snapshot.
 - No screen-recording permission: `screencapture` doesn't work; `scripts/snapshot.sh` uses `ImageRenderer` (AppKit controls and the live view aren't drawn; `ScrollView`s come out blank, which is why views take `scrolls: false`).
-- Permissions: launching from Terminal hides Local Network problems (they don't apply to Terminal's processes); test them by opening the app with `open build/Osmotic.app` or from Finder.
+- Permissions: launching from Terminal hides Local Network problems (they don't apply to Terminal's processes); test them by opening the app with `open build/Osmotic.app` or from Finder. A build launched from a terminal also **crashes on TCC** the moment it starts Bluetooth or reads a removable volume, because the usage string is looked up on the responsible process (the terminal), not on the bundle: use demo mode for renders, and Finder for permission tests.
+- `snapshot.sh` renders nothing while a copy of the app is already running (macOS hands the launch to the open instance): quit Osmotic first.
 
 ## Recipes
 
 **New UI text.** Write it in English. `Text("…")`, `Button("…")`, `.help("…")`, `Silk("…")`, `LCDPair(label:)`, `BankLegend`, `SectionIndex(title:)`, `Notice(text:)`, `LED(label:)` are localized automatically (`LocalizedStringKey`). For a `String` (model messages, `LCDText(text:)`): `String(localized: "…")`. For data (file name, date): `Silk(verbatim:)`, `Notice(verbatim:)`, `Text(verbatim:)`. Then run `scripts/sync_strings.sh` and add the Spanish in `Resources/Localizable.xcstrings` (plurals: `plural` variations, see `"%lld files"`).
+
+**Reading the card over USB.** `CardScanner` lists a mounted volume's `DCIM` as the same `CameraFile` the manifest produces (real sizes, `.LRF` as the proxy); `CardCopier` copies a file with progress into a `.part` and moves it into place; `CardWatcher` (app) tracks mounted cards and reads the negotiated USB speed from the IO registry. `AppModel.openCard` puts the library in card mode (`isCard`): no session, no Wi-Fi to hand back, Live unavailable, Eject instead of Disconnect. Needs `NSRemovableVolumesUsageDescription`.
 
 **New system permission.** Usage key in `Resources/Info.plist` (English) + the same in `Resources/es.lproj/InfoPlist.strings` + an entitlement in `Resources/Osmotic.entitlements` if the hardened runtime protects the resource (location, camera, microphone…) + a row in the README's permissions table and in `SECURITY.md`.
 

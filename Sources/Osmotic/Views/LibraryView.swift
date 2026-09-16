@@ -239,19 +239,34 @@ struct LibraryTopPlate: View {
             WorkspaceTabs()
         } trailing: {
             HStack(spacing: Theme.s3) {
-                LED(
-                    color: model.linkLost ? Theme.danger : Theme.success,
-                    state: model.linkLost || model.switchingWorkspace ? .blink : .on,
-                    label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
+                if model.isCard {
+                    // Over the cable there is no link to lose: the light says the card is mounted.
+                    LED(color: Theme.success, state: .on, label: "Card")
+                } else {
+                    LED(
+                        color: model.linkLost ? Theme.danger : Theme.success,
+                        state: model.linkLost || model.switchingWorkspace ? .blink : .on,
+                        label: model.linkLost ? (model.reconnecting ? "Reconnecting" : "No signal") : "Linked")
+                }
                 CassetteKeyBank(compact: true) {
                     SettingsKey()
-                    Button {
-                        model.requestDisconnect()
-                    } label: {
-                        Label("Disconnect", systemImage: "eject.fill")
+                    if model.isCard {
+                        Button {
+                            model.ejectCard()
+                        } label: {
+                            Label("Eject", systemImage: "eject.fill")
+                        }
+                        .buttonStyle(.compactKey)
+                        .help("Unmount the card so the cable can come out")
+                    } else {
+                        Button {
+                            model.requestDisconnect()
+                        } label: {
+                            Label("Disconnect", systemImage: "eject.fill")
+                        }
+                        .buttonStyle(.compactKey)
+                        .help("Release the camera and put the Mac back on your Wi-Fi")
                     }
-                    .buttonStyle(.compactKey)
-                    .help("Release the camera and put the Mac back on your Wi-Fi")
                 }
             }
         }
@@ -317,19 +332,33 @@ private struct StatusDisplay: View {
         let s = model.status
         LCDGlass {
             HStack(spacing: Theme.s4) {
-                LCDText(text: (model.target?.model.name ?? String(localized: "Camera")).uppercased(), size: 12.5, weight: .medium)
+                LCDText(
+                    text: model.isCard
+                        ? model.cardName.uppercased()
+                        : (model.target?.model.name ?? String(localized: "Camera")).uppercased(),
+                    size: 12.5, weight: .medium)
                 LCDPair(label: "Files", value: "\(model.files.count)")
                 LCDPair(label: "New", value: "\(model.newFiles.count)")
                 if !model.selection.isEmpty {
                     LCDPair(label: "Selected", value: "\(model.selection.count)")
                 }
                 Spacer(minLength: Theme.s2)
-                LCDPair(
-                    label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
-                    color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
-                if let st = s.displayStorage {
-                    LCDPair(label: "Free", value: Format.compact(bytes: st.freeMb * 1_048_576))
-                        .help(String(localized: "\(Format.megabytes(st.freeMb)) free of \(Format.megabytes(st.totalMb))"))
+                if model.isCard {
+                    if let link = model.cardLink {
+                        LCDPair(label: "Link", value: link.label, color: link.isSlow ? Theme.warning : Theme.lcdText)
+                            .help(String(localized: "The cable negotiated \(link.headline)"))
+                    }
+                    if model.cardTotalBytes > 0 {
+                        LCDPair(label: "Free", value: Format.compact(bytes: model.cardFreeBytes))
+                    }
+                } else {
+                    LCDPair(
+                        label: "Batt", value: s.batteryPercent >= 0 ? "\(s.batteryPercent)%" : "--",
+                        color: (0...15).contains(s.batteryPercent) ? Theme.danger : Theme.lcdText)
+                    if let st = s.displayStorage {
+                        LCDPair(label: "Free", value: Format.compact(bytes: st.freeMb * 1_048_576))
+                            .help(String(localized: "\(Format.megabytes(st.freeMb)) free of \(Format.megabytes(st.totalMb))"))
+                    }
                 }
             }
             .padding(.horizontal, Theme.s3 + 2)

@@ -66,6 +66,20 @@ extension AppModel {
             let dest = DownloadPaths.destination(for: f)
             log("transfer: \(f.name) → \(dest.path)")
             speedSample = (Date(), -1)  // seeded by the first report, which includes any resumed bytes
+            if isCard {
+                await copyFromCardStep(f, to: dest, saved: &saved, current: current)
+                guard gen == transferGeneration else { return }
+                queuedIds.remove(f.id)
+                currentTransferId = nil
+                if var t = transfer {
+                    t.done += 1
+                    t.bytesDone += max(0, t.currentSize)
+                    t.currentBytes = 0
+                    t.current = nil
+                    transfer = t
+                }
+                continue
+            }
             let result = await downloader.download(
                 urlPath: f.originalURLPath, to: dest, expectedSize: size(of: f),
                 onTotal: { total in Task { @MainActor [weak self] in self?.transferRealSize(fileId: f.id, total: total) } },
@@ -154,7 +168,29 @@ extension AppModel {
         )
     }
 
-    private func transferProgress(fileId: String, bytes: Int) {
+    /// One file off the card: a copy, then the same history, dates and sidecars as a download.
+    private func copyFromCardStep(_ f: CameraFile, to dest: URL, saved: inout Int, current: () -> Bool) async {
+        switch await copyFromCard(f, to: dest) {
+        case .saved(let url):
+            saved += 1
+            stampDates(url, f)
+            log("card: \(f.name) saved")
+        case .skipped:
+            log("card: \(f.name) already on disk")
+        case .failed(let why):
+            transfer?.failed.append(f.name)
+            log("card: \(f.name) FAILED — \(why)")
+            return
+        case .cancelled:
+            log("card: \(f.name) cancelled")
+            return
+        }
+        history.insert(f)
+        downloaded.insert(f.id)
+        if Preferences.includeSidecars && current() { await copyCardSidecars(of: f, next: dest) }
+    }
+
+    func transferProgress(fileId: String, bytes: Int) {
         guard var t = transfer, t.current?.id == fileId else { return }
         let now = Date()
         if speedSample.bytes < 0 { speedSample = (now, bytes) }

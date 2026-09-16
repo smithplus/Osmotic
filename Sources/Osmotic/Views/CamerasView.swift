@@ -77,8 +77,31 @@ struct CamerasView: View {
                 .transition(.panelFromTop)
             }
 
+            if !model.cards.cards.isEmpty || model.cards.accessDenied {
+                VStack(alignment: .leading, spacing: Theme.s2 + 2) {
+                    SectionIndex(number: 1, title: "Plugged in")
+                    ForEach(model.cards.cards) { card in
+                        CardModule(card: card, busy: model.transfer != nil) { model.openCard(card) }
+                    }
+                    if model.cards.accessDenied {
+                        // macOS keeps files on removable volumes behind a permission; the reader can
+                        // grant it in System Settings, or point at the card here and skip the question.
+                        HStack(spacing: Theme.s3) {
+                            Notice(
+                                text:
+                                    "macOS won’t let Osmotic read the card yet. Allow it in System Settings › Privacy & Security › Files and Folders, or pick the card yourself.",
+                                color: Theme.warning)
+                            CassetteKeyBank {
+                                Button("Choose Card…") { model.chooseCard() }
+                                    .buttonStyle(.secondaryKey)
+                            }
+                        }
+                    }
+                }
+            }
+
             VStack(alignment: .leading, spacing: Theme.s2 + 2) {
-                SectionIndex(number: 1, title: "Nearby")
+                SectionIndex(number: model.cards.cards.isEmpty ? 1 : 2, title: "Nearby")
                 if nearby.isEmpty {
                     if bluetoothReady { EmptyNearby() }
                 } else {
@@ -97,7 +120,7 @@ struct CamerasView: View {
 
             if !savedOutOfRange.isEmpty {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
-                    SectionIndex(number: 2, title: "Connected before")
+                    SectionIndex(number: model.cards.cards.isEmpty ? 2 : 3, title: "Connected before")
                     ForEach(savedOutOfRange) { cam in
                         CameraModule(
                             title: cam.modelName, subtitle: cam.bleName, rssi: nil, saved: true, inRange: false,
@@ -255,6 +278,49 @@ private struct CameraModule: View {
     }
 
     static func level(_ rssi: Int) -> Int { BluetoothService.signalLevel(rssi) }
+}
+
+/// A card plugged in over USB: what it is, how full it is, and how fast the cable negotiated.
+private struct CardModule: View {
+    let card: CardWatcher.Card
+    let busy: Bool
+    let open: () -> Void
+
+    var body: some View {
+        HStack(spacing: Theme.s3) {
+            Image(systemName: "sdcard.fill")
+                .accessibilityHidden(true)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(Theme.ink.opacity(0.75))
+                .frame(width: 46, height: 46)
+                .recessed(radius: Theme.radiusM)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: card.name)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Theme.ink)
+                HStack(spacing: 6) {
+                    if let link = card.link {
+                        Silk(verbatim: link.label + " · " + link.headline)
+                    }
+                    if card.totalBytes > 0 {
+                        Silk(verbatim: "· " + Format.compact(bytes: card.freeBytes) + " free")
+                    }
+                }
+            }
+            Spacer()
+            CassetteKeyBank {
+                Button("Open", action: open)
+                    .buttonStyle(CassetteKeyStyle(finish: .primary))
+                    .disabled(busy)
+                    .accessibilityLabel(Text("Open the card \(card.name)"))
+            }
+        }
+        .padding(.vertical, Theme.s3 - 2)
+        .padding(.horizontal, Theme.s3)
+        .raisedPanel(screws: true)
+        .help(Text("The camera's card, over the cable. No Wi-Fi, and your Internet stays on."))
+    }
 }
 
 /// Four small green LEDs for signal strength.
