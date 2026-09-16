@@ -1,5 +1,5 @@
 // One illustration per install step, for the landing page (docs/images/step-1..3.png, then WebP).
-//   1. drag Osmotic to Applications: the disk image as Finder opens it (+ step-1.mp4, the drag itself)
+//   1. drag Osmotic to Applications: the disk image as Finder opens it (+ step-1.mp4, the drag, looping)
 //   2. the first launch: the Privacy & Security pane, drawn the way macOS lays it out
 //   3. connect: the app's own Cameras screen (a real render), with the key to press marked
 // Steps 1 and 2 are drawings: macOS windows can't be captured here (no screen-recording permission),
@@ -214,7 +214,7 @@ func step1(_ t: Double?) {
     var x = appCenter.x + 76
     var i = 0.0
     while x < folderCenter.x - 82 {
-        let lit = t.map { smooth(($0 - 0.7 - i * 0.07) / 0.15) } ?? 1
+        let lit = t.map { smooth(($0 - 0.7 - i * 0.07) / 0.15) * (1 - smooth(($0 - 3.0) / 0.5)) } ?? 1
         amber.withAlphaComponent(0.25 + 0.55 * lit).setFill()
         NSBezierPath(ovalIn: NSRect(x: x, y: dotY, width: 7, height: 7)).fill()
         x += 20
@@ -249,7 +249,9 @@ func step1(_ t: Double?) {
     case ..<0.8: hand = onApp
     case ..<1.75: hand = mix(onApp, onFolder, smooth((t - 0.8) / 0.95))
     case ..<2.2: hand = onFolder
-    default: hand = mix(onFolder, away, smooth((t - 2.2) / 0.7))
+    case ..<2.9: hand = mix(onFolder, away, smooth((t - 2.2) / 0.7))
+    // Out the way it came in, so the last frame matches the first and the loop has no seam.
+    default: hand = mix(away, startP, smooth((t - 2.9) / 0.6))
     }
     // The icon travels with the hand, faded like a drag image, and sinks into the folder on release.
     if t >= 0.72 && t < 2.35 {
@@ -266,7 +268,8 @@ func step1(_ t: Double?) {
 
 try save("step-1.png") { step1(nil) }
 
-// The clip: 3.2 s at 30 fps through ffmpeg, H.264 at the still's size. It plays once on the page.
+// The clip: 4 s at 30 fps through ffmpeg, H.264 at the still's size. It loops on the page, and its
+// last frame is its first (pointer back in the corner, guide dim), so the seam doesn't show.
 if let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(where: { FileManager.default.fileExists(atPath: $0) }) {
     let mp4 = images.appendingPathComponent("step-1.mp4")
     let p = Process()
@@ -279,7 +282,7 @@ if let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(wher
     let pipe = Pipe()
     p.standardInput = pipe
     try p.run()
-    for n in 0..<96 {
+    for n in 0..<120 {
         let rep = render { step1(Double(n) / 30) }
         pipe.fileHandleForWriting.write(Data(bytes: rep.bitmapData!, count: Int(W) * Int(H) * 4))
     }

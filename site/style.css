@@ -285,9 +285,9 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
   border-radius: 12px; background: #1d1d1c;
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1), 0 14px 38px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
 }
-/* The video is its own pause control (main.js), so it takes focus like one. */
-.demo-video { cursor: pointer; }
-.demo-video:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+/* A video is its own pause control (main.js), so it takes focus like one. */
+.demo-video, .step-shot video { cursor: pointer; }
+.demo-video:focus-visible, .step-shot video:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .shot--hero { margin-inline: 0; }
 
 .lcd--proof {

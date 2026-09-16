@@ -120,7 +120,8 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
   for (const el of targets) io.observe(el);
 })();
 
-// The demo videos (the hero's session, the Live tab): loops rendered by the app itself. Each starts
+// The demo videos (the hero's session, the Live tab, the drag in install step 1): loops rendered by
+// the app itself. Each starts
 // once the page has loaded (the poster is what paints first) and plays only while it is in view.
 // The picture is its own control: a click, Enter or Space stops and starts it, so a reader can hold
 // a frame without a button on the page. Reduce Motion leaves the posters.
@@ -163,24 +164,6 @@ for (const figure of document.querySelectorAll("[data-demo]")) {
   if (document.readyState === "complete") start();
   else addEventListener("load", start, { once: true });
 }
-
-// Short clips that show one gesture (dragging the app to Applications) play once, when the reader
-// gets to them, and rest on their last frame. Under five seconds, so no pause key is needed.
-(() => {
-  const clips = [...document.querySelectorAll("video[data-play-once]")];
-  if (clips.length === 0 || reduceMotion.matches || !("IntersectionObserver" in window)) return;
-  const io = new IntersectionObserver(
-    (entries) => {
-      for (const e of entries) {
-        if (!e.isIntersecting) continue;
-        io.unobserve(e.target);
-        setTimeout(() => e.target.play().catch(() => {}), 400);  // after the card has risen in
-      }
-    },
-    { threshold: 0.6 },
-  );
-  for (const clip of clips) io.observe(clip);
-})();
 
 // iOS Safari applies :active (the key press) only when a touch listener exists.
 document.addEventListener("touchstart", () => {}, { passive: true });
