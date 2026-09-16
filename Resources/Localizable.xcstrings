@@ -3008,6 +3008,16 @@
           }
         }
       }
+    },
+    "%@ is plugged in, but its card isn’t showing up. Unplug the cable and plug it back in, or pick USB storage on the camera.": {
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ está enchufada, pero su tarjeta no aparece. Desenchufá el cable y volvé a enchufarlo, o elegí almacenamiento USB en la cámara."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

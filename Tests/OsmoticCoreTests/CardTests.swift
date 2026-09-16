@@ -43,6 +43,17 @@ private func makeCard(_ files: [(String, Int)]) throws -> URL {
         #expect(files.allSatisfy { $0.isVideo })
     }
 
+    @Test func tellsAnUnreadableCardApartFromNoCard() throws {
+        let card = try makeCard([("DJI_20260827200600_0001_D.MP4", 32)])
+        let dcim = card.appendingPathComponent("DCIM")
+        try FileManager.default.setAttributes([.posixPermissions: 0o000], ofItemAtPath: dcim.path)
+        defer { try? FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: dcim.path) }
+        #expect(CardScanner.access(to: card) == .denied, "a DCIM that can't be read is reported, not hidden")
+        let plain = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("plain-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: plain, withIntermediateDirectories: true)
+        #expect(CardScanner.access(to: plain) == .notACard, "no DCIM at all is simply not a card")
+    }
+
     @Test func findsTheCompanionsOfAClip() throws {
         let card = try makeCard([
             ("DJI_20260827200600_0001_D.MP4", 10),

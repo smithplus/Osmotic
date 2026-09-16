@@ -42,10 +42,12 @@ struct CamerasView: View {
             if visible { model.ble.startScan() } else { model.ble.stopScan() }
         }
         .task {
-            // Keep the list honest: drop cameras that stopped advertising.
+            // Keep the lists honest: drop cameras that stopped advertising, and look at the USB bus
+            // again (a camera unplugged or plugged back in doesn't always mount or unmount a volume).
             while !Task.isCancelled {
                 try? await Task.sleep(for: .seconds(3))
                 model.ble.pruneStale()
+                model.cards.refresh()
             }
         }
     }
@@ -77,7 +79,7 @@ struct CamerasView: View {
                 .transition(.panelFromTop)
             }
 
-            if !model.cards.cards.isEmpty || model.cards.accessDenied {
+            if !model.cards.cards.isEmpty || model.cards.accessDenied || model.cards.cameraWithoutCard != nil {
                 VStack(alignment: .leading, spacing: Theme.s2 + 2) {
                     SectionIndex(number: 1, title: "Plugged in")
                     ForEach(model.cards.cards) { card in
@@ -88,7 +90,20 @@ struct CamerasView: View {
                             model.openCard(card)
                         }
                     }
-                    if model.cards.accessDenied {
+                    if let camera = model.cards.cameraWithoutCard, model.cards.cards.isEmpty {
+                        // The camera is on the cable but presents no card: ejected in Finder, or out
+                        // of storage mode. It comes back when the cable does.
+                        HStack(spacing: Theme.s3) {
+                            Notice(
+                                text:
+                                    "\(camera) is plugged in, but its card isn’t showing up. Unplug the cable and plug it back in, or pick USB storage on the camera.",
+                                color: Theme.warning)
+                            CassetteKeyBank {
+                                Button("Choose Card…") { model.chooseCard() }
+                                    .buttonStyle(.secondaryKey)
+                            }
+                        }
+                    } else if model.cards.accessDenied {
                         // macOS keeps files on removable volumes behind a permission; the reader can
                         // grant it in System Settings, or point at the card here and skip the question.
                         HStack(spacing: Theme.s3) {

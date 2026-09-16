@@ -64,6 +64,11 @@ final class CardWatcher {
     /// macOS is refusing to read a removable volume: the app needs permission in
     /// Privacy & Security › Files and Folders, or the reader can point at the card themselves.
     private(set) var accessDenied = false
+    /// A DJI camera is on the USB bus but none of its cards is mounted: it left storage mode, or
+    /// the card was ejected in Finder. Unplugging and plugging it back in brings the card back.
+    private(set) var cameraWithoutCard: String?
+    /// The first scan is always logged, even when it finds nothing, so a log says what the app saw.
+    @ObservationIgnored private var scanned = false
 
     init(watch: Bool = true) {
         refresh()
@@ -86,9 +91,15 @@ final class CardWatcher {
             guard let self else { return }
             if result.denied != accessDenied {
                 accessDenied = result.denied
-                if result.denied { log("card: macOS refused to read a removable volume (permission)") }
+                if result.denied { log("card: a removable volume couldn't be read (permission or I/O)") }
             }
-            guard result.cards != cards else { return }
+            let bare = result.cards.isEmpty ? result.djiOnUSB : nil
+            if bare != cameraWithoutCard {
+                cameraWithoutCard = bare
+                if let bare { log("card: \(bare) is on USB but no card is mounted") }
+            }
+            guard result.cards != cards || !scanned else { return }
+            scanned = true
             cards = result.cards
             measured = measured.filter { entry in result.cards.contains { $0.volume == entry.key } }
             let listed = result.cards.map { "\($0.name) [\($0.link?.label ?? "unknown link")]" }.joined(separator: ", ")
@@ -132,7 +143,7 @@ final class CardWatcher {
     }
 
     /// Off the main thread: which mounted volumes are camera cards, and whether macOS refused a look.
-    private nonisolated static func scan() -> (cards: [Card], denied: Bool) {
+    private nonisolated static func scan() -> (cards: [Card], denied: Bool, djiOnUSB: String?) {
         let keys: [URLResourceKey] = [
             .volumeIsRemovableKey, .volumeNameKey, .volumeAvailableCapacityKey, .volumeTotalCapacityKey,
         ]
@@ -156,7 +167,31 @@ final class CardWatcher {
             case .notACard: break
             }
         }
-        return (cards, denied)
+        return (cards, denied, djiCameraOnUSB())
+    }
+
+    /// The product name of a DJI device on the USB bus (vendor 0x2CA3), if there is one.
+    nonisolated static func djiCameraOnUSB() -> String? {
+        guard let matching = IOServiceMatching("IOUSBHostDevice") else { return nil }
+        var iterator: io_iterator_t = IO_OBJECT_NULL
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, matching, &iterator) == KERN_SUCCESS else { return nil }
+        defer { IOObjectRelease(iterator) }
+        var service = IOIteratorNext(iterator)
+        while service != IO_OBJECT_NULL {
+            defer {
+                IOObjectRelease(service)
+                service = IOIteratorNext(iterator)
+            }
+            let vendor =
+                IORegistryEntryCreateCFProperty(service, "idVendor" as CFString, kCFAllocatorDefault, 0)?
+                .takeRetainedValue() as? NSNumber
+            guard vendor?.intValue == 0x2CA3 else { continue }
+            let name =
+                IORegistryEntryCreateCFProperty(service, "USB Product Name" as CFString, kCFAllocatorDefault, 0)?
+                .takeRetainedValue() as? String
+            return name ?? "DJI camera"
+        }
+        return nil
     }
 
     // ---- How the cable negotiated ----------------------------------------------------------------

@@ -32,11 +32,15 @@ public enum CardScanner {
             let hasFolder = items.contains { (try? $0.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true }
             return hasFolder ? .card : .notACard
         } catch let error as NSError {
-            let denied =
-                error.code == NSFileReadNoPermissionError
-                || (error.domain == NSPOSIXErrorDomain && error.code == Int(EPERM))
-                || (error.underlyingErrors.first as? NSError)?.code == Int(EPERM)
-            return denied ? .denied : .notACard
+            // Only a missing DCIM means "not a camera's card". Anything else (EPERM from privacy
+            // controls, EACCES, an I/O error) means the card couldn't be read, which the reader
+            // should hear about rather than see an empty list.
+            let underlying = error.underlyingErrors.first as? NSError
+            let missing =
+                error.code == NSFileReadNoSuchFileError
+                || (error.domain == NSPOSIXErrorDomain && error.code == Int(ENOENT))
+                || (underlying?.domain == NSPOSIXErrorDomain && underlying?.code == Int(ENOENT))
+            return missing ? .notACard : .denied
         }
     }
 
