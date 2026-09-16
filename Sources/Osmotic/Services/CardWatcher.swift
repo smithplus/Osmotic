@@ -91,7 +91,8 @@ final class CardWatcher {
             guard result.cards != cards else { return }
             cards = result.cards
             measured = measured.filter { entry in result.cards.contains { $0.volume == entry.key } }
-            log("card: \(result.cards.map { "\($0.name) [\($0.link?.label ?? "unknown link")]" }.joined(separator: ", "))")
+            let listed = result.cards.map { "\($0.name) [\($0.link?.label ?? "unknown link")]" }.joined(separator: ", ")
+            log("card: \(listed.isEmpty ? "none plugged in" : listed)")
             for card in result.cards where measured[card.volume] == nil { measure(card) }
         }
     }
