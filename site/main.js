@@ -121,53 +121,34 @@ const reduceMotion = matchMedia("(prefers-reduced-motion: reduce)");
 })();
 
 // The demo videos (the hero's session, the Live tab): loops rendered by the app itself. Each starts
-// once the page has loaded (the poster is what paints first), plays only while it is in view, names
-// the step on screen, and has a Pause key (a moving picture must be stoppable). Reduce Motion
-// leaves the posters.
+// once the page has loaded (the poster is what paints first) and plays only while it is in view.
+// The picture is its own control: a click, Enter or Space stops and starts it, so a reader can hold
+// a frame without a button on the page. Reduce Motion leaves the posters.
 for (const figure of document.querySelectorAll("[data-demo]")) {
   const video = figure.querySelector("video");
-  const bar = figure.querySelector(".demo-bar");
-  const stepName = figure.querySelector("[data-demo-step]");
-  const toggle = figure.querySelector("[data-demo-toggle]");
-  // "seconds:Name" pairs, written by scripts/make_demo_video.swift's storyboard.
-  const steps = (figure.dataset.steps || "")
-    .split(",")
-    .map((pair) => pair.split(":"))
-    .map(([t, name]) => ({ t: Number(t), name }))
-    .filter((s) => Number.isFinite(s.t) && s.name);
   let userPaused = reduceMotion.matches;
   let inView = false;
 
-  const label = () => {
-    const now = video.currentTime;
-    let current = steps[0];
-    for (const s of steps) if (s.t <= now) current = s;
-    if (current && stepName.textContent !== current.name) stepName.textContent = current.name;
-  };
-  const sync = () => {
-    toggle.textContent = video.paused ? "Play" : "Pause";
-    toggle.setAttribute("aria-pressed", String(video.paused));
-  };
   const play = () => {
     if (userPaused || !inView) return;
-    video.play().catch(() => {});  // autoplay refused: the poster stays, the key still works
+    video.play().catch(() => {});  // autoplay refused: the poster stays
   };
-
-  video.addEventListener("timeupdate", label);
-  video.addEventListener("play", sync);
-  video.addEventListener("pause", sync);
-  toggle.addEventListener("click", () => {
+  const toggle = () => {
     userPaused = !video.paused;
     if (userPaused) video.pause();
     else {
       inView = true;
       play();
     }
+  };
+  video.addEventListener("click", toggle);
+  video.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    toggle();
   });
 
   const start = () => {
-    bar.hidden = false;
-    sync();
     new IntersectionObserver(
       (entries) => {
         for (const e of entries) {

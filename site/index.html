@@ -59,18 +59,14 @@
       </div>
       <p class="fine">Free and open source · macOS 15+ · Apple silicon and Intel</p>
     </div>
-    <figure class="shot shot--hero demo" data-demo data-steps="0:Download,2.7:Done,5.3:Connect,7.4:Link,10.4:Pick,13.35:Download">
+    <figure class="shot shot--hero demo" data-demo>
       <!-- One session with a camera, rendered by the app itself in demo mode
            (scripts/make_demo_video.swift): no screen recording, synthetic footage. main.js starts it
            once the page has loaded, unless the reader asked for reduced motion. -->
       <video class="demo-video" width="1400" height="966" poster="images/demo-poster.webp" muted loop playsinline preload="none"
-             aria-label="Osmotic connecting to an Osmo Pocket 3, two clips ticked, and their download to the Mac">
+             tabindex="0" aria-label="Osmotic connecting to an Osmo Pocket 3, two clips ticked, and their download to the Mac. Click to stop it">
         <source src="images/demo.mp4" type="video/mp4">
       </video>
-      <figcaption class="demo-bar" hidden>
-        <span class="demo-step"><span class="label">Step:</span> <span data-demo-step>Download</span></span>
-        <span class="bank"><button type="button" class="key key--compact" data-demo-toggle>Pause</button></span>
-      </figcaption>
     </figure>
     <div class="lcd lcd--proof" data-reveal>
       <p><span class="label">Speed:</span> ~<span data-count="33">33</span> MB/s</p>
@@ -110,15 +106,11 @@
         <h3>Control it from across the room</h3>
         <p>Record, take photos, switch modes and watch the picture live.</p>
       </div>
-      <figure class="shot" data-reveal="tray" data-demo data-steps="0:Record,4:Stop,5.1:Mode,7.9:Record">
+      <figure class="shot" data-reveal="tray" data-demo>
         <video class="demo-video" width="1400" height="966" poster="images/live-poster.webp" muted loop playsinline preload="none"
-               aria-label="Osmotic's Live tab: recording starts, stops, and the mode switches to Slow-mo and back">
+               tabindex="0" aria-label="Osmotic's Live tab: recording starts, stops, and the mode switches to Slow-mo and back. Click to stop it">
           <source src="images/live.mp4" type="video/mp4">
         </video>
-        <figcaption class="demo-bar" hidden>
-          <span class="demo-step"><span class="label">Step:</span> <span data-demo-step>Record</span></span>
-          <span class="bank"><button type="button" class="key key--compact" data-demo-toggle>Pause</button></span>
-        </figcaption>
       </figure>
     </article>
 

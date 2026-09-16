@@ -285,14 +285,9 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
   border-radius: 12px; background: #1d1d1c;
   box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1), 0 14px 38px rgb(0 0 0 / 0.45), 0 2px 6px rgb(0 0 0 / 0.3);
 }
-.demo-bar {
-  display: flex; align-items: center; justify-content: space-between; gap: var(--s3);
-  margin-top: var(--s3); font: 500 11px/1 var(--mono); letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--muted);
-}
-.demo-step .label { color: var(--lcd-caption); }
-.demo-step [data-demo-step] { color: var(--lcd-text); }
-.demo-bar .key { min-width: 76px; }
+/* The video is its own pause control (main.js), so it takes focus like one. */
+.demo-video { cursor: pointer; }
+.demo-video:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .shot--hero { margin-inline: 0; }
 
 .lcd--proof {
@@ -536,6 +531,9 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .steps--row { grid-template-columns: 1fr; }
 }
 @media (max-width: 560px) {
+  /* Stacked keys fill the slot: a key half as wide as its bank reads as a mistake. */
+  .actions .bank, .cta .bank { display: flex; flex-direction: column; align-items: stretch; width: 100%; }
+  .actions .key, .cta .key { width: 100%; }
   /* Five columns don't fit a phone: the comparison becomes one LABEL: value line per option,
      the way the app's readouts are written. */
   .lcd--pairs { overflow-x: visible; }
