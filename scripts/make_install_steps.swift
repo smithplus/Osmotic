@@ -1,7 +1,7 @@
 // One illustration per install step, for the landing page (docs/images/step-1..3.png, then WebP).
 //   1. drag Osmotic to Applications: the disk image as Finder opens it (+ step-1.mp4, the drag, looping)
-//   2. the first launch: the Privacy & Security pane, drawn the way macOS lays it out
-//   3. connect: the app's own Cameras screen (a real render), with the key to press marked
+//   2. the first launch: the Privacy & Security pane, drawn the way macOS lays it out (+ step-2.mp4)
+//   3. connect: the app's own Cameras screen (a real render), the key to press marked (+ step-3.mp4)
 // Steps 1 and 2 are drawings: macOS windows can't be captured here (no screen-recording permission),
 // so they copy the system's layout and colors, never Apple's own artwork.
 // Run: swift scripts/make_install_steps.swift . && for f in docs/images/step-*.png; do cwebp -quiet -q 88 "$f" -o "${f%.png}.webp"; done
@@ -80,6 +80,58 @@ func pointer(tip: NSPoint, scale k: CGFloat = 1) {
 }
 
 func smooth(_ x: Double) -> Double { let t = min(1, max(0, x)); return t * t * (3 - 2 * t) }
+
+func mixPt(_ a: NSPoint, _ b: NSPoint, _ u: Double) -> NSPoint {
+    NSPoint(x: a.x + (b.x - a.x) * u, y: a.y + (b.y - a.y) * u)
+}
+
+/// A hand that comes in from `start`, presses `target`, waits a moment and leaves the way it came,
+/// so the first and last frame of a 4-second loop are the same picture.
+func visit(_ t: Double, target: NSPoint, from start: NSPoint,
+           press: Double = 1.5, leave: Double = 2.5, gone: Double = 3.4) -> (tip: NSPoint, pressed: Bool) {
+    let tip: NSPoint
+    if t < press { tip = mixPt(start, target, smooth((t - 0.2) / (press - 0.4))) } else if t < leave {
+        tip = target
+    } else {
+        tip = mixPt(target, start, smooth((t - leave) / (gone - leave)))
+    }
+    return (tip, t >= press && t < press + 0.13)
+}
+
+/// The ring a click leaves behind, spreading from the point and fading.
+func ripple(at p: NSPoint, t: Double, from start: Double, span: Double = 0.5) {
+    guard t >= start, t < start + span else { return }
+    let u = (t - start) / span
+    let r = 10 + 30 * u
+    amber.withAlphaComponent(0.8 * (1 - u)).setStroke()
+    let path = NSBezierPath(ovalIn: tr(NSRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)))
+    path.lineWidth = 2.5
+    path.stroke()
+}
+
+/// 4 s at 30 fps to docs/images/<name>.mp4, H.264 at the still's size, meant to loop.
+func clip(_ name: String, _ frame: (Double) -> Void) throws {
+    guard let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(where: { FileManager.default.fileExists(atPath: $0) })
+    else { print("no ffmpeg: skipping \(name)"); return }
+    let mp4 = images.appendingPathComponent(name)
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: ffmpeg)
+    p.arguments = [
+        "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", "\(Int(W))x\(Int(H))", "-r", "30", "-i", "-",
+        "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p",
+        "-movflags", "+faststart", mp4.path,
+    ]
+    let pipe = Pipe()
+    p.standardInput = pipe
+    try p.run()
+    for n in 0..<120 {
+        let rep = render { frame(Double(n) / 30) }
+        pipe.fileHandleForWriting.write(Data(bytes: rep.bitmapData!, count: Int(W) * Int(H) * 4))
+    }
+    pipe.fileHandleForWriting.closeFile()
+    p.waitUntilExit()
+    print(mp4.path)
+}
 
 /// Top-based rect (like `text`) to AppKit's bottom-based one.
 func tr(_ r: NSRect) -> NSRect { NSRect(x: r.minX, y: H - r.maxY, width: r.width, height: r.height) }
@@ -268,33 +320,12 @@ func step1(_ t: Double?) {
 
 try save("step-1.png") { step1(nil) }
 
-// The clip: 4 s at 30 fps through ffmpeg, H.264 at the still's size. It loops on the page, and its
-// last frame is its first (pointer back in the corner, guide dim), so the seam doesn't show.
-if let ffmpeg = ["/opt/homebrew/bin/ffmpeg", "/usr/local/bin/ffmpeg"].first(where: { FileManager.default.fileExists(atPath: $0) }) {
-    let mp4 = images.appendingPathComponent("step-1.mp4")
-    let p = Process()
-    p.executableURL = URL(fileURLWithPath: ffmpeg)
-    p.arguments = [
-        "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgba", "-s", "\(Int(W))x\(Int(H))", "-r", "30", "-i", "-",
-        "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "24", "-tune", "animation", "-pix_fmt", "yuv420p",
-        "-movflags", "+faststart", mp4.path,
-    ]
-    let pipe = Pipe()
-    p.standardInput = pipe
-    try p.run()
-    for n in 0..<120 {
-        let rep = render { step1(Double(n) / 30) }
-        pipe.fileHandleForWriting.write(Data(bytes: rep.bitmapData!, count: Int(W) * Int(H) * 4))
-    }
-    pipe.fileHandleForWriting.closeFile()
-    p.waitUntilExit()
-    print(mp4.path)
-}
+try clip("step-1.mp4") { step1($0) }
 
 // 2. The first launch: the Settings pane to open, drawn in the system's own visual language.
 // The real window can't be captured here (no screen-recording permission), so this is a drawing of
 // what the user will see: the layout and colors macOS uses in dark appearance, none of Apple's art.
-try save("step-2.png") {
+func step2(_ t: Double?) {
     let win = NSRect(x: 60, y: 92, width: W - 120, height: 336)
     let sidebar: CGFloat = 216
     _ = macWindow(win)
@@ -362,11 +393,21 @@ try save("step-2.png") {
     NSColor.white.withAlphaComponent(0.1).setStroke()
     let edge = NSBezierPath(roundedRect: tr(win).insetBy(dx: 0.5, dy: 0.5), xRadius: 14, yRadius: 14)
     edge.stroke()
+
+    // In the clip, a hand comes in, presses Open Anyway and leaves the way it came.
+    guard let t else { return }
+    let target = NSPoint(x: button.midX + 12, y: button.midY + 7)
+    let hand = visit(t, target: target, from: NSPoint(x: W - 96, y: H - 40))
+    ripple(at: NSPoint(x: button.midX, y: button.midY), t: t, from: 1.5)
+    pointer(tip: hand.tip, scale: hand.pressed ? 0.88 : 1)
 }
+
+try save("step-2.png") { step2(nil) }
+try clip("step-2.mp4") { step2($0) }
 
 // 3. Connect: the app's own Cameras screen, whole (like the two windows before it), with the page's
 // amber ring on the key to press and the pointer on it.
-try save("step-3.png") {
+func step3(_ t: Double?) {
     guard let shot = NSImage(contentsOf: images.appendingPathComponent("cameras.png")) else { return }
     // cameras.png is framed already (44-px margin, shadow): place it by its window, 780 px wide.
     let px = shot.representations.first.map { CGFloat($0.pixelsWide) } ?? shot.size.width
@@ -381,5 +422,14 @@ try save("step-3.png") {
     let ring = NSBezierPath(roundedRect: tr(NSRect(x: key.x - 42, y: key.y - 17, width: 84, height: 34)), xRadius: 8, yRadius: 8)
     ring.lineWidth = 2
     ring.stroke()
-    pointer(tip: NSPoint(x: key.x + 14, y: key.y + 6))
+    guard let t else {
+        pointer(tip: NSPoint(x: key.x + 14, y: key.y + 6))
+        return
+    }
+    let hand = visit(t, target: NSPoint(x: key.x + 14, y: key.y + 6), from: NSPoint(x: W - 96, y: H - 40))
+    ripple(at: key, t: t, from: 1.5)
+    pointer(tip: hand.tip, scale: hand.pressed ? 0.88 : 1)
 }
+
+try save("step-3.png") { step3(nil) }
+try clip("step-3.mp4") { step3($0) }

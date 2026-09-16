@@ -298,13 +298,17 @@ h1 { font-size: clamp(38px, 7vw, 68px); line-height: 1.04; letter-spacing: -0.03
 
 /* ---- Sections ------------------------------------------------------------------------------ */
 .section { padding-block: var(--s7) 0; }
+/* A section title sits in the middle of its own engraved rule, like a legend printed on a plate. */
 .index {
-  display: flex; align-items: center; gap: var(--s2);
+  display: flex; align-items: center; justify-content: center; gap: var(--s3);
   margin: 0 0 var(--s5);
-  font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase;
+  font-size: 12px; font-weight: 600; letter-spacing: 0.16em; text-transform: uppercase; text-align: center;
 }
-.index span { font-family: var(--mono); color: var(--accent); letter-spacing: 0.05em; }
-.index::after { content: ""; flex: 1; height: 1px; background: rgb(255 255 255 / 0.1); box-shadow: 0 1px 0 rgb(0 0 0 / 0.4); transform-origin: left center; }
+.index::before, .index::after {
+  content: ""; flex: 1; height: 1px; background: rgb(255 255 255 / 0.1); box-shadow: 0 1px 0 rgb(0 0 0 / 0.4);
+}
+.index::before { transform-origin: right center; }
+.index::after { transform-origin: left center; }
 .intro { max-width: 720px; margin: 0 0 var(--s5); color: var(--muted); font-size: 18px; }
 
 h3 { font-size: clamp(22px, 3vw, 30px); letter-spacing: -0.02em; line-height: 1.15; margin: 0 0 var(--s3); }
@@ -478,9 +482,11 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   transition: opacity 450ms var(--ease-out), transform 550ms var(--ease-out);
   transition-delay: calc(var(--i, 0) * 50ms);
 }
-/* Section rules draw from the left, like a printed line. */
-.reveal-ready .index::after { transform: scaleX(0); }
-.reveal-ready .index.is-in::after { transform: scaleX(1); transition: transform 600ms var(--ease-out) 80ms; }
+/* The rules draw out from the title, like a line being printed either way. */
+.reveal-ready .index::before, .reveal-ready .index::after { transform: scaleX(0); }
+.reveal-ready .index.is-in::before, .reveal-ready .index.is-in::after {
+  transform: scaleX(1); transition: transform 600ms var(--ease-out) 80ms;
+}
 /* Order for staggered items, in CSS so the strict CSP (no inline styles) holds. Reset first:
    the parent block carries its own --i, which would otherwise be inherited by the first item. */
 .stages li, .lcd--table tbody tr { --i: 0; }
@@ -585,6 +591,7 @@ td.on { color: var(--led-green); text-shadow: 0 0 6px rgb(74 222 128 / 0.35); }
   .reveal-ready .index::after { transform: none; }
   .reveal-ready .stages .led::after, .reveal-ready .lcd--table tbody tr { transition-delay: 0ms !important; }
   .reveal-ready .stages li + li::before, .reveal-ready .stages.is-in li + li::before { transform: none; transition: none; }
+  .reveal-ready .index::before, .reveal-ready .index::after { transform: none; }
   .reveal-ready .feature .shot, .reveal-ready .feature--flip .shot { transform: none; }
   .reveal-ready .steps--row li.is-in .n, .reveal-ready .cta .panel.is-in::after { animation: none; }
   .cta .panel::after { display: none; }
