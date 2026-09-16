@@ -56,7 +56,8 @@ Plug the camera into the Mac with USB-C and choose **USB storage** (or **Data**)
 - Sizes come from the card, so the bar and the time left are right from the first second, whatever the clip's length.
 - **Eject** unmounts the card so the cable can come out. Pulling the cable mid-copy is safe too: what already arrived is saved, and the file being copied is discarded rather than left half written.
 - The card's row shows what it **measured**, not just what the bus promises: Osmotic reads a stretch of the biggest clip and reports the rate and roughly how long the whole card would take. A slow cable is worth swapping before the copy, not after.
-- About speed: the readout shows **USB 2.0** or **USB 3**. A cable that only carries USB 2 (most charging cables) tops out around 40 MB/s, which is roughly what Wi-Fi gives you. A USB 3 cable, straight into the Mac rather than through a hub, is the one worth using for a full card.
+- About speed: the readout shows **USB 2.0** or **USB 3**. On an Osmo Pocket 3 the camera's own port negotiates USB 2.0 whatever cable you use (measured: 40 MB/s with three different cables, through a hub and straight into the Mac), so a better cable changes nothing there. That is still a little faster than Wi-Fi, and your network stays untouched.
+- **The fast way for a full card:** take the microSD out and put it in a USB 3 reader. Osmotic lists any mounted card the same way, so nothing changes except the speed, which is where a reader wins by several times.
 
 ## Live: control the camera
 

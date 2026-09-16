@@ -41,6 +41,10 @@ The whole Files flow worked on the first try: BLE armed (MTU 512), already paire
 - Signed with hardened runtime + location and camera entitlements (`Resources/Osmotic.entitlements`); no `NSAllowsArbitraryLoads`. `NSAllowsLocalNetworking` is what enables HTTP to `192.168.2.1` on macOS 14+: don't remove it.
 - Connection: "Try Again" fixed; a new connection waits for the previous Wi-Fi restore and for recoveries; `CameraSession.close()` idempotent.
 
+## Card over USB (2026-09-15, tested with hardware)
+
+An Osmo Pocket 3 in storage mode mounts as `/Volumes/SD_Card` (ExFAT, `File-Stor Gadget`, `DCIM/DJI_001`). Read on a real card: 18 clips, 36.8 GB listed, thumbnails from the `.LRF` in about 0.2 s each, the volume's own sizes (a 17 GB clip reads as 17 GB). The camera's port negotiates **USB 2.0** with every cable tried, including straight into the Mac, and reads at **40 MB/s** (`dd`: 40,029,586 B/s); Wi-Fi on the same camera gave 33 MB/s. A microSD in a USB 3 reader is the fast path and works through the same screens. Still to try on hardware: a long copy to the end, and pulling the cable mid-copy.
+
 ## Website (2026-09-15)
 
 `site/` is the landing page on GitHub Pages (https://smithplus.github.io/Osmotic/), published by `.github/workflows/pages.yml` on every push to `main` that touches it. `scripts/seo_audit.sh` runs against the live page after each deploy and is green (46 checks). Around 87 KB on first load, no fonts or dependencies. `docs/LANDING_REFERENCES.md` holds the density targets; `docs/GUIDE.md` is the user guide the app's Help menu opens.
